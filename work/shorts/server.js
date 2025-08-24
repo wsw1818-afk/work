@@ -28,15 +28,48 @@ async function initializeFolders() {
         console.log('📁 폴더 구조가 초기화되었습니다.');
         
         // 기본 카테고리 폴더 생성
-        const defaultCategories = ['여행', '요리', '게임', '교육', '라이프', '기술'];
+        const defaultCategories = ['여행', '요리', '게임', '교육', '라이프', '기술', '운동', '음악', '예술', '동물', '패션', '뷰티'];
         for (const category of defaultCategories) {
             const categoryPath = path.join(CATEGORIES_PATH, category);
             await fs.mkdir(categoryPath, { recursive: true });
         }
         console.log('📂 기본 카테고리 폴더가 생성되었습니다.');
+        
+        // 다운로드 폴더 자동 감시 시작
+        await ensureDownloadFolderExists();
     } catch (error) {
         console.error('폴더 초기화 오류:', error);
     }
+}
+
+// 다운로드 폴더 존재 확인 및 생성
+async function ensureDownloadFolderExists() {
+    try {
+        await fs.access(DOWNLOAD_PATH);
+        console.log('✅ 다운로드 폴더 확인됨');
+    } catch (error) {
+        console.log('📥 다운로드 폴더를 생성합니다...');
+        await fs.mkdir(DOWNLOAD_PATH, { recursive: true });
+        console.log('✅ 다운로드 폴더가 생성되었습니다.');
+    }
+}
+
+// 주기적으로 다운로드 폴더 확인 (5초마다)
+function startDownloadFolderCheck() {
+    setInterval(async () => {
+        try {
+            await fs.access(DOWNLOAD_PATH);
+        } catch (error) {
+            console.log('⚠️ 다운로드 폴더가 삭제됨. 재생성합니다...');
+            await ensureDownloadFolderExists();
+            
+            // 클라이언트에 알림
+            io.emit('downloadFolderRecreated', {
+                message: '다운로드 폴더가 재생성되었습니다.',
+                path: DOWNLOAD_PATH
+            });
+        }
+    }, 5000);
 }
 
 // 다운로드 폴더 감시
