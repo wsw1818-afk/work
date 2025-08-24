@@ -97,10 +97,22 @@
         try {
             console.log('🔄 자동 동기화 시작...');
             
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateSyncStatus === 'function') {
+                window.updateSyncStatus('syncing', '동기화 중');
+            }
+            window.isCurrentlySyncing = true;
+            
             // 구글 드라이브 연결 상태 확인
             if (!window.isAuthenticated || typeof window.uploadBackupWithCustomName !== 'function') {
                 console.log('구글 드라이브가 연결되지 않았거나 업로드 함수가 없습니다.');
                 showNotification('자동 동기화 실패: 구글 드라이브 연결 확인 필요', 'error');
+                
+                // 상태 인디케이터 업데이트
+                if (typeof window.updateSyncStatus === 'function') {
+                    window.updateSyncStatus('error', '연결 필요');
+                }
+                window.isCurrentlySyncing = false;
                 return;
             }
 
@@ -120,11 +132,23 @@
                 
                 // 동기화 상태 UI 업데이트
                 updateSyncStatusUI();
+                
+                // 상태 인디케이터 업데이트
+                if (typeof window.updateSyncStatus === 'function') {
+                    window.updateSyncStatus('synced', '동기화됨', '방금 전');
+                }
             }
             
         } catch (error) {
             console.error('자동 동기화 실패:', error);
             showNotification('자동 동기화 실패: ' + error.message, 'error');
+            
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateSyncStatus === 'function') {
+                window.updateSyncStatus('error', '동기화 실패', error.message);
+            }
+        } finally {
+            window.isCurrentlySyncing = false;
         }
     }
 

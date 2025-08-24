@@ -225,6 +225,11 @@
                 console.log(`구글 드라이브 자동 인증 성공! 토큰 남은 시간: ${remainingTime}시간`);
                 showMessage(`구글 드라이브 자동 연결됨 (${remainingTime}시간 유효)`, 'success');
                 
+                // 상태 인디케이터 업데이트
+                if (typeof window.updateDriveStatus === 'function') {
+                    window.updateDriveStatus('connected', '연결됨', `${remainingTime}시간 남음`);
+                }
+                
                 // 토큰 만료 30분 전에 자동 갱신 시도
                 const renewTime = savedToken.expires_at - Date.now() - (30 * 60 * 1000);
                 if (renewTime > 0) {
@@ -297,6 +302,11 @@
             showMessage(`구글 드라이브 연동 성공! (${expiresIn}시간 유효)`, 'success');
             updateDriveButton();
             
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateDriveStatus === 'function') {
+                window.updateDriveStatus('connected', '연결됨', `${expiresIn}시간 유효`);
+            }
+            
             // 기본 파일 목록 표시
             listFiles();
         };
@@ -362,6 +372,11 @@
         isAuthenticated = false;
         window.isAuthenticated = false;
         updateDriveButton();
+        
+        // 상태 인디케이터 업데이트
+        if (typeof window.updateDriveStatus === 'function') {
+            window.updateDriveStatus('disconnected', '연결 안됨');
+        }
         showMessage('구글 드라이브 연결이 완전히 해제되었습니다. 다음 연결 시 24시간 동안 유지됩니다.', 'info');
     }
 

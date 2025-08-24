@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Shorts 폴더 기반 미디어 매니저</title>
+    <link rel="stylesheet" href="folder-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📁 YouTube Shorts 폴더 미디어 매니저</h1>
+            <div class="connection-status">
+                <span id="connectionStatus" class="status-disconnected">● 연결 안됨</span>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <!-- 왼쪽: 다운로드 폴더 -->
+            <div class="download-section">
+                <div class="section-header">
+                    <h2>📥 다운로드 폴더</h2>
+                    <button id="refreshDownloads" class="refresh-btn">🔄 새로고침</button>
+                </div>
+                <div class="download-info">
+                    <p id="downloadCount">파일 0개 대기 중</p>
+                </div>
+                <div class="download-files" id="downloadFiles">
+                    <!-- 다운로드 폴더의 파일들이 여기 표시됨 -->
+                </div>
+            </div>
+
+            <!-- 오른쪽: 카테고리 폴더 -->
+            <div class="categories-section">
+                <div class="section-header">
+                    <h2>📂 카테고리 폴더</h2>
+                    <button id="addCategoryBtn" class="add-btn">+ 새 카테고리</button>
+                </div>
+                <div class="categories-grid" id="categoriesGrid">
+                    <!-- 카테고리 폴더들이 여기 표시됨 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 자동 분류 패널 -->
+        <div class="auto-sort-panel">
+            <h3>🤖 자동 분류 설정</h3>
+            <div class="auto-sort-rules" id="autoSortRules">
+                <div class="rule-item">
+                    <input type="text" placeholder="키워드 (예: 여행, travel)" class="keyword-input">
+                    <select class="category-select">
+                        <option value="">카테고리 선택</option>
+                    </select>
+                    <button class="remove-rule">❌</button>
+                </div>
+            </div>
+            <button id="addRuleBtn" class="add-rule-btn">+ 규칙 추가</button>
+            <button id="autoSortBtn" class="auto-sort-btn">🚀 자동 분류 실행</button>
+        </div>
+    </div>
+
+    <!-- 파일 미리보기 모달 -->
+    <div class="preview-modal" id="previewModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="preview-container">
+                <img id="previewImage" style="display: none;">
+                <video id="previewVideo" controls style="display: none;"></video>
+            </div>
+            <div class="file-info">
+                <h3 id="fileName"></h3>
+                <p id="fileDetails"></p>
+                <div class="category-selector">
+                    <label>카테고리 선택:</label>
+                    <select id="categorySelect">
+                        <option value="">선택하세요</option>
+                    </select>
+                    <button id="moveFileBtn">📁 이동</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 새 카테고리 모달 -->
+    <div class="modal" id="categoryModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>새 카테고리 폴더 생성</h3>
+            <form id="categoryForm">
+                <input type="text" id="categoryName" placeholder="카테고리 이름" required>
+                <button type="submit">생성</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 드래그 오버레이 -->
+    <div class="drag-overlay" id="dragOverlay" style="display: none;">
+        <div class="drag-message">
+            <h2>🎯 카테고리로 드래그하여 이동</h2>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="folder-manager.js"></script>
+</body>
+</html>
