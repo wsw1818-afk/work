@@ -8,7 +8,8 @@
       "Read(/I:\\클로드 cli\\.claude/**)",
       "Bash(git add:*)",
       "Bash(git reset:*)",
-      "Read(//mnt/i/클로드 cli/**)"
+      "Read(//mnt/i/클로드 cli/**)",
+      "Read(/I:\\claude_CLI/**)"
     ],
     "deny": [],
     "ask": [],
