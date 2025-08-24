@@ -98,8 +98,22 @@ class MediaManager {
         });
 
         // Media viewer close
-        document.querySelector('.close-viewer').addEventListener('click', () => {
+        document.querySelector('.close-viewer')?.addEventListener('click', () => {
             this.closeViewer();
+        });
+        
+        // Close viewer by clicking outside content
+        document.getElementById('mediaViewer')?.addEventListener('click', (e) => {
+            if (e.target.id === 'mediaViewer') {
+                this.closeViewer();
+            }
+        });
+        
+        // Close viewer with ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isViewerOpen()) {
+                this.closeViewer();
+            }
         });
 
         // Viewer actions
@@ -335,8 +349,22 @@ class MediaManager {
     }
 
     closeViewer() {
-        document.getElementById('mediaViewer').style.display = 'none';
-        document.getElementById('viewerVideo').pause();
+        const viewer = document.getElementById('mediaViewer');
+        const video = document.getElementById('viewerVideo');
+        
+        if (viewer) {
+            viewer.style.display = 'none';
+        }
+        if (video) {
+            video.pause();
+        }
+        
+        this.currentViewingItem = null;
+    }
+    
+    isViewerOpen() {
+        const viewer = document.getElementById('mediaViewer');
+        return viewer && viewer.style.display !== 'none';
     }
 
     markAsUpscaled() {
