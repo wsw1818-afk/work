@@ -97,25 +97,42 @@ class MediaManager {
             this.importData(e.target.files[0]);
         });
 
-        // Media viewer close events - use event delegation
+        // Media viewer close events - multiple approaches for reliability
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('close-viewer')) {
-                console.log('Close button clicked'); // Debug log
+            console.log('Document click detected:', e.target.className, e.target.id);
+            
+            // Check for close button click (multiple ways)
+            if (e.target.classList.contains('close-viewer') || 
+                e.target.closest('.close-viewer') ||
+                (e.target.tagName === 'SPAN' && e.target.textContent === '×')) {
+                console.log('Close button clicked');
                 e.preventDefault();
                 e.stopPropagation();
                 this.closeViewer();
+                return;
             }
             
             // Close viewer by clicking outside content
             if (e.target.id === 'mediaViewer') {
-                console.log('Outside viewer clicked'); // Debug log
+                console.log('Outside viewer clicked');
+                this.closeViewer();
+                return;
+            }
+        });
+        
+        // Close viewer with ESC key - multiple event types
+        document.addEventListener('keydown', (e) => {
+            console.log('Key pressed:', e.key, 'Viewer open:', this.isViewerOpen());
+            if (e.key === 'Escape') {
+                e.preventDefault();
                 this.closeViewer();
             }
         });
         
-        // Close viewer with ESC key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isViewerOpen()) {
+        // Additional keyup listener for reliability
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
                 this.closeViewer();
             }
         });
@@ -328,6 +345,7 @@ class MediaManager {
     }
 
     openViewer(item) {
+        console.log('Opening viewer for:', item.name);
         const viewer = document.getElementById('mediaViewer');
         const viewerImage = document.getElementById('viewerImage');
         const viewerVideo = document.getElementById('viewerVideo');
@@ -354,12 +372,30 @@ class MediaManager {
         if (closeBtn) {
             closeBtn.style.display = 'flex';
             closeBtn.style.pointerEvents = 'auto';
+            closeBtn.style.zIndex = '2001';
+            
+            // Add direct click listener to close button
+            const existingListener = closeBtn.getAttribute('data-listener-added');
+            if (!existingListener) {
+                closeBtn.addEventListener('click', (e) => {
+                    console.log('Direct close button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.closeViewer();
+                });
+                closeBtn.setAttribute('data-listener-added', 'true');
+            }
         }
         
         viewer.style.display = 'flex';
         
         // Focus the viewer for keyboard events
         viewer.focus();
+        
+        // Add temporary body class to prevent scrolling
+        document.body.style.overflow = 'hidden';
+        
+        console.log('Viewer opened successfully');
     }
 
     closeViewer() {
@@ -373,6 +409,9 @@ class MediaManager {
         if (video) {
             video.pause();
         }
+        
+        // Restore body scrolling
+        document.body.style.overflow = '';
         
         this.currentViewingItem = null;
         console.log('Viewer closed'); // Debug log
