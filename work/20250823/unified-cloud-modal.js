@@ -471,6 +471,110 @@
     }
 
     /**
+     * 연결 상태 실시간 모니터링 시작
+     */
+    function startConnectionMonitoring() {
+        const monitoringInterval = setInterval(() => {
+            // 모달이 닫혔으면 모니터링 중지
+            if (!document.querySelector('.unified-modal')) {
+                clearInterval(monitoringInterval);
+                return;
+            }
+            
+            updateConnectionStatus();
+        }, 3000); // 3초마다 상태 확인
+        
+        // 초기 상태 업데이트
+        updateConnectionStatus();
+    }
+    
+    /**
+     * 연결 상태 업데이트
+     */
+    function updateConnectionStatus() {
+        // API 로딩 상태 확인
+        const gapiLoaded = typeof gapi !== 'undefined';
+        const gisLoaded = typeof google !== 'undefined' && google.accounts;
+        const gapiInited = window.gapiInited || false;
+        const gisInited = window.gisInited || false;
+        const isAuthenticated = window.isAuthenticated || false;
+        
+        // 상태 표시 요소들 찾기
+        const statusCards = document.querySelectorAll('.status-card');
+        const connectionBtns = document.querySelectorAll('[onclick*="connectToDrive"], [onclick*="disconnectDrive"]');
+        
+        statusCards.forEach(card => {
+            const icon = card.querySelector('.status-icon');
+            const titleEl = card.querySelector('strong');
+            const descEl = card.querySelector('p');
+            
+            if (!icon || !titleEl || !descEl) return;
+            
+            if (isAuthenticated) {
+                // 연결됨
+                card.style.background = '#e8f5e8';
+                card.style.borderColor = '#4caf50';
+                icon.textContent = '✅';
+                titleEl.textContent = '구글 드라이브 연결됨';
+                descEl.textContent = '구글 드라이브가 성공적으로 연결되어 백업이 가능합니다.';
+            } else if (!gapiLoaded || !gisLoaded) {
+                // 라이브러리 로딩 안됨
+                card.style.background = '#ffebee';
+                card.style.borderColor = '#f44336';
+                icon.textContent = '❌';
+                titleEl.textContent = '라이브러리 로딩 실패';
+                descEl.textContent = 'Google API 라이브러리가 로드되지 않았습니다. 페이지를 새로고침해주세요.';
+            } else if (!gapiInited || !gisInited) {
+                // 초기화 중
+                card.style.background = '#e3f2fd';
+                card.style.borderColor = '#2196f3';
+                icon.textContent = '🔄';
+                titleEl.textContent = 'API 초기화 중';
+                descEl.textContent = 'Google API를 초기화하고 있습니다. 잠시만 기다려주세요.';
+            } else {
+                const clientId = localStorage.getItem('googleDriveClientId');
+                const apiKey = localStorage.getItem('googleDriveApiKey');
+                
+                if (!clientId || !apiKey) {
+                    // 설정 필요
+                    card.style.background = '#fff3cd';
+                    card.style.borderColor = '#ffc107';
+                    icon.textContent = '⚙️';
+                    titleEl.textContent = 'API 설정 필요';
+                    descEl.textContent = 'API 키와 클라이언트 ID를 설정한 후 구글 드라이브에 연결하세요.';
+                } else {
+                    // 연결 대기
+                    card.style.background = '#fff3cd';
+                    card.style.borderColor = '#ffc107';
+                    icon.textContent = '⚠️';
+                    titleEl.textContent = 'API 설정 완료 - 연결 대기중';
+                    descEl.textContent = 'API 설정이 완료되었습니다. 아래 연결 버튼을 클릭하여 인증을 완료하세요.';
+                }
+            }
+        });
+        
+        // 연결 버튼 상태 업데이트
+        connectionBtns.forEach(btn => {
+            if (isAuthenticated) {
+                if (btn.onclick && btn.onclick.toString().includes('connectToDrive')) {
+                    btn.style.display = 'none';
+                }
+                if (btn.onclick && btn.onclick.toString().includes('disconnectDrive')) {
+                    btn.style.display = 'inline-block';
+                }
+            } else {
+                if (btn.onclick && btn.onclick.toString().includes('connectToDrive')) {
+                    btn.style.display = 'inline-block';
+                    btn.disabled = !gapiInited || !gisInited;
+                }
+                if (btn.onclick && btn.onclick.toString().includes('disconnectDrive')) {
+                    btn.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    /**
      * 탭 전환 함수
      */
     window.switchToTab = function(tabName) {
