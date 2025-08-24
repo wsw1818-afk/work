@@ -1,1 +1,0 @@
-git log --oneline --date=format:'%Y-%m-%d %H:%M' --format="%h %ad %s"
