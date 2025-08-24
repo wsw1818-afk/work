@@ -1849,24 +1849,27 @@
         return modal;
     }
 
-    window.closeModal = function() {
-        const modals = document.querySelectorAll('.drive-modal, .sync-modal, .modal, [class*="modal"]');
-        modals.forEach(modal => {
+    window.closeModal = function(specificModalId = null) {
+        // 특정 모달 ID가 지정된 경우 해당 모달만 닫기
+        if (specificModalId) {
+            const specificModal = document.getElementById(specificModalId);
+            if (specificModal && specificModal.parentNode) {
+                specificModal.style.display = 'none';
+                console.log(`🚪 특정 모달 닫기: ${specificModalId}`);
+                return;
+            }
+        }
+        
+        // Google Drive 관련 모달만 선택적으로 닫기
+        const driveModals = document.querySelectorAll('.drive-modal, .sync-modal, #unifiedCloudModal');
+        driveModals.forEach(modal => {
             if (modal && modal.parentNode) {
-                modal.remove();
+                modal.style.display = 'none';
+                console.log(`🚪 Google Drive 모달 닫기: ${modal.id || modal.className}`);
             }
         });
         
-        // 추가 안전 장치
-        const highZIndexElements = document.querySelectorAll('*');
-        highZIndexElements.forEach(el => {
-            const style = window.getComputedStyle(el);
-            if (style.position === 'fixed' && 
-                (style.zIndex > 9999 || el.style.zIndex > 9999) &&
-                style.display !== 'none') {
-                el.remove();
-            }
-        });
+        // 기존의 과도한 z-index 제거 로직은 삭제 (너무 광범위함)
     };
 
     function showMessage(message, type = 'info') {

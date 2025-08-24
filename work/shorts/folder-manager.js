@@ -461,6 +461,9 @@ class FolderMediaManager {
         title.textContent = `📂 ${categoryName}`;
         fileCount.textContent = `${files.length}개 파일`;
         
+        // 카테고리 폴더 열기 버튼 이벤트 설정
+        this.setupCategoryFolderButton(categoryName);
+        
         filesGrid.innerHTML = '';
         
         if (files.length === 0) {
@@ -500,6 +503,40 @@ class FolderMediaManager {
         }
         
         modal.style.display = 'flex';
+    }
+
+    setupCategoryFolderButton(categoryName) {
+        const btn = document.getElementById('openCategoryFolderBtn');
+        if (!btn) return;
+        
+        // 기존 이벤트 리스너 제거
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // 새로운 이벤트 리스너 추가
+        newBtn.addEventListener('click', () => {
+            this.openCategoryFolderInExplorer(categoryName);
+        });
+    }
+
+    async openCategoryFolderInExplorer(categoryName) {
+        try {
+            const response = await fetch('http://localhost:3000/api/open-category-folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryName })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.showNotification(`✅ ${categoryName} 폴더가 열렸습니다`);
+            } else {
+                this.showNotification('❌ 폴더를 열 수 없습니다', 'error');
+            }
+        } catch (error) {
+            console.error('폴더 열기 오류:', error);
+            this.showNotification('❌ 폴더 열기 실패', 'error');
+        }
     }
 
     showCategoryFilePreview(file, categoryName) {
