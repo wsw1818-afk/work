@@ -1,0 +1,409 @@
+/* 통합 메뉴 스타일 */
+.action-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.action-controls .unified-btn {
+    padding: 10px 15px !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    min-width: 120px;
+}
+
+.action-controls .unified-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+.action-controls .unified-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* 각 버튼별 색상 */
+#unifiedDriveBtn {
+    background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%) !important;
+}
+
+#unifiedExcelBtn {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+}
+
+#unifiedThemeBtn {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+}
+
+#unifiedLayoutBtn {
+    background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%) !important;
+}
+
+/* 모달 스타일 개선 */
+#unifiedDriveModal .modal-content,
+#unifiedExcelModal .modal-content {
+    max-width: 500px;
+    margin: 50px auto;
+}
+
+#unifiedDriveModal .modal-body,
+#unifiedExcelModal .modal-body {
+    padding: 20px;
+}
+
+#unifiedDriveModal h4,
+#unifiedExcelModal h4 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+}
+
+/* 백업 정보 박스 */
+.backup-info {
+    margin-top: 20px;
+    padding: 10px;
+    background: #f0f0f0;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Export 옵션 스타일 */
+.export-options {
+    margin-bottom: 20px;
+}
+
+.export-options label {
+    display: block;
+    margin: 10px 0;
+    cursor: pointer;
+}
+
+.export-options input[type="radio"] {
+    margin-right: 8px;
+}
+
+#dateRangeSection {
+    margin-left: 25px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+#dateRangeSection input[type="date"] {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* 와이드 화면 모드 스타일 */
+.wide-screen-mode .container {
+    max-width: 95vw !important;
+    width: 95vw !important;
+}
+
+.wide-screen-mode .calendar {
+    width: 100% !important;
+}
+
+.max-width-mode .container {
+    max-width: none !important;
+    width: 100% !important;
+}
+
+/* 연결 상태 표시 */
+.connection-status {
+    margin-left: auto;
+}
+
+.status-indicator {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-indicator.online {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-indicator.offline {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Google Drive 모달 스타일 개선 */
+#unifiedDriveModal .modal-content {
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#unifiedDriveModal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#unifiedDriveModal .form-group {
+    margin: 15px 0;
+}
+
+#unifiedDriveModal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+#unifiedDriveModal .form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 12px;
+}
+
+#unifiedDriveModal .setup-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#unifiedDriveModal .setup-buttons button {
+    flex: 1;
+    min-width: 120px;
+}
+
+#unifiedDriveModal .user-info {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #f0f8ff;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+#unifiedDriveModal .sync-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+#unifiedDriveModal .sync-info {
+    background: #f0f8ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+/* 메모 삭제 버튼 스타일 개선 */
+.memo-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+}
+
+.memo-item:hover {
+    background: #f0f0f0;
+    cursor: pointer;
+}
+
+.memo-content {
+    flex: 1;
+}
+
+.memo-title {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.memo-text {
+    margin: 0 0 8px 0;
+    color: #666;
+    line-height: 1.4;
+}
+
+.memo-time {
+    color: #999;
+    font-size: 12px;
+}
+
+.delete-memo-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.delete-memo-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+.delete-memo-btn:active {
+    transform: scale(0.95);
+}
+
+/* 화면 모드 컨트롤 스타일 */
+.screen-mode-controls {
+    padding: 15px 0;
+}
+
+.screen-mode-controls label {
+    display: block;
+    margin: 10px 0;
+    font-weight: 500;
+}
+
+.screen-mode-controls input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.screen-mode-controls small {
+    display: block;
+    margin-left: 24px;
+    color: #666;
+    font-size: 12px;
+}
+
+/* 레이아웃 프리셋 버튼 개선 */
+.preset-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.preset-btn {
+    padding: 10px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.preset-btn:hover {
+    border-color: #007bff;
+    background: #f0f8ff;
+}
+
+.preset-btn:active {
+    transform: scale(0.95);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    #unifiedDriveModal .modal-content {
+        max-width: 95vw;
+        margin: 10px auto;
+    }
+    
+    #unifiedDriveModal .setup-buttons {
+        flex-direction: column;
+    }
+    
+    #unifiedDriveModal .sync-buttons {
+        flex-direction: column;
+    }
+    
+    .preset-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 메모가 없을 때 표시 */
+.no-memos {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 30px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 2px dashed #ddd;
+}
+
+/* 수정된 메모 삭제 버튼 스타일 */
+.delete-memo-btn-fixed {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    background: #dc3545 !important;
+    color: white !important;
+    border: none !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    z-index: 10 !important;
+    transition: all 0.3s ease !important;
+}
+
+.delete-memo-btn-fixed:hover {
+    background: #c82333 !important;
+    transform: scale(1.05) !important;
+}
+
+.delete-memo-btn-fixed:active {
+    transform: scale(0.95) !important;
+}
+
+/* 메모 아이템 위치 설정 */
+.memo-item, .sticky-note {
+    position: relative !important;
+    padding-right: 50px !important; /* 삭제 버튼 공간 확보 */
+}
+
+/* 울트라 와이드 모드 추가 스타일 */
+.ultra-wide-mode .container {
+    max-width: 98vw !important;
+    width: 98vw !important;
+}
+
+.ultra-wide-mode .calendar {
+    width: 100% !important;
+}
+
+.ultra-wide-mode .days .day {
+    min-height: 120px !important;
+}
+
+/* 화면 모드별 최적화 */
+@media (min-width: 1920px) {
+    .wide-screen-mode .calendar .days .day {
+        font-size: 16px;
+    }
+    
+    .ultra-wide-mode .calendar .days .day {
+        font-size: 18px;
+        min-height: 140px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .ultra-wide-mode .calendar .days .day {
+        font-size: 20px;
+        min-height: 160px;
+    }
+}

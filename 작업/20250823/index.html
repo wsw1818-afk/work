@@ -783,7 +783,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 9999;
             padding: 20px;
             box-sizing: border-box;
         }
@@ -2799,17 +2799,7 @@
                         <button class="sticky-memo-save-btn" id="saveStickyMemo">💾 저장</button>
                     </div>
 
-                    <div class="memo-list-header">
-                        <div class="memo-list-title">📝 저장된 메모</div>
-                        <button class="memo-lock-toggle" id="stickyMemoLockToggle">
-                            <span class="lock-icon">🔒</span>
-                            <span class="lock-text">잠금</span>
-                        </button>
-                    </div>
-                    
-                    <div class="sticky-memo-list memo-list" id="stickyMemoList">
-                        <!-- 저장된 메모들이 여기에 표시됩니다 -->
-                    </div>
+                    <!-- 메모 리스트 제거됨 - 스티커 메모는 메모 입력만 제공 -->
                 </div>
             `;
             
@@ -2925,30 +2915,10 @@
             loadStickyMemos();
         }
 
+        // 스티키 메모 전용 함수 (메모장) - 메모 리스트 제거됨
         function loadStickyMemos() {
-            const memoList = document.getElementById('stickyMemoList');
-            if (!memoList) return; // 요소가 없으면 중단
-            
-            // 스티키 메모가 숨겨진 상태면 실행하지 않음
-            const stickyMemo = document.getElementById('stickyMemo');
-            if (stickyMemo && stickyMemo.style.display === 'none') {
-                return;
-            }
-            
-            if (memos.length === 0) {
-                memoList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">저장된 메모가 없습니다</div>';
-                return;
-            }
-
-            memoList.innerHTML = memos.map(memo => `
-                <div class="memo-item ${isMemosUnlocked ? 'unlocked' : ''}" onclick="openMemoDetail(${memo.id})">
-                    <div class="memo-item-title">${memo.title}</div>
-                    <div class="memo-item-content">${memo.content.substring(0, 100)}${memo.content.length > 100 ? '...' : ''}</div>
-                    <div class="memo-item-date">${memo.date}</div>
-                    <div class="memo-item-preview">클릭하여 보기</div>
-                    <button class="memo-item-delete ${isMemosUnlocked ? 'visible' : ''}" onclick="event.stopPropagation(); deleteMemoFromList(${memo.id})">✕</button>
-                </div>
-            `).join('');
+            console.log('스티키 메모 리스트 로드 - 메모 리스트가 제거되어 아무것도 하지 않음');
+            // 스티커 메모는 이제 메모 입력만 제공하므로 리스트 로드 기능 없음
         }
 
         // 드래그 앤 드롭 기능
@@ -3028,11 +2998,7 @@
                 saveBtn.addEventListener('click', saveStickyMemo);
             }
 
-            // 잠금/해제 토글 버튼
-            const lockToggle = document.getElementById('stickyMemoLockToggle');
-            if (lockToggle) {
-                lockToggle.addEventListener('click', toggleStickyMemoLock);
-            }
+            // 스티키 메모 잠금 토글 제거됨 (메모 리스트가 없으므로 불필요)
         }
 
         // 메모 모달 드래그 기능
@@ -3169,24 +3135,7 @@
             }
         }
 
-        function toggleStickyMemoLock() {
-            isMemosUnlocked = !isMemosUnlocked;
-            const toggle = document.getElementById('stickyMemoLockToggle');
-            const icon = toggle.querySelector('.lock-icon');
-            const text = toggle.querySelector('.lock-text');
-            
-            if (isMemosUnlocked) {
-                toggle.classList.add('unlocked');
-                icon.textContent = '🔓';
-                text.textContent = '해제됨';
-            } else {
-                toggle.classList.remove('unlocked');
-                icon.textContent = '🔒';
-                text.textContent = '잠금';
-            }
-            
-            loadStickyMemos(); // 메모 리스트 새로고침
-        }
+        // toggleStickyMemoLock 함수 제거됨 (메모 리스트가 없으므로 불필요)
 
         function saveMemo() {
             const title = document.getElementById('memoTitleInput').value.trim();
@@ -3214,6 +3163,8 @@
             // alert('메모가 저장되었습니다! 📝'); // 메시지 제거
         }
 
+        // 통합 메모 시스템으로 대체됨 - 충돌 방지를 위해 비활성화
+        /*
         function loadMemos() {
             const memoList = document.getElementById('memoList');
             
@@ -3232,7 +3183,9 @@
                 </div>
             `).join('');
         }
+        */
 
+        // 메모 상세보기 기능 (HTML 원본)
         // 메모 상세보기 기능
         let currentMemoId = null;
 
@@ -3275,6 +3228,9 @@
             modalContent.style.top = constrainedY + 'px';
             modalContent.style.margin = '0';
             
+            // z-index를 높게 설정하여 다른 모달보다 앞에 표시
+            memoDetailModal.style.zIndex = '10000';
+            
             // 상세 모달 표시
             memoDetailModal.style.display = 'block';
         }
@@ -3283,12 +3239,13 @@
             const memoDetailModal = document.getElementById('memoDetailModal');
             const modalContent = memoDetailModal.querySelector('.memo-modal-content');
             
-            // 모달 위치 리셋
+            // 모달 위치 및 스타일 리셋
             modalContent.style.position = '';
             modalContent.style.left = '';
             modalContent.style.top = '';
             modalContent.style.margin = '';
             modalContent.classList.remove('dragging');
+            memoDetailModal.style.zIndex = '';
             
             memoDetailModal.style.display = 'none';
             currentMemoId = null;
@@ -3300,16 +3257,33 @@
             const memo = memos.find(m => m.id === currentMemoId);
             if (!memo) return;
             
-            // 편집 모드로 전환 - 기존 메모 입력창에 내용 채우기
-            document.getElementById('memoTitleInput').value = memo.title;
-            document.getElementById('memoContentInput').value = memo.content;
+            // 날짜별 메모 입력창에 내용 채우기 (일반 메모 입력창이 없으므로)
+            const dateTitleInput = document.getElementById('dateMemoTitleInput');
+            const dateContentInput = document.getElementById('dateMemoContentInput');
             
-            // 메모를 삭제하고 새로 저장하게 함
-            deleteMemo(currentMemoId);
-            
-            // 상세 모달 닫고 메모 작성 모달로 포커스
-            closeMemoDetail();
-            document.getElementById('memoTitleInput').focus();
+            if (dateTitleInput && dateContentInput) {
+                dateTitleInput.value = memo.title;
+                dateContentInput.value = memo.content;
+                
+                // 메모를 삭제하고 새로 저장하게 함
+                deleteMemo(currentMemoId);
+                
+                // 상세 모달 닫기
+                closeMemoDetail();
+                
+                // 날짜별 메모 모달 열기
+                if (window.openDateMemoModal) {
+                    const date = new Date(memo.date);
+                    window.openDateMemoModal(date.getFullYear(), date.getMonth() + 1, date.getDate());
+                }
+                
+                // 입력창에 포커스
+                setTimeout(() => {
+                    dateTitleInput.focus();
+                }, 100);
+            } else {
+                alert('편집 기능을 사용할 수 없습니다. 날짜별 메모 입력창을 찾을 수 없습니다.');
+            }
         }
 
         function deleteMemoFromDetail() {
@@ -3329,7 +3303,7 @@
             memos = memos.filter(m => m.id !== id);
             localStorage.setItem('calendarMemos', JSON.stringify(memos));
             loadMemos();
-            loadDateMemos(); // 날짜별 메모도 새로고침
+            if (window.displayDateMemos) window.displayDateMemos(); // 날짜별 메모도 새로고침
         }
 
         // 메모 리스트에서 직접 삭제 기능
@@ -3378,7 +3352,7 @@
                 text.textContent = '잠금';
             }
             
-            loadDateMemos(); // 날짜별 메모 리스트 새로고침
+            if (window.displayDateMemos) window.displayDateMemos(); // 날짜별 메모 리스트 새로고침
         }
 
         // 잠금 상태 리셋 함수들
@@ -3456,7 +3430,7 @@
                 stickyMemo.style.setProperty('display', 'none', 'important');
             }
             
-            loadDateMemos();
+            if (window.displayDateMemos) window.displayDateMemos();
         }
 
         function closeDateMemoModal() {
@@ -3505,12 +3479,14 @@
             localStorage.setItem('calendarMemos', JSON.stringify(memos));
             
             clearDateMemoForm();
-            loadDateMemos();
+            if (window.displayDateMemos) window.displayDateMemos();
             updateCalendarDisplay(); // 달력 표시 업데이트
             
             // alert(`📝 ${selectedDate} 메모가 저장되었습니다!`); // 메시지 제거
         }
 
+        // 통합 메모 시스템으로 대체됨 - 충돌 방지를 위해 비활성화
+        /*
         function loadDateMemos() {
             if (!selectedDate) return;
 
@@ -3532,6 +3508,7 @@
                 </div>
             `).join('');
         }
+        */
 
         // 기존 viewDateMemo 함수는 openMemoDetail로 대체됨
         function viewDateMemo(id) {
@@ -3828,5 +3805,26 @@
             }
         });
     </script>
+
+    <!-- Google Drive 통합 스크립트 -->
+    <script src="google-drive-integration.js"></script>
+    
+    <!-- 통합 메모 관리 시스템 (모든 메모 관련 문제 해결) -->
+    <script src="unified-memo-system.js"></script>
+    
+    <!-- 기존 스크립트들은 비활성화 (충돌 방지) -->
+    <!--
+    <script src="memo-detail-modal-fix.js"></script>
+    <script src="memo-click-fix.js"></script>
+    <script src="error-handling-improvements.js"></script>
+    <script src="memo-id-fix.js"></script>
+    <script src="quick-memo-fix.js"></script>
+    <script src="memo-lock-fix.js"></script>
+    <script src="dom-safety-fix.js"></script>
+    <script src="ultimate-memo-lock.js"></script>
+    <script src="memo-refresh-fix.js"></script>
+    <script src="instant-delete.js"></script>
+    <script src="ghost-memo-cleanup.js"></script>
+    -->
 </body>
 </html>

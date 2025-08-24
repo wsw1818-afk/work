@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git log:*)",
+      "Bash(git revert:*)",
+      "Bash(git stash:*)",
+      "Bash(git commit:*)",
+      "Read(/I:\\클로드 cli\\.claude/**)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Read(//mnt/i/클로드 cli/**)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "I:\\클로드 cli"
+    ]
+  }
+}

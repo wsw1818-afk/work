@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아름다운 2025년 8월 달력</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calendar-container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+        }
+
+        .month-year {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            padding: 15px;
+            font-weight: 700;
+            color: white;
+            background: #667eea;
+            border-radius: 8px;
+        }
+
+        .weekday.sunday {
+            background: #e53e3e;
+        }
+
+        .weekday.saturday {
+            background: #3182ce;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .day {
+            min-height: 120px;
+            padding: 15px;
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .day.other-month {
+            opacity: 0.3;
+            background: #f7fafc;
+        }
+
+        .day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .day-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .day.today .day-number {
+            color: white;
+        }
+
+        .day.sunday .day-number {
+            color: #e53e3e;
+        }
+
+        .day.saturday .day-number {
+            color: #3182ce;
+        }
+
+        .day.holiday .day-number {
+            color: #e53e3e !important;
+            font-weight: 800;
+        }
+
+        .holiday-label {
+            font-size: 12px;
+            color: #e53e3e;
+            font-weight: 600;
+            background: rgba(229, 62, 62, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 24px;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* 다크 모드 */
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        }
+
+        [data-theme="dark"] .calendar-container {
+            background: rgba(45, 55, 72, 0.95);
+        }
+
+        [data-theme="dark"] .day {
+            background: #4a5568;
+            color: white;
+        }
+
+        [data-theme="dark"] .day-number {
+            color: white;
+        }
+
+        [data-theme="dark"] .day:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .calendar-container {
+                padding: 20px;
+            }
+
+            .month-year {
+                font-size: 28px;
+            }
+
+            .day {
+                min-height: 80px;
+                padding: 10px;
+            }
+
+            .day-number {
+                font-size: 22px;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button class="nav-btn" id="prevBtn">‹</button>
+            <h1 class="month-year" id="monthYear">2025년 8월</h1>
+            <button class="nav-btn" id="nextBtn">›</button>
+        </div>
+
+        <div class="action-bar">
+            <button class="action-btn">📢 공지 쓰기</button>
+            <button class="action-btn">➕ 생성 모드</button>
+            <button class="action-btn">🎨 스티커</button>
+            <button class="action-btn">📊 엑셀</button>
+            <button class="action-btn">☁️ 구글 드라이브</button>
+            <select class="action-btn" style="background: #667eea; color: white; border: none;">
+                <option>모든 카테고리</option>
+            </select>
+        </div>
+
+        <div class="weekdays">
+            <div class="weekday sunday">일</div>
+            <div class="weekday">월</div>
+            <div class="weekday">화</div>
+            <div class="weekday">수</div>
+            <div class="weekday">목</div>
+            <div class="weekday">금</div>
+            <div class="weekday saturday">토</div>
+        </div>
+
+        <div class="days-grid" id="daysGrid"></div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+
+    <script>
+        // 달력 생성
+        function generateCalendar() {
+            const grid = document.getElementById('daysGrid');
+            const year = 2025;
+            const month = 8; // 8월
+            
+            // 8월 1일의 요일 (0=일요일)
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const prevMonthDays = new Date(year, month - 1, 0).getDate();
+            
+            grid.innerHTML = '';
+            
+            // 이전 달 날짜
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'day other-month';
+                day.innerHTML = `<span class="day-number">${prevMonthDays - i}</span>`;
+                grid.appendChild(day);
+            }
+            
+            // 현재 달 날짜
+            for (let date = 1; date <= daysInMonth; date++) {
+                const day = document.createElement('div');
+                day.className = 'day';
+                
+                // 요일 체크
+                const dayIndex = (firstDay + date - 1) % 7;
+                if (dayIndex === 0) day.classList.add('sunday');
+                if (dayIndex === 6) day.classList.add('saturday');
+                
+                // 오늘 날짜 체크
+                const today = new Date();
+                if (year === today.getFullYear() && 
+                    month === today.getMonth() + 1 && 
+                    date === today.getDate()) {
+                    day.classList.add('today');
+                }
+                
+                // 공휴일 체크
+                let holidayName = '';
+                if (date === 15) {
+                    day.classList.add('holiday');
+                    holidayName = '<div class="holiday-label">광복절</div>';
+                }
+                
+                day.innerHTML = `
+                    <span class="day-number">${date}</span>
+                    ${holidayName}
+                `;
+                
+                grid.appendChild(day);
+            }
+            
+            // 다음 달 날짜 (6주 42칸 채우기)
+            const totalCells = 42;
+            const currentCells = firstDay + daysInMonth;
+            const remainingCells = totalCells - currentCells;
+            
+            for (let date = 1; date <= remainingCells; date++) {
+                const day = document.createElement('div');
+                day.className = 'day other-month';
+                day.innerHTML = `<span class="day-number">${date}</span>`;
+                grid.appendChild(day);
+            }
+        }
+        
+        // 테마 토글
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            this.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        });
+        
+        // 저장된 테마 복원
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        
+        // 달력 생성
+        generateCalendar();
+        
+        // 날짜 클릭 이벤트
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.day') && !e.target.closest('.day').classList.contains('other-month')) {
+                const day = e.target.closest('.day');
+                const dayNumber = day.querySelector('.day-number').textContent;
+                console.log(`${dayNumber}일 클릭됨`);
+                // 여기에 메모/일정 추가 기능 구현 가능
+            }
+        });
+        
+        // 월 네비게이션 (시연용)
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            console.log('이전 달로 이동');
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            console.log('다음 달로 이동');
+        });
+    </script>
+</body>
+</html>

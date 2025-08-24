@@ -1,0 +1,10 @@
+/* 메모 리스트와 상세 보기 스크롤 */
+#memoListView {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#memoList {
+    max-height: 350px;
+    overflow-y: auto;
+}
