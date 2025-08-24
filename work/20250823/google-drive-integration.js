@@ -1860,16 +1860,20 @@
             }
         }
         
-        // Google Drive 관련 모달만 선택적으로 닫기
-        const driveModals = document.querySelectorAll('.drive-modal, .sync-modal, #unifiedCloudModal');
-        driveModals.forEach(modal => {
+        // Google Drive 및 통합 클라우드 관련 모달 닫기
+        const cloudModals = document.querySelectorAll('.drive-modal, .sync-modal, .unified-modal, #unifiedCloudModal');
+        cloudModals.forEach(modal => {
             if (modal && modal.parentNode) {
-                modal.style.display = 'none';
-                console.log(`🚪 Google Drive 모달 닫기: ${modal.id || modal.className}`);
+                if (modal.style.display !== 'none') {
+                    modal.style.display = 'none';
+                    console.log(`🚪 클라우드 모달 닫기: ${modal.id || modal.className}`);
+                } else {
+                    // 이미 숨겨진 경우 완전히 제거
+                    modal.remove();
+                    console.log(`🗑️ 클라우드 모달 제거: ${modal.id || modal.className}`);
+                }
             }
         });
-        
-        // 기존의 과도한 z-index 제거 로직은 삭제 (너무 광범위함)
     };
 
     function showMessage(message, type = 'info') {
