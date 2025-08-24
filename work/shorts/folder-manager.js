@@ -521,15 +521,15 @@ class FolderMediaManager {
 
     async openCategoryFolderInExplorer(categoryName) {
         try {
-            const response = await fetch('http://localhost:3000/api/open-category-folder', {
+            // 임시로 기존 미디어 폴더 열기 API 사용
+            const response = await fetch('http://localhost:3000/api/open-media-folder', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoryName })
+                headers: { 'Content-Type': 'application/json' }
             });
 
             const result = await response.json();
             if (result.success) {
-                this.showNotification(`✅ ${categoryName} 폴더가 열렸습니다`);
+                this.showNotification(`📂 미디어 폴더가 열렸습니다. ${categoryName} 카테고리를 찾아보세요.`);
             } else {
                 this.showNotification('❌ 폴더를 열 수 없습니다', 'error');
             }
