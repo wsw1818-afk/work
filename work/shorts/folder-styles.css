@@ -448,6 +448,69 @@ header h1 {
     }
 }
 
+/* 폴더 누락 상태 */
+.folder-missing {
+    background: #fff3e0;
+    border: 2px solid #ff9800;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.folder-missing .warning-icon {
+    font-size: 48px;
+    color: #ff9800;
+    margin-bottom: 15px;
+}
+
+.folder-missing h3 {
+    color: #e65100;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.folder-missing p {
+    color: #f57f17;
+    margin-bottom: 20px;
+}
+
+.create-folder-btn {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0 10px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
+.create-folder-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+.open-folder-btn {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0 10px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+}
+
+.open-folder-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+}
+
 /* 스크롤바 스타일 */
 ::-webkit-scrollbar {
     width: 8px;
