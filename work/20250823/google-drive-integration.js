@@ -80,8 +80,10 @@
                 client_id: CLIENT_ID,
                 scope: SCOPES,
                 callback: '', // 나중에 정의됨
-                // Cross-Origin-Opener-Policy 오류 해결을 위한 설정
+                // Cross-Origin-Opener-Policy 오류 방지를 위한 설정
                 ux_mode: 'popup',
+                // 팝업 차단 우회를 위한 설정
+                auto_select: false,
                 // 24시간 지속되도록 설정
                 access_type: 'offline',
                 include_granted_scopes: true,
@@ -341,19 +343,35 @@
             localStorage.setItem('lastGoogleConsentTime', now.toString());
         }
 
-        if (!savedToken && !currentGapiToken) {
-            // 처음 인증이거나 토큰이 전혀 없음
-            if (shouldPromptConsent) {
-                console.log('24시간이 지났거나 처음 인증, 전체 consent 화면 표시');
-                tokenClient.requestAccessToken({prompt: 'consent'});
+        try {
+            if (!savedToken && !currentGapiToken) {
+                // 처음 인증이거나 토큰이 전혀 없음
+                if (shouldPromptConsent) {
+                    console.log('24시간이 지났거나 처음 인증, 전체 consent 화면 표시');
+                    tokenClient.requestAccessToken({prompt: 'consent'});
+                } else {
+                    console.log('24시간 내 재인증, 간단한 인증 시도');
+                    tokenClient.requestAccessToken({prompt: 'select_account'});
+                }
             } else {
-                console.log('24시간 내 재인증, 간단한 인증 시도');
-                tokenClient.requestAccessToken({prompt: 'select_account'});
+                // 토큰이 있지만 인증 상태가 아님 - 갱신 시도
+                console.log('토큰 갱신 시도');
+                tokenClient.requestAccessToken({prompt: ''});
             }
-        } else {
-            // 토큰이 있지만 인증 상태가 아님 - 갱신 시도
-            console.log('토큰 갱신 시도');
-            tokenClient.requestAccessToken({prompt: ''});
+        } catch (error) {
+            console.error('Google 인증 중 오류 발생:', error);
+            
+            if (error.message && error.message.includes('Cross-Origin-Opener-Policy')) {
+                showMessage('팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.', 'error');
+                
+                // 대안으로 직접 링크 제공
+                setTimeout(() => {
+                    const authUrl = `https://accounts.google.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=consent`;
+                    showMessage(`팝업이 작동하지 않는 경우 <a href="${authUrl}" target="_blank" style="color: white; text-decoration: underline;">여기를 클릭하여 직접 인증</a>하세요.`, 'warning');
+                }, 2000);
+            } else {
+                showMessage('Google 인증 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
         }
     }
 
