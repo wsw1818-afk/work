@@ -609,9 +609,14 @@
      * 통합 모달 생성
      */
     function createUnifiedModal(title) {
-        // 기존 모달들 제거
-        const existingModals = document.querySelectorAll('.unified-modal, .sync-modal, .drive-modal, .modal, [class*="modal"]');
-        existingModals.forEach(modal => modal.remove());
+        // 기존 통합 클라우드 모달만 제거 (다른 모달은 유지)
+        const existingUnifiedModals = document.querySelectorAll('.unified-modal, .sync-modal, .drive-modal');
+        existingUnifiedModals.forEach(modal => {
+            if (modal && modal.parentNode) {
+                modal.remove();
+                console.log(`🚪 통합 클라우드 모달 제거: ${modal.className}`);
+            }
+        });
         
         const modal = document.createElement('div');
         modal.className = 'unified-modal';
