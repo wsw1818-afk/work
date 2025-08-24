@@ -1299,9 +1299,10 @@
 
                                 <h5>3. 문제 해결</h5>
                                 <ul>
-                                    <li><code>origin_mismatch</code> 오류: 승인된 JavaScript 원본 확인</li>
-                                    <li><code>access_denied</code> 오류: OAuth 동의 화면 설정 확인</li>
-                                    <li>API 키 오류: 키 제한사항 및 활성화된 API 확인</li>
+                                    <li><code>origin_mismatch</code> 오류: 승인된 JavaScript 원본에 현재 도메인 추가</li>
+                                    <li><code>access_denied</code> 오류: OAuth 동의 화면 설정 및 테스트 사용자 추가</li>
+                                    <li><code>API keys are not supported</code>: 정상입니다. OAuth2 연결로 해결됩니다</li>
+                                    <li>API 키 오류: Drive API 활성화 및 키 제한사항 확인</li>
                                 </ul>
                             </div>
                         </details>

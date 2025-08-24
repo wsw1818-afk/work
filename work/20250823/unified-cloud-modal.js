@@ -623,25 +623,8 @@
                 throw new Error('올바르지 않은 API 키 형식입니다.');
             }
 
-            // API 테스트
-            const testUrl = `https://www.googleapis.com/drive/v3/about?fields=user&key=${apiKey}`;
-            
-            try {
-                const response = await fetch(testUrl);
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showTestResult('✅ API 연결 성공! 설정을 저장하고 구글 드라이브에 연결하세요.', 'success', 'apiTestResult');
-                } else if (data.error) {
-                    if (data.error.code === 403) {
-                        showTestResult('⚠️ API 키는 유효하지만 Drive API가 활성화되지 않았습니다.', 'error', 'apiTestResult');
-                    } else {
-                        showTestResult(`❌ API 오류: ${data.error.message}`, 'error', 'apiTestResult');
-                    }
-                }
-            } catch (fetchErr) {
-                showTestResult('✅ 기본 형식 검증 통과! 설정을 저장한 후 연결을 테스트하세요.', 'success', 'apiTestResult');
-            }
+            // Drive API는 OAuth2만 지원하므로 형식 검증만 수행
+            showTestResult('✅ API 형식 검증 완료! Drive API는 OAuth2 인증이 필요합니다.\n\n다음 단계:\n1. 설정을 저장하세요\n2. Google Cloud Console에서 Drive API를 활성화하세요\n3. "구글 드라이브 연결" 버튼을 클릭하세요', 'success', 'apiTestResult');
             
         } catch (err) {
             showTestResult(`❌ 테스트 실패: ${err.message}`, 'error', 'apiTestResult');
@@ -835,7 +818,9 @@
         if (!testResult) return;
         
         testResult.style.display = 'block';
-        testResult.textContent = message;
+        
+        // HTML로 렌더링하여 줄바꿈 처리
+        testResult.innerHTML = message.replace(/\n/g, '<br>');
         testResult.className = `test-result ${type}`;
         
         const colors = {
@@ -848,6 +833,7 @@
         Object.assign(testResult.style, color);
         testResult.style.borderRadius = '8px';
         testResult.style.padding = '12px 15px';
+        testResult.style.lineHeight = '1.5';
     }
 
     /**
