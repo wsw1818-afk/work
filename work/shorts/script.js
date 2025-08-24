@@ -1,14 +1,30 @@
 class MediaManager {
     constructor() {
         this.mediaItems = JSON.parse(localStorage.getItem('mediaItems')) || [];
+        this.categories = JSON.parse(localStorage.getItem('categories')) || this.getDefaultCategories();
         this.currentTab = 'images';
+        this.currentViewingItem = null;
+        this.selectedUploadCategory = null;
         this.init();
+    }
+
+    getDefaultCategories() {
+        return [
+            { id: 'travel', name: '여행', icon: '✈️', color: '#3498db', description: '여행 관련 콘텐츠' },
+            { id: 'food', name: '요리', icon: '🍳', color: '#e74c3c', description: '음식 및 요리 관련' },
+            { id: 'gaming', name: '게임', icon: '🎮', color: '#9b59b6', description: '게임 플레이 및 리뷰' },
+            { id: 'education', name: '교육', icon: '📚', color: '#f39c12', description: '교육 및 학습 자료' },
+            { id: 'lifestyle', name: '라이프', icon: '🌱', color: '#27ae60', description: '일상 및 라이프스타일' },
+            { id: 'tech', name: '기술', icon: '💻', color: '#34495e', description: 'IT 및 기술 관련' }
+        ];
     }
 
     init() {
         this.setupEventListeners();
         this.loadMediaItems();
         this.updateStats();
+        this.updateCategoryFilters();
+        this.loadCategories();
     }
 
     setupEventListeners() {
@@ -22,7 +38,8 @@ class MediaManager {
         // File upload
         const fileInput = document.getElementById('fileInput');
         fileInput.addEventListener('change', (e) => {
-            this.handleFileUpload(e.target.files);
+            this.showCategorySelector();
+            this.pendingFiles = e.target.files;
         });
 
         // Drag and drop
@@ -55,6 +72,10 @@ class MediaManager {
             this.filterAndDisplayMedia();
         });
 
+        document.getElementById('filterCategory').addEventListener('change', () => {
+            this.filterAndDisplayMedia();
+        });
+
         // Settings
         document.getElementById('clearStorage').addEventListener('click', () => {
             if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
@@ -84,12 +105,48 @@ class MediaManager {
             this.markAsUpscaled();
         });
 
+        document.getElementById('changeCategoryBtn').addEventListener('click', () => {
+            this.showChangeCategoryDialog();
+        });
+
         document.getElementById('deleteMedia').addEventListener('click', () => {
             this.deleteCurrentMedia();
         });
 
         document.getElementById('downloadMedia').addEventListener('click', () => {
             this.downloadCurrentMedia();
+        });
+
+        // Category management
+        document.getElementById('addCategoryBtn')?.addEventListener('click', () => {
+            this.showCategoryModal();
+        });
+
+        document.getElementById('newCategoryBtn')?.addEventListener('click', () => {
+            this.showCategoryModal();
+        });
+
+        document.querySelector('.modal-close')?.addEventListener('click', () => {
+            this.hideCategoryModal();
+        });
+
+        document.getElementById('cancelCategory')?.addEventListener('click', () => {
+            this.hideCategoryModal();
+        });
+
+        document.getElementById('categoryForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addNewCategory();
+        });
+
+        // Upload category selector
+        document.getElementById('uploadCategory')?.addEventListener('change', (e) => {
+            this.selectedUploadCategory = e.target.value;
+            if (this.pendingFiles) {
+                this.handleFileUpload(this.pendingFiles);
+                this.pendingFiles = null;
+                this.hideCategorySelector();
+            }
         });
     }
 
@@ -107,6 +164,11 @@ class MediaManager {
         });
 
         this.filterAndDisplayMedia();
+        
+        // Load categories tab if selected
+        if (tabName === 'categories') {
+            this.displayCategories();
+        }
     }
 
     handleFileUpload(files) {
@@ -122,30 +184,36 @@ class MediaManager {
                         data: e.target.result,
                         dateAdded: new Date().toISOString(),
                         isUpscaled: false,
-                        originalId: null
+                        originalId: null,
+                        category: this.selectedUploadCategory || null
                     };
                     this.mediaItems.push(mediaItem);
                     this.saveToLocalStorage();
                     this.filterAndDisplayMedia();
                     this.updateStats();
-                    this.showToast(`✅ ${file.name} 업로드 완료`);
+                    const categoryName = this.getCategoryName(this.selectedUploadCategory);
+                    const categoryMsg = categoryName ? ` (${categoryName})` : '';
+                    this.showToast(`✅ ${file.name} 업로드 완료${categoryMsg}`);
                 };
                 reader.readAsDataURL(file);
             }
         });
+        this.selectedUploadCategory = null;
     }
 
     filterAndDisplayMedia() {
         const searchTerm = document.getElementById('searchBox').value.toLowerCase();
         const sortBy = document.getElementById('sortBy').value;
         const filterType = document.getElementById('filterType').value;
+        const filterCategory = document.getElementById('filterCategory')?.value || 'all';
 
         let filteredItems = this.mediaItems.filter(item => {
             const matchesSearch = item.name.toLowerCase().includes(searchTerm);
             const matchesFilter = filterType === 'all' || 
                 (filterType === 'original' && !item.isUpscaled) ||
                 (filterType === 'upscaled' && item.isUpscaled);
-            return matchesSearch && matchesFilter;
+            const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
+            return matchesSearch && matchesFilter && matchesCategory;
         });
 
         // Sort items
@@ -199,10 +267,12 @@ class MediaManager {
                 : `<video src="${item.data}"></video>`;
             
             const badge = item.isUpscaled ? '<span class="media-badge">업스케일</span>' : '';
+            const categoryBadge = item.category ? this.getCategoryBadge(item.category) : '';
             
             mediaElement.innerHTML = `
                 ${mediaContent}
                 ${badge}
+                ${categoryBadge}
                 <div class="media-info">
                     <div class="media-name">${item.name}</div>
                     <div class="media-meta">
@@ -306,6 +376,7 @@ class MediaManager {
 
     saveToLocalStorage() {
         localStorage.setItem('mediaItems', JSON.stringify(this.mediaItems));
+        localStorage.setItem('categories', JSON.stringify(this.categories));
     }
 
     loadMediaItems() {
@@ -314,9 +385,12 @@ class MediaManager {
 
     clearAllData() {
         this.mediaItems = [];
+        this.categories = this.getDefaultCategories();
         localStorage.removeItem('mediaItems');
+        localStorage.removeItem('categories');
         this.filterAndDisplayMedia();
         this.updateStats();
+        this.updateCategoryFilters();
         this.showToast('🗑️ 모든 데이터가 삭제되었습니다');
     }
 
@@ -360,6 +434,208 @@ class MediaManager {
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);
+    }
+
+    // Category management methods
+    updateCategoryFilters() {
+        const filterCategory = document.getElementById('filterCategory');
+        const uploadCategory = document.getElementById('uploadCategory');
+        
+        if (filterCategory) {
+            filterCategory.innerHTML = '<option value="all">모든 카테고리</option>';
+            this.categories.forEach(cat => {
+                filterCategory.innerHTML += `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`;
+            });
+        }
+        
+        if (uploadCategory) {
+            uploadCategory.innerHTML = '<option value="">카테고리 없음</option>';
+            this.categories.forEach(cat => {
+                uploadCategory.innerHTML += `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`;
+            });
+        }
+    }
+
+    getCategoryName(categoryId) {
+        const category = this.categories.find(cat => cat.id === categoryId);
+        return category ? category.name : null;
+    }
+
+    getCategoryBadge(categoryId) {
+        const category = this.categories.find(cat => cat.id === categoryId);
+        if (!category) return '';
+        return `<span class="category-badge" style="background-color: ${category.color}">${category.icon} ${category.name}</span>`;
+    }
+
+    displayCategories() {
+        const grid = document.getElementById('categoriesGrid');
+        if (!grid) return;
+        
+        grid.innerHTML = '';
+        
+        this.categories.forEach(category => {
+            const itemsInCategory = this.mediaItems.filter(item => item.category === category.id);
+            const categoryCard = document.createElement('div');
+            categoryCard.className = 'category-card';
+            categoryCard.style.borderColor = category.color;
+            
+            const preview = this.getCategoryPreview(itemsInCategory);
+            
+            categoryCard.innerHTML = `
+                <div class="category-header" style="background-color: ${category.color}">
+                    <span class="category-icon">${category.icon}</span>
+                    <span class="category-name">${category.name}</span>
+                    <button class="category-menu-btn" data-category="${category.id}">⋮</button>
+                </div>
+                <div class="category-preview">
+                    ${preview}
+                </div>
+                <div class="category-info">
+                    <p class="category-description">${category.description || ''}</p>
+                    <div class="category-stats">
+                        <span>📷 ${itemsInCategory.filter(i => i.type === 'image').length}</span>
+                        <span>🎥 ${itemsInCategory.filter(i => i.type === 'video').length}</span>
+                        <span>💾 ${this.formatFileSize(itemsInCategory.reduce((acc, i) => acc + i.size, 0))}</span>
+                    </div>
+                </div>
+            `;
+            
+            categoryCard.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('category-menu-btn')) {
+                    this.filterByCategory(category.id);
+                }
+            });
+            
+            categoryCard.querySelector('.category-menu-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showCategoryMenu(category.id, e.target);
+            });
+            
+            grid.appendChild(categoryCard);
+        });
+    }
+
+    getCategoryPreview(items) {
+        if (items.length === 0) {
+            return '<div class="empty-preview">아직 콘텐츠가 없습니다</div>';
+        }
+        
+        const previewItems = items.slice(0, 4);
+        const previews = previewItems.map(item => {
+            if (item.type === 'image') {
+                return `<img src="${item.data}" alt="${item.name}">`;
+            } else {
+                return `<video src="${item.data}"></video>`;
+            }
+        }).join('');
+        
+        return `<div class="preview-grid">${previews}</div>`;
+    }
+
+    filterByCategory(categoryId) {
+        document.getElementById('filterCategory').value = categoryId;
+        this.switchTab('images');
+        this.filterAndDisplayMedia();
+    }
+
+    showCategoryMenu(categoryId, targetElement) {
+        // Simple implementation - you can enhance this with a proper context menu
+        const action = confirm('이 카테고리를 삭제하시겠습니까?');
+        if (action) {
+            this.deleteCategory(categoryId);
+        }
+    }
+
+    deleteCategory(categoryId) {
+        if (confirm('정말로 이 카테고리를 삭제하시겠습니까? 콘텐츠는 유지됩니다.')) {
+            this.categories = this.categories.filter(cat => cat.id !== categoryId);
+            // Remove category from all media items
+            this.mediaItems.forEach(item => {
+                if (item.category === categoryId) {
+                    item.category = null;
+                }
+            });
+            this.saveToLocalStorage();
+            this.updateCategoryFilters();
+            this.displayCategories();
+            this.showToast('🗑️ 카테고리가 삭제되었습니다');
+        }
+    }
+
+    showCategoryModal() {
+        document.getElementById('categoryModal').style.display = 'flex';
+    }
+
+    hideCategoryModal() {
+        document.getElementById('categoryModal').style.display = 'none';
+        document.getElementById('categoryForm').reset();
+    }
+
+    addNewCategory() {
+        const name = document.getElementById('categoryName').value;
+        const description = document.getElementById('categoryDescription').value;
+        const color = document.getElementById('categoryColor').value;
+        const icon = document.getElementById('categoryIcon').value;
+        
+        const newCategory = {
+            id: Date.now().toString(),
+            name: name,
+            description: description,
+            color: color,
+            icon: icon
+        };
+        
+        this.categories.push(newCategory);
+        this.saveToLocalStorage();
+        this.updateCategoryFilters();
+        
+        if (this.currentTab === 'categories') {
+            this.displayCategories();
+        }
+        
+        this.hideCategoryModal();
+        this.showToast(`✅ '${name}' 카테고리가 추가되었습니다`);
+    }
+
+    showCategorySelector() {
+        const selector = document.getElementById('categorySelector');
+        if (selector) {
+            selector.style.display = 'block';
+            this.updateCategoryFilters();
+        }
+    }
+
+    hideCategorySelector() {
+        const selector = document.getElementById('categorySelector');
+        if (selector) {
+            selector.style.display = 'none';
+        }
+    }
+
+    showChangeCategoryDialog() {
+        if (!this.currentViewingItem) return;
+        
+        const categories = this.categories.map(cat => `${cat.icon} ${cat.name}`).join('\n');
+        const selectedIndex = prompt(`카테고리를 선택하세요 (번호 입력):\n\n${categories.split('\n').map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\n0. 카테고리 없음`);
+        
+        if (selectedIndex !== null) {
+            const index = parseInt(selectedIndex) - 1;
+            if (index === -1) {
+                this.currentViewingItem.category = null;
+            } else if (index >= 0 && index < this.categories.length) {
+                this.currentViewingItem.category = this.categories[index].id;
+            }
+            this.saveToLocalStorage();
+            this.filterAndDisplayMedia();
+            const categoryName = index === -1 ? '카테고리 없음' : this.categories[index].name;
+            this.showToast(`✅ 카테고리가 '${categoryName}'으로 변경되었습니다`);
+        }
+    }
+
+    loadCategories() {
+        if (this.currentTab === 'categories') {
+            this.displayCategories();
+        }
     }
 }
 

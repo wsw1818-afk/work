@@ -1388,9 +1388,7 @@
             <button class="action-btn" id="createBtn">➕ 일정 추가</button>
             <button class="action-btn" id="memoBtn">📝 메모장</button>
             <button class="action-btn" id="excelBtn">📊 엑셀</button>
-            <button class="action-btn" id="driveBtn">☁️ 구글 드라이브</button>
-            <button class="action-btn" id="syncSettingsBtn">🔄 자동 동기화</button>
-            <button class="action-btn" id="customBackupBtn">📤 사용자 백업</button>
+            <button class="action-btn" id="unifiedCloudBtn">☁️ 클라우드 설정</button>
             <button class="action-btn" id="settingsBtn">⚙️ 설정</button>
         </div>
 
@@ -3582,41 +3580,21 @@
                 console.error('엑셀 버튼을 찾을 수 없습니다');
             }
 
-            // 구글 드라이브 - google-drive-integration.js에서 초기화됨
-            console.log('구글 드라이브 통합 스크립트에 의해 초기화됨');
-
-            // 자동 동기화 설정 버튼
-            const syncSettingsBtn = document.getElementById('syncSettingsBtn');
-            if (syncSettingsBtn) {
-                syncSettingsBtn.addEventListener('click', function() {
-                    console.log('자동 동기화 설정 버튼 클릭됨');
-                    if (typeof window.showSyncSettingsModal === 'function') {
-                        window.showSyncSettingsModal();
+            // 통합 클라우드 설정 버튼 (구글 드라이브 + 자동 동기화 통합)
+            const unifiedCloudBtn = document.getElementById('unifiedCloudBtn');
+            if (unifiedCloudBtn) {
+                unifiedCloudBtn.addEventListener('click', function() {
+                    console.log('통합 클라우드 설정 버튼 클릭됨');
+                    if (typeof window.showUnifiedCloudModal === 'function') {
+                        window.showUnifiedCloudModal();
                     } else {
-                        console.error('showSyncSettingsModal 함수를 찾을 수 없습니다.');
-                        alert('동기화 설정 기능을 로드하는 중입니다. 잠시 후 다시 시도해주세요.');
+                        console.error('showUnifiedCloudModal 함수를 찾을 수 없습니다.');
+                        alert('클라우드 설정 기능을 로드하는 중입니다. 잠시 후 다시 시도해주세요.');
                     }
                 });
-                console.log('자동 동기화 설정 버튼 이벤트 등록 완료');
+                console.log('통합 클라우드 설정 버튼 이벤트 등록 완료');
             } else {
-                console.error('자동 동기화 설정 버튼을 찾을 수 없습니다');
-            }
-
-            // 사용자 백업 버튼
-            const customBackupBtn = document.getElementById('customBackupBtn');
-            if (customBackupBtn) {
-                customBackupBtn.addEventListener('click', function() {
-                    console.log('사용자 백업 버튼 클릭됨');
-                    if (typeof window.showCustomBackupModal === 'function') {
-                        window.showCustomBackupModal();
-                    } else {
-                        console.error('showCustomBackupModal 함수를 찾을 수 없습니다.');
-                        alert('사용자 백업 기능을 로드하는 중입니다. 잠시 후 다시 시도해주세요.');
-                    }
-                });
-                console.log('사용자 백업 버튼 이벤트 등록 완료');
-            } else {
-                console.error('사용자 백업 버튼을 찾을 수 없습니다');
+                console.error('통합 클라우드 설정 버튼을 찾을 수 없습니다');
             }
 
             // 설정
@@ -3842,8 +3820,8 @@
     <!-- 자동 동기화 시스템 -->
     <script src="auto-sync-system.js"></script>
     
-    <!-- 동기화 설정 UI -->
-    <script src="sync-settings-ui.js"></script>
+    <!-- 통합 클라우드 모달 (구글 드라이브 + 자동 동기화 통합) -->
+    <script src="unified-cloud-modal.js"></script>
     
     <!-- 통합 메모 관리 시스템 (모든 메모 관련 문제 해결) -->
     <script src="unified-memo-system.js"></script>
