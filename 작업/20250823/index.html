@@ -504,8 +504,27 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 10px;
+            padding: 15px 20px 10px 20px;
+            margin: -20px -20px 20px -20px;
             border-bottom: 2px solid #667eea;
+            cursor: move;
+            user-select: none;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .memo-header:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .memo-modal-content.dragging {
+            transform: translateZ(0);
+            user-select: none;
+        }
+        
+        .memo-header.dragging {
+            cursor: grabbing !important;
+            background: rgba(102, 126, 234, 0.2);
         }
 
         .memo-title {
@@ -2466,8 +2485,11 @@
         }
 
         function openStickyMemo() {
+            console.log('openStickyMemo 함수 실행됨');
+            
             // 스티키 메모 생성 또는 가져오기
             const stickyMemo = createStickyMemo();
+            console.log('스티키 메모 엘리먼트:', stickyMemo);
             
             // 표시
             stickyMemo.style.display = 'block';
@@ -2481,11 +2503,14 @@
             // 저장된 위치 복원 또는 기본 위치 설정
             const savedPosition = localStorage.getItem('stickyMemoPosition');
             if (savedPosition) {
+                console.log('저장된 위치 복원 중');
                 loadStickyMemoPosition();
             } else {
-                // 기본 위치 설정 (화면 중앙 우측)
-                stickyMemo.style.left = (window.innerWidth - 400) + 'px';
+                // 기본 위치 설정 (화면 우측 상단)
+                const leftPos = Math.max(50, window.innerWidth - 400);
+                stickyMemo.style.left = leftPos + 'px';
                 stickyMemo.style.top = '100px';
+                console.log('기본 위치 설정:', leftPos + 'px', '100px');
             }
             
             // 저장된 크기 복원
@@ -2495,8 +2520,23 @@
                 stickyMemo.style.height = savedSize.height;
             }
             
+            // 강제로 표시 설정
+            stickyMemo.style.setProperty('display', 'block', 'important');
+            stickyMemo.style.setProperty('visibility', 'visible', 'important');
+            stickyMemo.style.setProperty('opacity', '1', 'important');
+            stickyMemo.style.setProperty('pointer-events', 'auto', 'important');
+            
             loadStickyMemos();
             stickyMemo.classList.add('active');
+            
+            console.log('스티키 메모 활성화 완료. 최종 스타일:', {
+                display: stickyMemo.style.display,
+                visibility: stickyMemo.style.visibility,
+                opacity: stickyMemo.style.opacity,
+                left: stickyMemo.style.left,
+                top: stickyMemo.style.top,
+                zIndex: stickyMemo.style.zIndex
+            });
         }
 
         function closeStickyMemo() {
@@ -2657,6 +2697,75 @@
             }
         }
 
+        // 메모 모달 드래그 기능
+        function initMemoModalDrag() {
+            let isDragging = false;
+            let dragOffset = { x: 0, y: 0 };
+            let currentModal = null;
+
+            // 모든 메모 모달에 드래그 기능 추가
+            const modalIds = ['dateMemoModal', 'memoDetailModal'];
+            
+            modalIds.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    const modalContent = modal.querySelector('.memo-modal-content');
+                    const header = modal.querySelector('.memo-header');
+                    
+                    if (header && modalContent) {
+                        header.addEventListener('mousedown', function(e) {
+                            startModalDrag(e, modalContent);
+                        });
+                    }
+                }
+            });
+
+            document.addEventListener('mousemove', dragModal);
+            document.addEventListener('mouseup', stopModalDrag);
+
+            function startModalDrag(e, modalContent) {
+                isDragging = true;
+                currentModal = modalContent;
+                
+                const rect = modalContent.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                
+                modalContent.classList.add('dragging');
+                modalContent.style.position = 'absolute';
+                modalContent.style.left = rect.left + 'px';
+                modalContent.style.top = rect.top + 'px';
+                modalContent.style.margin = '0';
+                
+                e.preventDefault();
+            }
+
+            function dragModal(e) {
+                if (!isDragging || !currentModal) return;
+                
+                const x = e.clientX - dragOffset.x;
+                const y = e.clientY - dragOffset.y;
+                
+                // 화면 경계 확인
+                const maxX = window.innerWidth - currentModal.offsetWidth;
+                const maxY = window.innerHeight - currentModal.offsetHeight;
+                
+                const constrainedX = Math.max(0, Math.min(x, maxX));
+                const constrainedY = Math.max(0, Math.min(y, maxY));
+                
+                currentModal.style.left = constrainedX + 'px';
+                currentModal.style.top = constrainedY + 'px';
+            }
+
+            function stopModalDrag() {
+                if (isDragging && currentModal) {
+                    currentModal.classList.remove('dragging');
+                    isDragging = false;
+                    currentModal = null;
+                }
+            }
+        }
+
         // 최소화/최대화 기능
         function minimizeStickyMemo() {
             const stickyMemo = document.getElementById('stickyMemo');
@@ -2800,12 +2909,50 @@
             document.getElementById('memoDetailDate').textContent = `📅 ${memo.date}`;
             document.getElementById('memoDetailBody').textContent = memo.content;
             
+            // 상세 모달 위치 설정
+            const memoDetailModal = document.getElementById('memoDetailModal');
+            const modalContent = memoDetailModal.querySelector('.memo-modal-content');
+            
+            // 달력 컨테이너 위치 계산
+            const calendarContainer = document.querySelector('.calendar-container');
+            const containerRect = calendarContainer.getBoundingClientRect();
+            
+            // 모달을 달력 중앙에 배치
+            const modalWidth = 500;
+            const modalHeight = 400;
+            
+            const centerX = containerRect.left + (containerRect.width - modalWidth) / 2;
+            const centerY = containerRect.top + (containerRect.height - modalHeight) / 2;
+            
+            // 화면 경계 확인
+            const maxX = window.innerWidth - modalWidth - 20;
+            const maxY = window.innerHeight - modalHeight - 20;
+            
+            const constrainedX = Math.max(20, Math.min(centerX, maxX));
+            const constrainedY = Math.max(20, Math.min(centerY, maxY));
+            
+            // 모달 스타일 설정
+            modalContent.style.position = 'absolute';
+            modalContent.style.left = constrainedX + 'px';
+            modalContent.style.top = constrainedY + 'px';
+            modalContent.style.margin = '0';
+            
             // 상세 모달 표시
-            document.getElementById('memoDetailModal').style.display = 'block';
+            memoDetailModal.style.display = 'block';
         }
 
         function closeMemoDetail() {
-            document.getElementById('memoDetailModal').style.display = 'none';
+            const memoDetailModal = document.getElementById('memoDetailModal');
+            const modalContent = memoDetailModal.querySelector('.memo-modal-content');
+            
+            // 모달 위치 리셋
+            modalContent.style.position = '';
+            modalContent.style.left = '';
+            modalContent.style.top = '';
+            modalContent.style.margin = '';
+            modalContent.classList.remove('dragging');
+            
+            memoDetailModal.style.display = 'none';
             currentMemoId = null;
         }
 
@@ -2937,6 +3084,32 @@
             
             // 날짜별 메모 모달만 열기 (스티키 메모는 열지 않음)
             const dateMemoModal = document.getElementById('dateMemoModal');
+            const modalContent = dateMemoModal.querySelector('.memo-modal-content');
+            
+            // 달력 컨테이너 위치 계산
+            const calendarContainer = document.querySelector('.calendar-container');
+            const containerRect = calendarContainer.getBoundingClientRect();
+            
+            // 모달을 달력 중앙에 배치
+            const modalWidth = 500; // max-width 값
+            const modalHeight = 400; // 예상 높이
+            
+            const centerX = containerRect.left + (containerRect.width - modalWidth) / 2;
+            const centerY = containerRect.top + (containerRect.height - modalHeight) / 2;
+            
+            // 화면 경계 확인
+            const maxX = window.innerWidth - modalWidth - 20;
+            const maxY = window.innerHeight - modalHeight - 20;
+            
+            const constrainedX = Math.max(20, Math.min(centerX, maxX));
+            const constrainedY = Math.max(20, Math.min(centerY, maxY));
+            
+            // 모달 스타일 초기화 및 위치 설정
+            modalContent.style.position = 'absolute';
+            modalContent.style.left = constrainedX + 'px';
+            modalContent.style.top = constrainedY + 'px';
+            modalContent.style.margin = '0';
+            
             dateMemoModal.style.display = 'block';
             
             // 스티키 메모가 열려있다면 닫기
@@ -2949,7 +3122,17 @@
         }
 
         function closeDateMemoModal() {
-            document.getElementById('dateMemoModal').style.display = 'none';
+            const dateMemoModal = document.getElementById('dateMemoModal');
+            const modalContent = dateMemoModal.querySelector('.memo-modal-content');
+            
+            // 모달 위치 리셋
+            modalContent.style.position = '';
+            modalContent.style.left = '';
+            modalContent.style.top = '';
+            modalContent.style.margin = '';
+            modalContent.classList.remove('dragging');
+            
+            dateMemoModal.style.display = 'none';
             clearDateMemoForm();
             selectedDate = null;
             // 모달 닫을 때 잠금 상태로 리셋
@@ -3246,6 +3429,10 @@
                     }
                 });
             });
+
+            // 메모 모달 드래그 기능 초기화
+            initMemoModalDrag();
+            console.log('메모 모달 드래그 이벤트 등록 완료');
 
             console.log('모든 버튼 초기화 완료!');
         }
