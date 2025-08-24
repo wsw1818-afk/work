@@ -586,11 +586,443 @@
     };
 
     /**
+     * 모달 스타일 추가
+     */
+    function addModalStyles() {
+        if (document.querySelector('#drive-modal-styles')) return;
+        
+        const styles = document.createElement('style');
+        styles.id = 'drive-modal-styles';
+        styles.textContent = `
+            .cloud-settings-content {
+                padding: 10px;
+            }
+            
+            .connection-status {
+                margin-bottom: 25px;
+            }
+            
+            .connection-status h3 {
+                font-size: 16px;
+                margin-bottom: 15px;
+                color: #2c3e50;
+            }
+            
+            .status-card {
+                display: flex;
+                align-items: center;
+                padding: 20px;
+                border-radius: 12px;
+                border: 2px solid #e0e0e0;
+                background: #f9f9f9;
+            }
+            
+            .status-card.connected {
+                background: #e8f5e8;
+                border-color: #4caf50;
+            }
+            
+            .status-card.disconnected {
+                background: #ffeaea;
+                border-color: #f44336;
+            }
+            
+            .status-icon {
+                font-size: 28px;
+                margin-right: 15px;
+            }
+            
+            .status-text strong {
+                display: block;
+                font-size: 16px;
+                margin-bottom: 5px;
+                color: #2c3e50;
+            }
+            
+            .status-text p {
+                margin: 0;
+                color: #666;
+                font-size: 14px;
+            }
+            
+            .backup-actions {
+                margin-bottom: 25px;
+            }
+            
+            .backup-actions h3 {
+                font-size: 16px;
+                margin-bottom: 15px;
+                color: #2c3e50;
+            }
+            
+            .action-buttons {
+                display: flex;
+                gap: 15px;
+            }
+            
+            .backup-action-btn {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                padding: 20px;
+                border: 2px solid #e0e0e0;
+                border-radius: 12px;
+                background: white;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-align: left;
+            }
+            
+            .backup-action-btn:hover {
+                border-color: #3498db;
+                background: #f8f9fa;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            
+            .backup-action-btn.backup:hover {
+                border-color: #3498db;
+            }
+            
+            .backup-action-btn.restore:hover {
+                border-color: #27ae60;
+            }
+            
+            .btn-icon {
+                font-size: 28px;
+                margin-right: 15px;
+            }
+            
+            .btn-text strong {
+                display: block;
+                font-size: 16px;
+                margin-bottom: 5px;
+                color: #2c3e50;
+            }
+            
+            .btn-text small {
+                color: #7f8c8d;
+                font-size: 13px;
+            }
+            
+            .quick-start {
+                margin-bottom: 25px;
+            }
+            
+            .quick-start h3 {
+                font-size: 16px;
+                margin-bottom: 15px;
+                color: #2c3e50;
+            }
+            
+            .quick-start-steps {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 12px;
+            }
+            
+            .step {
+                display: flex;
+                margin-bottom: 20px;
+            }
+            
+            .step:last-child {
+                margin-bottom: 0;
+            }
+            
+            .step-number {
+                width: 32px;
+                height: 32px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                margin-right: 15px;
+                flex-shrink: 0;
+            }
+            
+            .step-content {
+                flex: 1;
+            }
+            
+            .step-content strong {
+                display: block;
+                margin-bottom: 5px;
+                color: #2c3e50;
+            }
+            
+            .step-content p {
+                margin: 0 0 10px 0;
+                color: #666;
+                font-size: 14px;
+            }
+            
+            .quick-btn {
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                transition: background 0.2s;
+            }
+            
+            .quick-btn:hover {
+                background: #2980b9;
+            }
+            
+            .api-input {
+                margin-bottom: 25px;
+            }
+            
+            .api-input h4 {
+                font-size: 15px;
+                margin-bottom: 15px;
+                color: #2c3e50;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-group.highlight {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                border: 1px solid #e0e0e0;
+            }
+            
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: #2c3e50;
+                font-size: 14px;
+            }
+            
+            .required {
+                color: #e74c3c;
+                font-size: 12px;
+                margin-left: 5px;
+            }
+            
+            .input-wrapper {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 8px;
+            }
+            
+            .settings-input {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 14px;
+                font-family: 'Courier New', monospace;
+            }
+            
+            .settings-input:focus {
+                outline: none;
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            }
+            
+            .paste-btn {
+                background: #ecf0f1;
+                color: #2c3e50;
+                border: 1px solid #bdc3c7;
+                padding: 10px 15px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                white-space: nowrap;
+                transition: all 0.2s;
+            }
+            
+            .paste-btn:hover {
+                background: #d5dbdd;
+                border-color: #95a5a6;
+            }
+            
+            .form-group small {
+                display: block;
+                color: #7f8c8d;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            
+            .test-section {
+                margin-bottom: 25px;
+                text-align: center;
+            }
+            
+            .test-btn {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border: none;
+                padding: 14px 32px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: 500;
+                transition: all 0.3s;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            }
+            
+            .test-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            }
+            
+            .test-result {
+                margin-top: 15px;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+            }
+            
+            .test-result.success {
+                background: #c8e6c9;
+                color: #2e7d32;
+                border: 1px solid #4caf50;
+            }
+            
+            .test-result.error {
+                background: #ffcdd2;
+                color: #c62828;
+                border: 1px solid #f44336;
+            }
+            
+            .test-result.info {
+                background: #e3f2fd;
+                color: #1976d2;
+                border: 1px solid #2196f3;
+            }
+            
+            .settings-actions {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .save-btn {
+                flex: 1;
+                background: #27ae60;
+                color: white;
+                border: none;
+                padding: 14px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+            
+            .save-btn:hover {
+                background: #229954;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+            }
+            
+            .cancel-btn {
+                background: #ecf0f1;
+                color: #2c3e50;
+                border: 1px solid #bdc3c7;
+                padding: 14px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: all 0.2s;
+            }
+            
+            .cancel-btn:hover {
+                background: #d5dbdd;
+                border-color: #95a5a6;
+            }
+            
+            .help-section {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 12px;
+                margin-top: 20px;
+            }
+            
+            .help-section summary {
+                cursor: pointer;
+                font-weight: 500;
+                color: #2c3e50;
+                padding: 10px;
+                background: white;
+                border-radius: 8px;
+                list-style: none;
+                transition: background 0.2s;
+            }
+            
+            .help-section summary:hover {
+                background: #ecf0f1;
+            }
+            
+            .help-section summary::-webkit-details-marker {
+                display: none;
+            }
+            
+            .help-content {
+                margin-top: 15px;
+                padding: 15px;
+                background: white;
+                border-radius: 8px;
+            }
+            
+            .help-content h5 {
+                color: #2c3e50;
+                margin-top: 15px;
+                margin-bottom: 10px;
+                font-size: 14px;
+            }
+            
+            .help-content h5:first-child {
+                margin-top: 0;
+            }
+            
+            .help-content ol,
+            .help-content ul {
+                margin: 10px 0;
+                padding-left: 25px;
+                color: #666;
+                font-size: 13px;
+                line-height: 1.6;
+            }
+            
+            .help-content li {
+                margin-bottom: 5px;
+            }
+            
+            .help-content code {
+                background: #f4f4f4;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                color: #e74c3c;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    /**
      * 클라우드 설정 모달
      */
     function showCloudSettingsModal() {
         const modal = createModal('구글 드라이브 설정');
-        const content = modal.querySelector('.modal-content');
+        const content = modal.querySelector('.modal-body');
+        
+        // 모달 스타일 추가
+        addModalStyles();
         
         content.innerHTML = `
             <div class="cloud-settings-content">
@@ -609,14 +1041,14 @@
                     <div class="backup-actions">
                         <h3>📦 백업 및 복원</h3>
                         <div class="action-buttons">
-                            <button class="backup-action-btn backup" onclick="backupCalendarMemos()">
+                            <button class="backup-action-btn backup" onclick="window.backupCalendarMemos(); return false;">
                                 <span class="btn-icon">📤</span>
                                 <span class="btn-text">
                                     <strong>백업하기</strong>
                                     <small>현재 메모를 구글 드라이브에 저장</small>
                                 </span>
                             </button>
-                            <button class="backup-action-btn restore" onclick="restoreCalendarMemos()">
+                            <button class="backup-action-btn restore" onclick="window.restoreCalendarMemos(); return false;">
                                 <span class="btn-icon">📥</span>
                                 <span class="btn-text">
                                     <strong>복원하기</strong>
@@ -634,7 +1066,7 @@
                                 <div class="step-content">
                                     <strong>Google Cloud Console 접속</strong>
                                     <p>Google Cloud Console에서 프로젝트를 생성하고 Drive API를 활성화하세요.</p>
-                                    <button class="quick-btn" onclick="window.open('https://console.cloud.google.com/', '_blank')">
+                                    <button class="quick-btn" onclick="window.open('https://console.cloud.google.com/', '_blank'); return false;">
                                         Console 열기
                                     </button>
                                 </div>
@@ -666,7 +1098,7 @@
                                 <input type="text" id="clientId" class="settings-input large" 
                                        placeholder="000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
                                        value="${CLIENT_ID === 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com' ? '' : CLIENT_ID}">
-                                <button class="paste-btn" onclick="pasteFromClipboard('clientId')">📋 붙여넣기</button>
+                                <button class="paste-btn" onclick="window.pasteFromClipboard('clientId'); return false;">📋 붙여넣기</button>
                             </div>
                             <small>Google Cloud Console의 사용자 인증 정보에서 생성한 OAuth 2.0 클라이언트 ID</small>
                         </div>
@@ -679,22 +1111,22 @@
                                 <input type="password" id="apiKey" class="settings-input large" 
                                        placeholder="AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                                        value="${API_KEY === 'YOUR_API_KEY_HERE' ? '' : API_KEY}">
-                                <button class="paste-btn" onclick="pasteFromClipboard('apiKey')">📋 붙여넣기</button>
+                                <button class="paste-btn" onclick="window.pasteFromClipboard('apiKey'); return false;">📋 붙여넣기</button>
                             </div>
                             <small>Google Cloud Console에서 생성한 API 키 (브라우저 키 권장)</small>
                         </div>
                     </div>
 
                     <div class="test-section">
-                        <button class="test-btn large" onclick="testGoogleDriveConnection()">
+                        <button class="test-btn large" onclick="window.testGoogleDriveConnection(); return false;">
                             🧪 연결 테스트
                         </button>
                         <div id="testResult" class="test-result" style="display: none;"></div>
                     </div>
 
                     <div class="settings-actions">
-                        <button class="save-btn big" onclick="saveCloudSettings()">💾 설정 저장</button>
-                        <button class="cancel-btn" onclick="closeModal()">취소</button>
+                        <button class="save-btn big" onclick="window.saveCloudSettings(); return false;">💾 설정 저장</button>
+                        <button class="cancel-btn" onclick="window.closeModal(); return false;">취소</button>
                     </div>
 
                     <div class="help-section">
@@ -738,6 +1170,7 @@
     // 전역 함수로 노출
     window.backupCalendarMemos = backupCalendarMemos;
     window.restoreCalendarMemos = restoreCalendarMemos;
+    window.showCloudSettingsModal = showCloudSettingsModal;
 
     /**
      * 클립보드에서 붙여넣기
@@ -745,10 +1178,25 @@
     window.pasteFromClipboard = async function(inputId) {
         try {
             const text = await navigator.clipboard.readText();
-            document.getElementById(inputId).value = text;
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = text;
+                showMessage('붙여넣기 완료!', 'success');
+            }
         } catch (err) {
             console.warn('클립보드 접근 실패:', err);
-            showMessage('클립보드에서 붙여넣기를 실패했습니다.', 'info');
+            // 대체 방법: 브라우저의 붙여넣기 권한 요청
+            try {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.focus();
+                    input.select();
+                    document.execCommand('paste');
+                    showMessage('붙여넣기 완료!', 'success');
+                }
+            } catch (fallbackErr) {
+                showMessage('클립보드 접근 권한이 필요합니다. Ctrl+V를 사용해주세요.', 'info');
+            }
         }
     };
 
@@ -768,24 +1216,50 @@
         showTestResult('연결 테스트 중...', 'info');
 
         try {
-            // 임시로 설정값 적용
-            const originalClientId = CLIENT_ID;
-            const originalApiKey = API_KEY;
-            
-            // 전역 변수 업데이트 (임시)
-            window.TEMP_CLIENT_ID = clientId;
-            window.TEMP_API_KEY = apiKey;
-
-            // 간단한 validation 수행
+            // 기본 형식 검증
             if (!clientId.includes('.apps.googleusercontent.com')) {
-                throw new Error('올바르지 않은 클라이언트 ID 형식입니다.');
+                throw new Error('올바르지 않은 클라이언트 ID 형식입니다. ".apps.googleusercontent.com"으로 끝나야 합니다.');
             }
 
-            if (!apiKey.startsWith('AIza')) {
+            if (!apiKey.startsWith('AIza') || apiKey.length < 30) {
                 throw new Error('올바르지 않은 API 키 형식입니다.');
             }
 
-            showTestResult('✅ 기본 검증 통과! 실제 연결은 설정 저장 후 테스트하세요.', 'success');
+            // 실제 API 테스트 시도
+            showTestResult('API 연결 테스트 중...', 'info');
+            
+            // Google API를 사용한 간단한 테스트
+            const testUrl = `https://www.googleapis.com/drive/v3/about?fields=user&key=${apiKey}`;
+            
+            try {
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showTestResult('✅ API 키 검증 성공! 설정을 저장하고 페이지를 새로고침하세요.', 'success');
+                } else if (data.error) {
+                    if (data.error.code === 403) {
+                        showTestResult('⚠️ API 키는 유효하지만 Drive API가 활성화되지 않았습니다. Google Cloud Console에서 Drive API를 활성화하세요.', 'error');
+                    } else if (data.error.code === 400) {
+                        showTestResult('❌ 잘못된 API 키입니다. Google Cloud Console에서 다시 확인하세요.', 'error');
+                    } else {
+                        showTestResult(`❌ API 오류: ${data.error.message}`, 'error');
+                    }
+                } else {
+                    showTestResult('✅ 기본 검증 통과! 설정을 저장하고 페이지를 새로고침하세요.', 'success');
+                }
+            } catch (fetchErr) {
+                // CORS 오류가 발생할 수 있으므로 기본 검증만 수행
+                console.log('API 직접 테스트 실패 (CORS):', fetchErr);
+                showTestResult('✅ 기본 형식 검증 통과! 설정을 저장한 후 실제 연결을 테스트하세요.', 'success');
+            }
+            
         } catch (err) {
             showTestResult(`❌ 테스트 실패: ${err.message}`, 'error');
         }
@@ -861,8 +1335,12 @@
     }
 
     function createModal(title) {
+        // 기존 모달이 있다면 제거
+        const existingModal = document.querySelector('.drive-modal');
+        if (existingModal) existingModal.remove();
+        
         const modal = document.createElement('div');
-        modal.className = 'modal';
+        modal.className = 'drive-modal';
         modal.style.cssText = `
             position: fixed;
             top: 0;
@@ -885,25 +1363,46 @@
             max-width: 800px;
             max-height: 90vh;
             width: 90%;
-            overflow-y: auto;
+            overflow: hidden;
             position: relative;
+            display: flex;
+            flex-direction: column;
         `;
 
         const header = document.createElement('div');
         header.className = 'cloud-header';
+        header.style.cssText = `
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+        `;
+        
         header.innerHTML = `
-            <h2 style="margin: 0; font-size: 18px;">${title}</h2>
-            <button onclick="closeModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='none'">×</button>
+            <h2 style="margin: 0; font-size: 20px; font-weight: 600;">${title}</h2>
+            <button onclick="closeModal()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='none'">×</button>
+        `;
+        
+        const body = document.createElement('div');
+        body.className = 'modal-body';
+        body.style.cssText = `
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(90vh - 80px);
         `;
 
         content.appendChild(header);
+        content.appendChild(body);
         modal.appendChild(content);
 
         return modal;
     }
 
     window.closeModal = function() {
-        const modals = document.querySelectorAll('.modal');
+        const modals = document.querySelectorAll('.drive-modal, .modal');
         modals.forEach(modal => modal.remove());
     };
 
