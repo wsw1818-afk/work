@@ -97,13 +97,15 @@ class MediaManager {
             this.importData(e.target.files[0]);
         });
 
-        // Media viewer close
-        document.querySelector('.close-viewer')?.addEventListener('click', () => {
-            this.closeViewer();
-        });
-        
-        // Close viewer by clicking outside content
-        document.getElementById('mediaViewer')?.addEventListener('click', (e) => {
+        // Media viewer close events - use event delegation
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('close-viewer')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeViewer();
+            }
+            
+            // Close viewer by clicking outside content
             if (e.target.id === 'mediaViewer') {
                 this.closeViewer();
             }
@@ -329,6 +331,7 @@ class MediaManager {
         const viewerVideo = document.getElementById('viewerVideo');
         const viewerTitle = document.getElementById('viewerTitle');
         const viewerDetails = document.getElementById('viewerDetails');
+        const closeBtn = document.querySelector('.close-viewer');
         
         this.currentViewingItem = item;
         
@@ -342,13 +345,23 @@ class MediaManager {
             viewerImage.style.display = 'none';
         }
         
-        viewerTitle.textContent = item.name;
-        viewerDetails.textContent = `크기: ${this.formatFileSize(item.size)} | 추가일: ${new Date(item.dateAdded).toLocaleString()}`;
+        if (viewerTitle) viewerTitle.textContent = item.name;
+        if (viewerDetails) viewerDetails.textContent = `크기: ${this.formatFileSize(item.size)} | 추가일: ${new Date(item.dateAdded).toLocaleString()}`;
+        
+        // Make sure close button is visible and clickable
+        if (closeBtn) {
+            closeBtn.style.display = 'flex';
+            closeBtn.style.pointerEvents = 'auto';
+        }
         
         viewer.style.display = 'flex';
+        
+        // Focus the viewer for keyboard events
+        viewer.focus();
     }
 
     closeViewer() {
+        console.log('Closing viewer...'); // Debug log
         const viewer = document.getElementById('mediaViewer');
         const video = document.getElementById('viewerVideo');
         
@@ -360,6 +373,7 @@ class MediaManager {
         }
         
         this.currentViewingItem = null;
+        console.log('Viewer closed'); // Debug log
     }
     
     isViewerOpen() {

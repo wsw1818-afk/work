@@ -47,6 +47,14 @@
             gapiInited = true;
             window.gapiInited = true;
             console.log('Google API 초기화 완료');
+            
+            // GAPI 초기화 후 토큰 복원 시도
+            setTimeout(() => {
+                if (gisInited) {
+                    checkAndRestoreToken();
+                }
+            }, 500);
+            
         } catch (error) {
             console.error('Google API 초기화 실패:', error);
             gapiInited = false;
@@ -72,11 +80,17 @@
                 client_id: CLIENT_ID,
                 scope: SCOPES,
                 callback: '', // 나중에 정의됨
+                // 24시간 지속되도록 설정
+                access_type: 'offline',
+                include_granted_scopes: true,
+                // 더 긴 토큰 생명 주기를 위한 설정
+                prompt: 'consent',
+                max_age: 86400 // 24시간 (초 단위)
             });
             window.tokenClient = tokenClient;
             gisInited = true;
             window.gisInited = true;
-            console.log('Google Identity Services 초기화 완료');
+            console.log('Google Identity Services 초기화 완료 - 24시간 지속 설정');
         } catch (error) {
             console.error('Google Identity Services 초기화 실패:', error);
             gisInited = false;
@@ -85,6 +99,9 @@
         }
         
         maybeEnableButtons();
+        
+        // 기존 토큰이 있고 유효하면 자동 인증
+        checkAndRestoreToken();
     }
 
     /**
@@ -110,6 +127,85 @@
     }
 
     /**
+     * 토큰 저장 함수
+     */
+    function saveTokenData(token) {
+        const tokenData = {
+            access_token: token.access_token,
+            expires_at: Date.now() + (token.expires_in * 1000), // 만료 시간 계산
+            scope: token.scope || SCOPES,
+            token_type: token.token_type || 'Bearer',
+            saved_at: Date.now()
+        };
+        
+        localStorage.setItem('googleDriveToken', JSON.stringify(tokenData));
+        console.log('토큰이 localStorage에 저장되었습니다. 만료 시간:', new Date(tokenData.expires_at));
+    }
+
+    /**
+     * 저장된 토큰 불러오기
+     */
+    function getSavedToken() {
+        try {
+            const tokenStr = localStorage.getItem('googleDriveToken');
+            if (!tokenStr) return null;
+            
+            const tokenData = JSON.parse(tokenStr);
+            
+            // 토큰이 만료되었는지 확인 (10분 여유를 둠)
+            const bufferTime = 10 * 60 * 1000; // 10분
+            if (Date.now() + bufferTime >= tokenData.expires_at) {
+                console.log('저장된 토큰이 만료되었습니다.');
+                localStorage.removeItem('googleDriveToken');
+                return null;
+            }
+            
+            return tokenData;
+        } catch (error) {
+            console.error('저장된 토큰 불러오기 실패:', error);
+            localStorage.removeItem('googleDriveToken');
+            return null;
+        }
+    }
+
+    /**
+     * 기존 토큰 확인 및 복원
+     */
+    function checkAndRestoreToken() {
+        const savedToken = getSavedToken();
+        if (savedToken && gapiInited) {
+            console.log('저장된 토큰 발견, 자동 인증 시도...');
+            
+            // GAPI에 토큰 설정
+            gapi.client.setToken({
+                access_token: savedToken.access_token,
+                token_type: savedToken.token_type,
+                expires_in: Math.floor((savedToken.expires_at - Date.now()) / 1000)
+            });
+            
+            isAuthenticated = true;
+            window.isAuthenticated = true;
+            updateDriveButton();
+            
+            const remainingTime = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+            console.log(`구글 드라이브 자동 인증 성공! 토큰 남은 시간: ${remainingTime}시간`);
+            showMessage(`구글 드라이브 자동 연결됨 (${remainingTime}시간 유효)`, 'success');
+            
+            // 토큰 만료 10분 전에 알림
+            const alertTime = savedToken.expires_at - Date.now() - (10 * 60 * 1000);
+            if (alertTime > 0) {
+                setTimeout(() => {
+                    if (confirm('구글 드라이브 토큰이 곧 만료됩니다. 지금 갱신하시겠습니까?')) {
+                        handleAuthClick();
+                    }
+                }, alertTime);
+            }
+        } else {
+            console.log('저장된 유효한 토큰이 없습니다.');
+        }
+    }
+
+    /**
      * 인증 버튼 클릭 핸들러
      */
     function handleAuthClick() {
@@ -119,20 +215,45 @@
                 return;
             }
             
+            // 토큰 저장
+            saveTokenData(resp);
+            
             isAuthenticated = true;
             window.isAuthenticated = true;
-            showMessage('구글 드라이브 연동 성공!', 'success');
+            
+            const expiresIn = Math.floor(resp.expires_in / 3600);
+            showMessage(`구글 드라이브 연동 성공! (${expiresIn}시간 유효)`, 'success');
             updateDriveButton();
             
             // 기본 파일 목록 표시
             listFiles();
         };
 
-        if (gapi.client.getToken() === null) {
-            // 처음 인증
-            tokenClient.requestAccessToken({prompt: 'consent'});
+        // 24시간마다 한 번만 consent 요구
+        const savedToken = getSavedToken();
+        const lastConsentTime = localStorage.getItem('lastGoogleConsentTime');
+        const now = Date.now();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+        
+        let shouldPromptConsent = false;
+        
+        if (!lastConsentTime || (now - parseInt(lastConsentTime)) > oneDayMs) {
+            shouldPromptConsent = true;
+            localStorage.setItem('lastGoogleConsentTime', now.toString());
+        }
+
+        if (gapi.client.getToken() === null || !savedToken) {
+            // 처음 인증이거나 토큰이 없음
+            if (shouldPromptConsent) {
+                console.log('24시간이 지났거나 처음 인증, consent 화면 표시');
+                tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+                console.log('24시간 내 재인증, 간소화된 인증 사용');
+                tokenClient.requestAccessToken({prompt: 'none'});
+            }
         } else {
-            // 이미 토큰이 있음
+            // 이미 토큰이 있으면 자동 갱신
+            console.log('기존 토큰 갱신');
             tokenClient.requestAccessToken({prompt: ''});
         }
     }
@@ -147,10 +268,14 @@
             gapi.client.setToken('');
         }
         
+        // 저장된 토큰 정보도 삭제
+        localStorage.removeItem('googleDriveToken');
+        localStorage.removeItem('lastGoogleConsentTime');
+        
         isAuthenticated = false;
         window.isAuthenticated = false;
         updateDriveButton();
-        showMessage('구글 드라이브 연결이 해제되었습니다.', 'info');
+        showMessage('구글 드라이브 연결이 완전히 해제되었습니다. 다음 연결 시 24시간 동안 유지됩니다.', 'info');
     }
 
     /**

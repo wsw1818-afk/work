@@ -298,14 +298,18 @@ header h1 {
     font-size: 30px;
     color: white;
     cursor: pointer;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s;
-    z-index: 1001;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    z-index: 2000;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .close-viewer:hover {
