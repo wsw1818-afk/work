@@ -172,36 +172,108 @@
      * 기존 토큰 확인 및 복원
      */
     function checkAndRestoreToken() {
+        console.log('토큰 복원 시작 - gapiInited:', gapiInited, 'gisInited:', gisInited);
+        
         const savedToken = getSavedToken();
         if (savedToken && gapiInited) {
-            console.log('저장된 토큰 발견, 자동 인증 시도...');
-            
-            // GAPI에 토큰 설정
-            gapi.client.setToken({
-                access_token: savedToken.access_token,
-                token_type: savedToken.token_type,
-                expires_in: Math.floor((savedToken.expires_at - Date.now()) / 1000)
+            console.log('저장된 토큰 발견, 자동 인증 시도...', {
+                expires_at: new Date(savedToken.expires_at),
+                remaining_hours: Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60))
             });
             
-            isAuthenticated = true;
-            window.isAuthenticated = true;
-            updateDriveButton();
-            
-            const remainingTime = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
-            console.log(`구글 드라이브 자동 인증 성공! 토큰 남은 시간: ${remainingTime}시간`);
-            showMessage(`구글 드라이브 자동 연결됨 (${remainingTime}시간 유효)`, 'success');
-            
-            // 토큰 만료 10분 전에 알림
-            const alertTime = savedToken.expires_at - Date.now() - (10 * 60 * 1000);
-            if (alertTime > 0) {
-                setTimeout(() => {
-                    if (confirm('구글 드라이브 토큰이 곧 만료됩니다. 지금 갱신하시겠습니까?')) {
-                        handleAuthClick();
-                    }
-                }, alertTime);
+            try {
+                // GAPI에 토큰 설정
+                gapi.client.setToken({
+                    access_token: savedToken.access_token,
+                    token_type: savedToken.token_type || 'Bearer',
+                    expires_in: Math.floor((savedToken.expires_at - Date.now()) / 1000)
+                });
+                
+                // 토큰 유효성 테스트
+                testTokenValidity(savedToken);
+                
+            } catch (error) {
+                console.error('토큰 복원 중 오류 발생:', error);
+                localStorage.removeItem('googleDriveToken');
+                console.log('손상된 토큰을 삭제했습니다.');
             }
+        } else if (savedToken && !gapiInited) {
+            console.log('토큰은 있지만 GAPI가 초기화되지 않음. 잠시 후 재시도...');
+            setTimeout(() => {
+                checkAndRestoreToken();
+            }, 1000);
         } else {
             console.log('저장된 유효한 토큰이 없습니다.');
+        }
+    }
+
+    /**
+     * 토큰 유효성 테스트
+     */
+    async function testTokenValidity(savedToken) {
+        try {
+            // Drive API로 간단한 요청을 보내서 토큰이 유효한지 확인
+            const response = await gapi.client.drive.about.get({ fields: 'user' });
+            
+            if (response && response.result) {
+                // 토큰이 유효함
+                isAuthenticated = true;
+                window.isAuthenticated = true;
+                updateDriveButton();
+                
+                const remainingTime = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+                console.log(`구글 드라이브 자동 인증 성공! 토큰 남은 시간: ${remainingTime}시간`);
+                showMessage(`구글 드라이브 자동 연결됨 (${remainingTime}시간 유효)`, 'success');
+                
+                // 토큰 만료 30분 전에 자동 갱신 시도
+                const renewTime = savedToken.expires_at - Date.now() - (30 * 60 * 1000);
+                if (renewTime > 0) {
+                    setTimeout(() => {
+                        console.log('토큰 자동 갱신 시도...');
+                        silentTokenRenewal();
+                    }, renewTime);
+                }
+                
+            } else {
+                throw new Error('토큰 검증 응답이 올바르지 않음');
+            }
+        } catch (error) {
+            console.warn('저장된 토큰이 유효하지 않음:', error.message);
+            localStorage.removeItem('googleDriveToken');
+            isAuthenticated = false;
+            window.isAuthenticated = false;
+            updateDriveButton();
+        }
+    }
+
+    /**
+     * 자동 토큰 갱신 (사용자 개입 없이)
+     */
+    function silentTokenRenewal() {
+        if (tokenClient && gisInited) {
+            console.log('자동 토큰 갱신 시도 중...');
+            
+            // 콜백을 미리 설정
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    console.warn('자동 갱신 실패:', resp.error);
+                    return;
+                }
+                
+                // 토큰 저장
+                saveTokenData(resp);
+                
+                const expiresIn = Math.floor(resp.expires_in / 3600);
+                console.log(`토큰이 자동으로 갱신되었습니다 (${expiresIn}시간 유효)`);
+                showMessage(`구글 드라이브 토큰이 자동 갱신되었습니다 (${expiresIn}시간)`, 'info');
+            };
+            
+            // prompt 없이 자동 갱신 시도
+            try {
+                tokenClient.requestAccessToken({ prompt: '' });
+            } catch (error) {
+                console.error('자동 갱신 중 오류:', error);
+            }
         }
     }
 
@@ -229,31 +301,46 @@
             listFiles();
         };
 
-        // 24시간마다 한 번만 consent 요구
+        // 현재 상태 확인
         const savedToken = getSavedToken();
+        const currentGapiToken = gapi.client.getToken();
         const lastConsentTime = localStorage.getItem('lastGoogleConsentTime');
         const now = Date.now();
         const oneDayMs = 24 * 60 * 60 * 1000;
         
-        let shouldPromptConsent = false;
+        console.log('인증 시작 상태:', {
+            savedToken: !!savedToken,
+            currentGapiToken: !!currentGapiToken,
+            lastConsentTime: lastConsentTime ? new Date(parseInt(lastConsentTime)) : null,
+            isAuthenticated: isAuthenticated
+        });
         
+        // 이미 인증되어 있다면 토큰만 갱신
+        if (isAuthenticated && (savedToken || currentGapiToken)) {
+            console.log('이미 인증된 상태, 토큰 갱신만 수행');
+            tokenClient.requestAccessToken({prompt: ''});
+            return;
+        }
+        
+        // 24시간 consent 로직
+        let shouldPromptConsent = false;
         if (!lastConsentTime || (now - parseInt(lastConsentTime)) > oneDayMs) {
             shouldPromptConsent = true;
             localStorage.setItem('lastGoogleConsentTime', now.toString());
         }
 
-        if (gapi.client.getToken() === null || !savedToken) {
-            // 처음 인증이거나 토큰이 없음
+        if (!savedToken && !currentGapiToken) {
+            // 처음 인증이거나 토큰이 전혀 없음
             if (shouldPromptConsent) {
-                console.log('24시간이 지났거나 처음 인증, consent 화면 표시');
+                console.log('24시간이 지났거나 처음 인증, 전체 consent 화면 표시');
                 tokenClient.requestAccessToken({prompt: 'consent'});
             } else {
-                console.log('24시간 내 재인증, 간소화된 인증 사용');
-                tokenClient.requestAccessToken({prompt: 'none'});
+                console.log('24시간 내 재인증, 간단한 인증 시도');
+                tokenClient.requestAccessToken({prompt: 'select_account'});
             }
         } else {
-            // 이미 토큰이 있으면 자동 갱신
-            console.log('기존 토큰 갱신');
+            // 토큰이 있지만 인증 상태가 아님 - 갱신 시도
+            console.log('토큰 갱신 시도');
             tokenClient.requestAccessToken({prompt: ''});
         }
     }

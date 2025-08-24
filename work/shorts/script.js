@@ -62,40 +62,55 @@ class MediaManager {
         }
 
         // Search and filter
-        document.getElementById('searchBox').addEventListener('input', () => {
-            this.filterAndDisplayMedia();
-        });
+        const searchBox = document.getElementById('searchBox');
+        if (searchBox) {
+            searchBox.addEventListener('input', () => {
+                this.filterAndDisplayMedia();
+            });
+        }
 
-        document.getElementById('sortBy').addEventListener('change', () => {
-            this.filterAndDisplayMedia();
-        });
+        const sortBy = document.getElementById('sortBy');
+        if (sortBy) {
+            sortBy.addEventListener('change', () => {
+                this.filterAndDisplayMedia();
+            });
+        }
 
-        document.getElementById('filterType').addEventListener('change', () => {
-            this.filterAndDisplayMedia();
-        });
-
-        document.getElementById('filterCategory').addEventListener('change', () => {
-            this.filterAndDisplayMedia();
-        });
+        const filterType = document.getElementById('filterType');
+        if (filterType) {
+            filterType.addEventListener('change', () => {
+                this.filterAndDisplayMedia();
+            });
+        }
 
         // Settings
-        document.getElementById('clearStorage').addEventListener('click', () => {
-            if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
-                this.clearAllData();
-            }
-        });
+        const clearStorage = document.getElementById('clearStorage');
+        if (clearStorage) {
+            clearStorage.addEventListener('click', () => {
+                if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
+                    this.clearAllData();
+                }
+            });
+        }
 
-        document.getElementById('exportData').addEventListener('click', () => {
-            this.exportData();
-        });
+        const exportData = document.getElementById('exportData');
+        if (exportData) {
+            exportData.addEventListener('click', () => {
+                this.exportData();
+            });
+        }
 
-        document.getElementById('importData').addEventListener('click', () => {
-            document.getElementById('importFile').click();
-        });
+        const importData = document.getElementById('importData');
+        const importFile = document.getElementById('importFile');
+        if (importData && importFile) {
+            importData.addEventListener('click', () => {
+                importFile.click();
+            });
 
-        document.getElementById('importFile').addEventListener('change', (e) => {
-            this.importData(e.target.files[0]);
-        });
+            importFile.addEventListener('change', (e) => {
+                this.importData(e.target.files[0]);
+            });
+        }
 
         // Media viewer close events - multiple approaches for reliability
         document.addEventListener('click', (e) => {
@@ -138,21 +153,33 @@ class MediaManager {
         });
 
         // Viewer actions
-        document.getElementById('markAsUpscaled').addEventListener('click', () => {
-            this.markAsUpscaled();
-        });
+        const markAsUpscaled = document.getElementById('markAsUpscaled');
+        if (markAsUpscaled) {
+            markAsUpscaled.addEventListener('click', () => {
+                this.markAsUpscaled();
+            });
+        }
 
-        document.getElementById('changeCategoryBtn').addEventListener('click', () => {
-            this.showChangeCategoryDialog();
-        });
+        const changeCategoryBtn = document.getElementById('changeCategoryBtn');
+        if (changeCategoryBtn) {
+            changeCategoryBtn.addEventListener('click', () => {
+                this.showChangeCategoryDialog();
+            });
+        }
 
-        document.getElementById('deleteMedia').addEventListener('click', () => {
-            this.deleteCurrentMedia();
-        });
+        const deleteMedia = document.getElementById('deleteMedia');
+        if (deleteMedia) {
+            deleteMedia.addEventListener('click', () => {
+                this.deleteCurrentMedia();
+            });
+        }
 
-        document.getElementById('downloadMedia').addEventListener('click', () => {
-            this.downloadCurrentMedia();
-        });
+        const downloadMedia = document.getElementById('downloadMedia');
+        if (downloadMedia) {
+            downloadMedia.addEventListener('click', () => {
+                this.downloadCurrentMedia();
+            });
+        }
 
         // Category management
         document.getElementById('addCategoryBtn')?.addEventListener('click', () => {
@@ -463,9 +490,13 @@ class MediaManager {
         const videos = this.mediaItems.filter(item => item.type === 'video');
         const totalSize = this.mediaItems.reduce((acc, item) => acc + item.size, 0);
         
-        document.getElementById('totalImages').textContent = `이미지: ${images.length}`;
-        document.getElementById('totalVideos').textContent = `영상: ${videos.length}`;
-        document.getElementById('totalSize').textContent = `전체 용량: ${this.formatFileSize(totalSize)}`;
+        const totalImagesEl = document.getElementById('totalImages');
+        const totalVideosEl = document.getElementById('totalVideos');
+        const totalSizeEl = document.getElementById('totalSize');
+        
+        if (totalImagesEl) totalImagesEl.textContent = `이미지: ${images.length}`;
+        if (totalVideosEl) totalVideosEl.textContent = `영상: ${videos.length}`;
+        if (totalSizeEl) totalSizeEl.textContent = `전체 용량: ${this.formatFileSize(totalSize)}`;
     }
 
     formatFileSize(bytes) {
@@ -492,7 +523,6 @@ class MediaManager {
         localStorage.removeItem('categories');
         this.filterAndDisplayMedia();
         this.updateStats();
-        this.updateCategoryFilters();
         this.showToast('🗑️ 모든 데이터가 삭제되었습니다');
     }
 

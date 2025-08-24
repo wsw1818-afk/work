@@ -791,6 +791,7 @@
         }
         
         // 진단 결과 표시
+        const diagnosticsText = diagnostics.join(' ');
         const needsForceInit = diagnosticsText.includes('초기화 상태를 확인할 수 없습니다') || 
                               diagnosticsText.includes('초기화가 완료되지 않았습니다');
         
