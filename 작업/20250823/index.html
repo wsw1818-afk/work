@@ -1371,6 +1371,9 @@
             }
         }
     </style>
+    <!-- Google API Scripts -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
     <div class="calendar-container">
@@ -3577,17 +3580,8 @@
                 console.error('엑셀 버튼을 찾을 수 없습니다');
             }
 
-            // 구글 드라이브
-            const driveBtn = document.getElementById('driveBtn');
-            if (driveBtn) {
-                driveBtn.addEventListener('click', function() {
-                    console.log('드라이브 버튼 클릭됨');
-                    alert('☁️ 구글 드라이브 연동은 구글 계정 로그인이 필요합니다.\n\n향후 업데이트 예정입니다!');
-                });
-                console.log('드라이브 버튼 이벤트 등록 완료');
-            } else {
-                console.error('드라이브 버튼을 찾을 수 없습니다');
-            }
+            // 구글 드라이브 - google-drive-integration.js에서 초기화됨
+            console.log('구글 드라이브 통합 스크립트에 의해 초기화됨');
 
             // 설정
             const settingsBtn = document.getElementById('settingsBtn');

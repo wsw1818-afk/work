@@ -4,7 +4,7 @@
 
     // Google API 설정
     const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.metadata.readonly';
     
     let tokenClient;
     let gapiInited = false;
@@ -79,16 +79,21 @@
      * 초기화 완료 시 버튼 활성화
      */
     function maybeEnableButtons() {
+        const driveBtn = document.getElementById('driveBtn');
+        if (!driveBtn) return;
+        
         if (gapiInited && gisInited) {
-            const driveBtn = document.getElementById('driveBtn');
-            if (driveBtn) {
-                driveBtn.disabled = false;
-                driveBtn.textContent = '☁️ 구글 드라이브 연동';
-                driveBtn.onclick = handleAuthClick;
-            }
+            driveBtn.disabled = false;
+            driveBtn.textContent = '☁️ 구글 드라이브 연동';
+            driveBtn.onclick = handleAuthClick;
             
             // 클라우드 설정 버튼이 있다면 업데이트
             updateCloudSettingsBtn();
+        } else if (!gapiInited || !gisInited) {
+            // API가 초기화되지 않았으면 설정 모달을 열도록 함
+            driveBtn.disabled = false;
+            driveBtn.textContent = '☁️ 구글 드라이브 설정';
+            driveBtn.onclick = showCloudSettingsModal;
         }
     }
 
@@ -349,6 +354,238 @@
     };
 
     /**
+     * 캘린더 메모 백업 함수
+     */
+    async function backupCalendarMemos() {
+        if (!isAuthenticated) {
+            showMessage('먼저 구글 드라이브에 연결해주세요.', 'error');
+            return;
+        }
+
+        try {
+            showMessage('달력 메모 백업 중...', 'info');
+            
+            // 로컬스토리지에서 메모 데이터 가져오기
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+            const backupData = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                memos: memos,
+                metadata: {
+                    totalMemos: Object.keys(memos).length,
+                    createdBy: 'Korean Calendar App',
+                    description: '한국 달력 앱 메모 백업'
+                }
+            };
+
+            const backupContent = JSON.stringify(backupData, null, 2);
+            const fileName = `calendar-memos-backup-${new Date().toISOString().split('T')[0]}.json`;
+            
+            await uploadBackupFile(fileName, backupContent);
+            showMessage(`✅ 달력 메모 백업 완료! (${Object.keys(memos).length}개 메모)`, 'success');
+            
+        } catch (err) {
+            console.error('백업 실패:', err);
+            showMessage(`백업 실패: ${err.message}`, 'error');
+        }
+    }
+
+    /**
+     * 백업 파일 업로드
+     */
+    async function uploadBackupFile(fileName, content) {
+        const metadata = {
+            name: fileName,
+            parents: ['appDataFolder'] // 앱 전용 폴더에 저장
+        };
+
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+        form.append('file', new Blob([content], {type: 'application/json'}));
+
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: new Headers({
+                'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+            }),
+            body: form
+        });
+
+        if (!response.ok) {
+            throw new Error(`업로드 실패: ${response.statusText}`);
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * 달력 메모 복원
+     */
+    async function restoreCalendarMemos() {
+        if (!isAuthenticated) {
+            showMessage('먼저 구글 드라이브에 연결해주세요.', 'error');
+            return;
+        }
+
+        try {
+            showMessage('백업 파일 검색 중...', 'info');
+            
+            // 앱 데이터 폴더에서 백업 파일들 검색
+            const response = await gapi.client.drive.files.list({
+                q: "parents in 'appDataFolder' and name contains 'calendar-memos-backup' and trashed=false",
+                fields: 'files(id, name, createdTime, size)',
+                orderBy: 'createdTime desc'
+            });
+
+            const backupFiles = response.result.files;
+            if (!backupFiles || backupFiles.length === 0) {
+                showMessage('백업 파일을 찾을 수 없습니다.', 'error');
+                return;
+            }
+
+            showBackupFilesList(backupFiles);
+            
+        } catch (err) {
+            console.error('복원 실패:', err);
+            showMessage(`복원 실패: ${err.message}`, 'error');
+        }
+    }
+
+    /**
+     * 백업 파일 목록 표시
+     */
+    function showBackupFilesList(files) {
+        const modal = createModal('📥 백업 파일에서 복원');
+        const content = modal.querySelector('.modal-content');
+        
+        const backupList = document.createElement('div');
+        backupList.className = 'backup-files-list';
+        backupList.style.cssText = `
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        `;
+
+        files.forEach(file => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'backup-file-item';
+            fileItem.style.cssText = `
+                display: flex;
+                align-items: center;
+                padding: 15px;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                margin-bottom: 10px;
+                cursor: pointer;
+                transition: all 0.2s;
+                background: #f9f9f9;
+            `;
+
+            const createdDate = new Date(file.createdTime).toLocaleDateString('ko-KR');
+            const createdTime = new Date(file.createdTime).toLocaleTimeString('ko-KR');
+
+            fileItem.innerHTML = `
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #2c3e50; margin-bottom: 5px;">
+                        📄 ${file.name}
+                    </div>
+                    <div style="font-size: 13px; color: #7f8c8d;">
+                        생성일: ${createdDate} ${createdTime} • 크기: ${formatFileSize(file.size)}
+                    </div>
+                </div>
+                <button class="restore-btn" onclick="restoreFromBackup('${file.id}', '${file.name}')" 
+                        style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    복원하기
+                </button>
+            `;
+
+            fileItem.addEventListener('mouseenter', () => {
+                fileItem.style.borderColor = '#3498db';
+                fileItem.style.backgroundColor = '#ecf0f1';
+            });
+            fileItem.addEventListener('mouseleave', () => {
+                fileItem.style.borderColor = '#e0e0e0';
+                fileItem.style.backgroundColor = '#f9f9f9';
+            });
+
+            backupList.appendChild(fileItem);
+        });
+
+        content.appendChild(backupList);
+
+        // 새 백업 버튼 추가
+        const newBackupBtn = document.createElement('button');
+        newBackupBtn.textContent = '📤 새 백업 만들기';
+        newBackupBtn.className = 'action-btn';
+        newBackupBtn.style.cssText = `
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            font-weight: 500;
+        `;
+        newBackupBtn.onclick = () => {
+            closeModal();
+            backupCalendarMemos();
+        };
+        content.appendChild(newBackupBtn);
+
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+    }
+
+    /**
+     * 백업에서 복원
+     */
+    window.restoreFromBackup = async function(fileId, fileName) {
+        try {
+            const confirmMsg = `정말로 "${fileName}"에서 복원하시겠습니까?\n\n현재 메모 데이터는 덮어쓰여집니다.`;
+            if (!confirm(confirmMsg)) return;
+
+            showMessage('백업 파일 복원 중...', 'info');
+            
+            const response = await gapi.client.drive.files.get({
+                fileId: fileId,
+                alt: 'media'
+            });
+
+            const backupData = JSON.parse(response.body);
+            
+            if (!backupData.memos) {
+                throw new Error('올바르지 않은 백업 파일 형식입니다.');
+            }
+
+            // 로컬스토리지에 복원
+            localStorage.setItem('calendarMemos', JSON.stringify(backupData.memos));
+            
+            // 글로벌 memos 변수 업데이트 (있다면)
+            if (window.memos) {
+                window.memos = backupData.memos;
+            }
+
+            // UI 새로고침
+            if (window.refreshAllUI) {
+                window.refreshAllUI();
+            } else if (window.displayStickyMemos) {
+                window.displayStickyMemos();
+            }
+
+            const memoCount = Object.keys(backupData.memos).length;
+            showMessage(`✅ 복원 완료! ${memoCount}개의 메모가 복원되었습니다.`, 'success');
+            
+            closeModal();
+            
+        } catch (err) {
+            console.error('복원 실패:', err);
+            showMessage(`복원 실패: ${err.message}`, 'error');
+        }
+    };
+
+    /**
      * 클라우드 설정 모달
      */
     function showCloudSettingsModal() {
@@ -357,113 +594,150 @@
         
         content.innerHTML = `
             <div class="cloud-settings-content">
-                <div class="quick-start">
-                    <h3>🚀 빠른 시작 가이드</h3>
-                    <div class="quick-start-steps">
-                        <div class="step">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <strong>Google Cloud Console 접속</strong>
-                                <p>Google Cloud Console에서 프로젝트를 생성하고 Drive API를 활성화하세요.</p>
-                                <button class="quick-btn" onclick="window.open('https://console.cloud.google.com/', '_blank')">
-                                    Console 열기
-                                </button>
-                            </div>
-                        </div>
-                        <div class="step">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <strong>OAuth 2.0 클라이언트 ID 생성</strong>
-                                <p>승인된 JavaScript 원본에 현재 도메인을 추가하세요.</p>
-                            </div>
-                        </div>
-                        <div class="step">
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <strong>API 키 및 클라이언트 ID 설정</strong>
-                                <p>아래 필드에 발급받은 정보를 입력하세요.</p>
-                            </div>
+                <div class="connection-status">
+                    <h3>📱 연결 상태</h3>
+                    <div class="status-card ${isAuthenticated ? 'connected' : 'disconnected'}">
+                        <div class="status-icon">${isAuthenticated ? '✅' : '❌'}</div>
+                        <div class="status-text">
+                            <strong>${isAuthenticated ? '연결됨' : '연결 안됨'}</strong>
+                            <p>${isAuthenticated ? '구글 드라이브가 연결되어 있습니다.' : '구글 드라이브 연결이 필요합니다.'}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="settings-section api-input">
-                    <h4>🔑 API 설정</h4>
-                    <div class="form-group highlight">
-                        <label>
-                            클라이언트 ID <span class="required">필수</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <input type="text" id="clientId" class="settings-input large" 
-                                   placeholder="000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
-                                   value="${CLIENT_ID === 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com' ? '' : CLIENT_ID}">
-                            <button class="paste-btn" onclick="pasteFromClipboard('clientId')">📋 붙여넣기</button>
+                ${isAuthenticated ? `
+                    <div class="backup-actions">
+                        <h3>📦 백업 및 복원</h3>
+                        <div class="action-buttons">
+                            <button class="backup-action-btn backup" onclick="backupCalendarMemos()">
+                                <span class="btn-icon">📤</span>
+                                <span class="btn-text">
+                                    <strong>백업하기</strong>
+                                    <small>현재 메모를 구글 드라이브에 저장</small>
+                                </span>
+                            </button>
+                            <button class="backup-action-btn restore" onclick="restoreCalendarMemos()">
+                                <span class="btn-icon">📥</span>
+                                <span class="btn-text">
+                                    <strong>복원하기</strong>
+                                    <small>구글 드라이브에서 메모 불러오기</small>
+                                </span>
+                            </button>
                         </div>
-                        <small>Google Cloud Console의 사용자 인증 정보에서 생성한 OAuth 2.0 클라이언트 ID</small>
+                    </div>
+                ` : `
+                    <div class="quick-start">
+                        <h3>🚀 빠른 시작 가이드</h3>
+                        <div class="quick-start-steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <strong>Google Cloud Console 접속</strong>
+                                    <p>Google Cloud Console에서 프로젝트를 생성하고 Drive API를 활성화하세요.</p>
+                                    <button class="quick-btn" onclick="window.open('https://console.cloud.google.com/', '_blank')">
+                                        Console 열기
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <strong>OAuth 2.0 클라이언트 ID 생성</strong>
+                                    <p>승인된 JavaScript 원본에 현재 도메인을 추가하세요.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <strong>API 키 및 클라이언트 ID 설정</strong>
+                                    <p>아래 필드에 발급받은 정보를 입력하세요.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group highlight">
-                        <label>
-                            API 키 <span class="required">필수</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <input type="password" id="apiKey" class="settings-input large" 
-                                   placeholder="AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                                   value="${API_KEY === 'YOUR_API_KEY_HERE' ? '' : API_KEY}">
-                            <button class="paste-btn" onclick="pasteFromClipboard('apiKey')">📋 붙여넣기</button>
+                    <div class="settings-section api-input">
+                        <h4>🔑 API 설정</h4>
+                        <div class="form-group highlight">
+                            <label>
+                                클라이언트 ID <span class="required">필수</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="text" id="clientId" class="settings-input large" 
+                                       placeholder="000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
+                                       value="${CLIENT_ID === 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com' ? '' : CLIENT_ID}">
+                                <button class="paste-btn" onclick="pasteFromClipboard('clientId')">📋 붙여넣기</button>
+                            </div>
+                            <small>Google Cloud Console의 사용자 인증 정보에서 생성한 OAuth 2.0 클라이언트 ID</small>
                         </div>
-                        <small>Google Cloud Console에서 생성한 API 키 (브라우저 키 권장)</small>
+
+                        <div class="form-group highlight">
+                            <label>
+                                API 키 <span class="required">필수</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="password" id="apiKey" class="settings-input large" 
+                                       placeholder="AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                                       value="${API_KEY === 'YOUR_API_KEY_HERE' ? '' : API_KEY}">
+                                <button class="paste-btn" onclick="pasteFromClipboard('apiKey')">📋 붙여넣기</button>
+                            </div>
+                            <small>Google Cloud Console에서 생성한 API 키 (브라우저 키 권장)</small>
+                        </div>
                     </div>
-                </div>
 
-                <div class="test-section">
-                    <button class="test-btn large" onclick="testGoogleDriveConnection()">
-                        🧪 연결 테스트
-                    </button>
-                    <div id="testResult" class="test-result" style="display: none;"></div>
-                </div>
+                    <div class="test-section">
+                        <button class="test-btn large" onclick="testGoogleDriveConnection()">
+                            🧪 연결 테스트
+                        </button>
+                        <div id="testResult" class="test-result" style="display: none;"></div>
+                    </div>
 
-                <div class="settings-actions">
-                    <button class="save-btn big" onclick="saveCloudSettings()">💾 설정 저장</button>
-                    <button class="cancel-btn" onclick="closeModal()">취소</button>
-                </div>
+                    <div class="settings-actions">
+                        <button class="save-btn big" onclick="saveCloudSettings()">💾 설정 저장</button>
+                        <button class="cancel-btn" onclick="closeModal()">취소</button>
+                    </div>
 
-                <div class="help-section">
-                    <details>
-                        <summary>📚 상세 설정 가이드</summary>
-                        <div class="help-content">
-                            <h5>1. Google Cloud Console 설정</h5>
-                            <ol>
-                                <li>Google Cloud Console 접속</li>
-                                <li>프로젝트 생성 또는 선택</li>
-                                <li>API 및 서비스 > 라이브러리에서 "Google Drive API" 검색 후 사용 설정</li>
-                                <li>사용자 인증 정보 > 사용자 인증 정보 만들기 > OAuth 클라이언트 ID</li>
-                                <li>애플리케이션 유형: 웹 애플리케이션</li>
-                                <li>승인된 JavaScript 원본에 현재 도메인 추가</li>
-                            </ol>
+                    <div class="help-section">
+                        <details>
+                            <summary>📚 상세 설정 가이드</summary>
+                            <div class="help-content">
+                                <h5>1. Google Cloud Console 설정</h5>
+                                <ol>
+                                    <li>Google Cloud Console 접속</li>
+                                    <li>프로젝트 생성 또는 선택</li>
+                                    <li>API 및 서비스 > 라이브러리에서 "Google Drive API" 검색 후 사용 설정</li>
+                                    <li>사용자 인증 정보 > 사용자 인증 정보 만들기 > OAuth 클라이언트 ID</li>
+                                    <li>애플리케이션 유형: 웹 애플리케이션</li>
+                                    <li>승인된 JavaScript 원본에 현재 도메인 추가</li>
+                                </ol>
 
-                            <h5>2. API 키 생성</h5>
-                            <ol>
-                                <li>사용자 인증 정보 > 사용자 인증 정보 만들기 > API 키</li>
-                                <li>API 키 제한 > 브라우저 키로 설정</li>
-                                <li>웹사이트 제한사항에 현재 도메인 추가</li>
-                            </ol>
+                                <h5>2. API 키 생성</h5>
+                                <ol>
+                                    <li>사용자 인증 정보 > 사용자 인증 정보 만들기 > API 키</li>
+                                    <li>API 키 제한 > 브라우저 키로 설정</li>
+                                    <li>웹사이트 제한사항에 현재 도메인 추가</li>
+                                </ol>
 
-                            <h5>3. 문제 해결</h5>
-                            <ul>
-                                <li><code>origin_mismatch</code> 오류: 승인된 JavaScript 원본 확인</li>
-                                <li><code>access_denied</code> 오류: OAuth 동의 화면 설정 확인</li>
-                                <li>API 키 오류: 키 제한사항 및 활성화된 API 확인</li>
-                            </ul>
-                        </div>
-                    </details>
-                </div>
+                                <h5>3. 문제 해결</h5>
+                                <ul>
+                                    <li><code>origin_mismatch</code> 오류: 승인된 JavaScript 원본 확인</li>
+                                    <li><code>access_denied</code> 오류: OAuth 동의 화면 설정 확인</li>
+                                    <li>API 키 오류: 키 제한사항 및 활성화된 API 확인</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+                `}
             </div>
         `;
 
         document.body.appendChild(modal);
         modal.style.display = 'flex';
     }
+
+    // 전역 함수로 노출
+    window.backupCalendarMemos = backupCalendarMemos;
+    window.restoreCalendarMemos = restoreCalendarMemos;
 
     /**
      * 클립보드에서 붙여넣기
@@ -673,6 +947,42 @@
                     from { transform: translateX(100%); opacity: 0; }
                     to { transform: translateX(0); opacity: 1; }
                 }
+                
+                .connection-status { margin-bottom: 25px; }
+                .status-card { 
+                    display: flex; 
+                    align-items: center; 
+                    padding: 20px; 
+                    border-radius: 12px; 
+                    margin-top: 10px;
+                    border: 2px solid #e0e0e0;
+                }
+                .status-card.connected { background: #e8f5e8; border-color: #4caf50; }
+                .status-card.disconnected { background: #ffeaea; border-color: #f44336; }
+                .status-icon { font-size: 24px; margin-right: 15px; }
+                .status-text strong { display: block; font-size: 16px; margin-bottom: 5px; }
+                .status-text p { margin: 0; color: #666; font-size: 14px; }
+                
+                .backup-actions { margin-bottom: 25px; }
+                .action-buttons { display: flex; gap: 15px; margin-top: 15px; }
+                .backup-action-btn { 
+                    flex: 1; 
+                    display: flex; 
+                    align-items: center; 
+                    padding: 20px; 
+                    border: 2px solid #e0e0e0; 
+                    border-radius: 12px; 
+                    background: white; 
+                    cursor: pointer; 
+                    transition: all 0.2s;
+                    text-align: left;
+                }
+                .backup-action-btn:hover { border-color: #3498db; background: #f8f9fa; }
+                .backup-action-btn.backup:hover { border-color: #3498db; }
+                .backup-action-btn.restore:hover { border-color: #27ae60; }
+                .btn-icon { font-size: 24px; margin-right: 15px; }
+                .btn-text strong { display: block; font-size: 16px; margin-bottom: 5px; color: #2c3e50; }
+                .btn-text small { color: #7f8c8d; font-size: 13px; }
             `;
             document.head.appendChild(styles);
         }
@@ -704,6 +1014,14 @@
             window.API_KEY = savedApiKey;
             console.log('저장된 Google Drive 설정을 불러왔습니다.');
         }
+        
+        // 버튼 초기 상태 설정
+        const driveBtn = document.getElementById('driveBtn');
+        if (driveBtn) {
+            driveBtn.disabled = false;
+            driveBtn.textContent = '☁️ 구글 드라이브 설정';
+            driveBtn.onclick = showCloudSettingsModal;
+        }
 
         // Google API 로드 대기
         if (typeof gapi !== 'undefined') {
@@ -721,21 +1039,10 @@
             window.gisLoadCallback = initializeGis;
         }
 
-        // 기존 드라이브 버튼 이벤트 재정의
+        // API 초기화 후 버튼 상태 업데이트
         setTimeout(() => {
-            const driveBtn = document.getElementById('driveBtn');
-            if (driveBtn) {
-                driveBtn.onclick = null; // 기존 이벤트 제거
-                if (gapiInited && gisInited) {
-                    driveBtn.disabled = false;
-                    driveBtn.textContent = '☁️ 구글 드라이브 연동';
-                    driveBtn.onclick = handleAuthClick;
-                } else {
-                    driveBtn.disabled = true;
-                    driveBtn.textContent = '☁️ 로딩 중...';
-                }
-            }
-        }, 1000);
+            maybeEnableButtons();
+        }, 500);
     }
 
     // 페이지 로드 완료 후 초기화
