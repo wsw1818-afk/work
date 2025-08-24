@@ -93,6 +93,22 @@
         </div>
     </div>
 
+    <!-- 카테고리 내용 보기 모달 -->
+    <div id="categoryContentModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+            <span class="close-modal">&times;</span>
+            <div class="category-content-header">
+                <h2 id="categoryContentTitle">📂 카테고리</h2>
+                <div class="category-info">
+                    <span id="categoryFileCount">0개 파일</span>
+                </div>
+            </div>
+            <div id="categoryFilesGrid" class="category-files-grid">
+                <!-- 카테고리 파일들이 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+
     <!-- 드래그 오버레이 -->
     <div class="drag-overlay" id="dragOverlay" style="display: none;">
         <div class="drag-message">

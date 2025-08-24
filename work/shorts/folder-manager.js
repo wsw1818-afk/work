@@ -360,6 +360,12 @@ class FolderMediaManager {
         document.getElementById('fileDetails').textContent = 
             `크기: ${this.formatFileSize(file.size)} | 수정일: ${new Date(file.modified).toLocaleString()}`;
         
+        // 다운로드 폴더 파일은 이동 버튼을 표시
+        const moveBtn = document.getElementById('moveFileBtn');
+        if (moveBtn) {
+            moveBtn.style.display = 'inline-block';
+        }
+        
         modal.style.display = 'flex';
     }
 
@@ -439,14 +445,94 @@ class FolderMediaManager {
             const response = await fetch(`http://localhost:3000/api/categories/${category}/files`);
             const files = await response.json();
             
-            // 여기에 카테고리 내용 표시 로직 추가
-            console.log(`${category} 폴더의 파일:`, files);
-            
-            // 간단한 알림으로 표시 (추후 모달로 개선 가능)
-            alert(`${category} 폴더에 ${files.length}개의 파일이 있습니다`);
+            this.showCategoryContent(category, files);
         } catch (error) {
             console.error('폴더 열기 오류:', error);
+            this.showNotification('❌ 폴더를 불러올 수 없습니다', 'error');
         }
+    }
+
+    showCategoryContent(categoryName, files) {
+        const modal = document.getElementById('categoryContentModal');
+        const title = document.getElementById('categoryContentTitle');
+        const fileCount = document.getElementById('categoryFileCount');
+        const filesGrid = document.getElementById('categoryFilesGrid');
+        
+        title.textContent = `📂 ${categoryName}`;
+        fileCount.textContent = `${files.length}개 파일`;
+        
+        filesGrid.innerHTML = '';
+        
+        if (files.length === 0) {
+            filesGrid.innerHTML = `
+                <div class="category-no-files">
+                    <div class="empty-icon">📁</div>
+                    <p>이 카테고리에는 파일이 없습니다</p>
+                </div>
+            `;
+        } else {
+            files.forEach(file => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'category-file-item';
+                
+                let previewElement = '';
+                if (file.type === 'image') {
+                    previewElement = `<img src="${file.path}" alt="${file.name}" class="category-file-preview">`;
+                } else if (file.type === 'video') {
+                    previewElement = `<video src="${file.path}" class="category-file-preview" muted></video>`;
+                }
+                
+                fileDiv.innerHTML = `
+                    ${previewElement}
+                    <div class="category-file-name">${file.name}</div>
+                    <div class="category-file-info">
+                        ${this.formatFileSize(file.size)} | ${new Date(file.modified).toLocaleDateString()}
+                    </div>
+                `;
+                
+                // 파일 클릭 시 미리보기
+                fileDiv.addEventListener('click', () => {
+                    this.showCategoryFilePreview(file, categoryName);
+                });
+                
+                filesGrid.appendChild(fileDiv);
+            });
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    showCategoryFilePreview(file, categoryName) {
+        // 카테고리 파일 미리보기 (기존 미리보기와 유사하지만 경로가 다름)
+        this.currentFile = { ...file, category: categoryName };
+        const modal = document.getElementById('previewModal');
+        const img = document.getElementById('previewImage');
+        const video = document.getElementById('previewVideo');
+        
+        if (file.type === 'image') {
+            img.src = file.path;
+            img.style.display = 'block';
+            video.style.display = 'none';
+        } else {
+            video.src = file.path;
+            video.style.display = 'block';
+            img.style.display = 'none';
+        }
+
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileDetails').textContent = 
+            `카테고리: ${categoryName} | 크기: ${this.formatFileSize(file.size)} | 수정일: ${new Date(file.modified).toLocaleString()}`;
+        
+        // 카테고리 내 파일은 이동 버튼을 숨김 (이미 분류된 상태)
+        const moveBtn = document.getElementById('moveFileBtn');
+        if (moveBtn) {
+            moveBtn.style.display = 'none';
+        }
+        
+        modal.style.display = 'flex';
+        
+        // 카테고리 내용 모달 닫기
+        document.getElementById('categoryContentModal').style.display = 'none';
     }
 
     updateCategorySelects() {
