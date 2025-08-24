@@ -356,6 +356,44 @@ app.post('/api/open-media-folder', async (req, res) => {
     }
 });
 
+// 카테고리 폴더 열기 API (Windows에서만 작동)
+app.post('/api/open-category-folder', async (req, res) => {
+    try {
+        const { exec } = require('child_process');
+        const { categoryName } = req.body;
+        
+        if (!categoryName) {
+            return res.status(400).json({ error: '카테고리 이름이 필요합니다' });
+        }
+        
+        const categoryPath = path.join(CATEGORIES_PATH, categoryName);
+        
+        // 폴더 존재 확인
+        try {
+            await fs.access(categoryPath);
+        } catch (error) {
+            return res.status(404).json({ error: '카테고리 폴더가 존재하지 않습니다' });
+        }
+        
+        // Windows에서 탐색기로 폴더 열기
+        if (process.platform === 'win32') {
+            exec(`explorer "${categoryPath}"`, (error) => {
+                if (error) {
+                    console.error('카테고리 폴더 열기 오류:', error);
+                    res.status(500).json({ error: '폴더를 열 수 없습니다' });
+                } else {
+                    console.log(`📂 카테고리 폴더 열림: ${categoryName}`);
+                    res.json({ success: true, message: `${categoryName} 폴더가 열렸습니다` });
+                }
+            });
+        } else {
+            res.status(400).json({ error: 'Windows에서만 지원됩니다' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // 파일 제공 (미디어 파일 직접 제공)
 app.use('/media', express.static(BASE_PATH));
 
