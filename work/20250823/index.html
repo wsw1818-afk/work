@@ -3771,7 +3771,20 @@
                             }
                         } else {
                             console.error('settingsModal을 찾을 수 없습니다 - 모든 방법 실패');
-                            alert('설정 모달을 열 수 없습니다. 페이지를 새로고침해주세요.');
+                            console.log('모달 재생성을 시도합니다...');
+                            
+                            // 설정 모달을 동적으로 재생성
+                            const recreatedModal = recreateSettingsModal();
+                            if (recreatedModal) {
+                                recreatedModal.style.display = 'block';
+                                console.log('설정 모달이 재생성되고 열렸습니다');
+                                
+                                if (typeof loadCurrentSettingsToModal === 'function') {
+                                    loadCurrentSettingsToModal();
+                                }
+                            } else {
+                                alert('설정 모달을 열 수 없습니다. 페이지를 새로고침해주세요.');
+                            }
                         }
                     }, 100);
                 });
@@ -3933,9 +3946,103 @@
             console.log('모든 버튼 초기화 완료!');
         }
 
+        // DOM 변화 감지기 설정 (모달 제거 추적)
+        function setupModalWatcher() {
+            const modals = document.querySelectorAll('.modal');
+            console.log('🔍 초기 모달 개수:', modals.length, '모달 ID들:', Array.from(modals).map(m => m.id));
+            
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        mutation.removedNodes.forEach(function(node) {
+                            if (node.nodeType === Node.ELEMENT_NODE && 
+                                (node.classList && node.classList.contains('modal') || (node.id && node.id.includes('Modal')))) {
+                                console.error('🚨 모달이 제거되었습니다:', node.id || node.className, 'by:', mutation.target);
+                                console.trace('모달 제거 스택 추적');
+                            }
+                        });
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            console.log('📊 모달 감지기 설정 완료');
+        }
+
+        // 설정 모달 재생성 함수
+        function recreateSettingsModal() {
+            try {
+                // 기존 모달이 있으면 제거
+                const existingModal = document.getElementById('settingsModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // 새 모달 생성
+                const modalHTML = `
+                <div class="modal" id="settingsModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title">⚙️ 설정</h2>
+                            <button class="modal-close" onclick="cancelSettings()">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">테마</label>
+                                <select class="form-select" id="themeSelect">
+                                    <option value="light">☀️ 라이트 모드</option>
+                                    <option value="dark">🌙 다크 모드</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">글꼴 크기: <span id="fontDisplay">100%</span></label>
+                                <input type="range" class="form-range" id="fontSlider" min="0.8" max="1.5" step="0.1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">달력 가로 크기: <span id="widthDisplay">100%</span></label>
+                                <input type="range" class="form-range" id="widthSlider" min="0.8" max="2.0" step="0.1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">달력 세로 크기: <span id="heightDisplay">100%</span></label>
+                                <input type="range" class="form-range" id="heightSlider" min="0.8" max="2.0" step="0.1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">주 시작일</label>
+                                <select class="form-select">
+                                    <option value="일요일">일요일</option>
+                                    <option value="월요일">월요일</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-primary" onclick="saveSettings()">저장</button>
+                            <button class="btn-secondary" onclick="cancelSettings()">취소</button>
+                        </div>
+                    </div>
+                </div>`;
+                
+                // DOM에 추가
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                const newModal = document.getElementById('settingsModal');
+                console.log('✅ 설정 모달이 재생성되었습니다:', newModal);
+                
+                return newModal;
+                
+            } catch (error) {
+                console.error('설정 모달 재생성 실패:', error);
+                return null;
+            }
+        }
+
         // 초기화
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM 로딩 완료 - 초기화 시작');
+            setupModalWatcher();
             
             try {
                 // 설정 로드

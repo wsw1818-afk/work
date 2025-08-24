@@ -85,11 +85,18 @@ class FolderMediaManager {
             this.createCategory();
         });
 
-        // 모달 닫기
+        // 모달 닫기 - X 버튼
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.target.closest('.modal, .preview-modal').style.display = 'none';
             });
+        });
+
+        // 모달 닫기 - 모달 외부 클릭
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal') || e.target.classList.contains('preview-modal')) {
+                e.target.style.display = 'none';
+            }
         });
 
         // 파일 이동 버튼
