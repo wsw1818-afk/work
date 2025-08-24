@@ -340,26 +340,18 @@ app.post('/api/open-media-folder', async (req, res) => {
         
         // Windows에서 탐색기로 폴더 열기
         if (process.platform === 'win32') {
-            console.log(`폴더 열기 시도: ${BASE_PATH}`);
-            exec(`explorer "${BASE_PATH}"`, (error, stdout, stderr) => {
+            exec(`explorer "${BASE_PATH}"`, (error) => {
                 if (error) {
                     console.error('폴더 열기 오류:', error);
-                    console.error('stderr:', stderr);
-                    if (!res.headersSent) {
-                        res.status(500).json({ error: '폴더를 열 수 없습니다', details: error.message });
-                    }
+                    res.status(500).json({ error: '폴더를 열 수 없습니다' });
                 } else {
-                    console.log('폴더 열기 성공:', stdout);
-                    if (!res.headersSent) {
-                        res.json({ success: true, message: '폴더가 열렸습니다' });
-                    }
+                    res.json({ success: true, message: '폴더가 열렸습니다' });
                 }
             });
         } else {
             res.status(400).json({ error: 'Windows에서만 지원됩니다' });
         }
     } catch (error) {
-        console.error('API 오류:', error);
         res.status(500).json({ error: error.message });
     }
 });
