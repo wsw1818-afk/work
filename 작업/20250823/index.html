@@ -17,25 +17,56 @@
             box-sizing: border-box;
         }
 
+        /* 고해상도 디스플레이 최적화 */
+        html {
+            /* 텍스트 렌더링 최적화 */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            
+            /* 고해상도 디스플레이 지원 */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            
+            /* 하드웨어 가속 */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            
+            /* 픽셀 렌더링 최적화 */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
         body {
-            font-family: 'Malgun Gothic', sans-serif;
+            font-family: 'Malgun Gothic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: calc(16px * var(--font-scale));
+            
+            /* 텍스트 선명도 향상 */
+            font-feature-settings: "liga", "kern";
+            font-variant-ligatures: common-ligatures;
+            font-kerning: auto;
+            
+            /* 부드러운 스크롤링 */
+            scroll-behavior: smooth;
         }
 
         .calendar-container {
             max-width: calc(1200px * var(--width-scale));
+            width: calc(1200px * var(--width-scale)); /* 고정 너비, 글자크기와 독립 */
+            height: auto; /* 높이는 내용에 따라 자동 조정하되 글자크기와 독립 */
             margin: 20px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            transform: scale(var(--width-scale), var(--height-scale));
+            /* transform scale 제거 - 글자크기 변경 시 달력 크기 영향 방지 */
             transform-origin: center top;
         }
 
@@ -132,12 +163,14 @@
 
         .day {
             min-height: calc(120px * var(--height-scale));
+            width: calc(var(--base-day-width, 160px) * var(--width-scale)); /* 고정 너비, 글자크기와 독립 */
             padding: 15px;
             background: white;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
+            box-sizing: border-box; /* padding 포함한 크기 계산 */
         }
 
         .day:hover {
@@ -1233,11 +1266,13 @@
                 margin: 10px;
                 padding: 20px;
                 max-width: calc(95vw * var(--width-scale));
+                /* 달력 컨테이너 크기는 글자크기와 독립적으로 유지 */
             }
             
             .day {
                 min-height: calc(80px * var(--height-scale));
                 padding: 10px;
+                /* 날짜 셀 높이는 글자크기와 독립적으로 유지 */
             }
             
             .day-number {
@@ -1257,6 +1292,82 @@
                 max-width: none;
                 padding: 15px;
                 max-height: calc(100vh - 20px);
+            }
+        }
+
+        /* 고해상도 디스플레이 최적화 (Retina, 4K, etc.) */
+        @media only screen and (-webkit-min-device-pixel-ratio: 2),
+               only screen and (min--moz-device-pixel-ratio: 2),
+               only screen and (-o-min-device-pixel-ratio: 2/1),
+               only screen and (min-device-pixel-ratio: 2),
+               only screen and (min-resolution: 192dpi),
+               only screen and (min-resolution: 2dppx) {
+            
+            /* 텍스트 렌더링 강화 */
+            body {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                text-rendering: optimizeLegibility;
+                font-variant-ligatures: common-ligatures;
+                font-feature-settings: "liga", "kern", "clig", "calt";
+            }
+            
+            /* 고해상도에서 더 선명한 보더 */
+            .day, .memo-item, .sticky-memo, .memo-modal-content {
+                border-width: 0.5px;
+            }
+            
+            /* 아이콘과 이모지 선명도 향상 */
+            .memo-item-title::before,
+            .memo-item-date::before,
+            .theme-toggle,
+            .nav-btn,
+            .action-btn {
+                text-shadow: 0 0 1px rgba(0,0,0,0.1);
+                -webkit-font-smoothing: antialiased;
+            }
+            
+            /* 그림자 효과 세밀화 */
+            .calendar-container {
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08),
+                           0 20px 40px rgba(0, 0, 0, 0.06);
+            }
+            
+            .day:hover {
+                box-shadow: 0 2.5px 7.5px rgba(0, 0, 0, 0.08);
+            }
+            
+            /* 버튼 호버 효과 세밀화 */
+            .action-btn:hover, .nav-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            }
+        }
+
+        /* 초고해상도 디스플레이 (4K+) */
+        @media only screen and (min-resolution: 300dpi),
+               only screen and (min-resolution: 3dppx) {
+            
+            /* 폰트 크기 미세 조정 */
+            body {
+                font-size: calc(16px * var(--font-scale) * 0.98);
+            }
+            
+            /* 더욱 세밀한 간격 조정 */
+            .day {
+                padding: 12px;
+            }
+            
+            .memo-item {
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+            
+            /* 초미세 그림자 */
+            .calendar-container {
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.04),
+                           0 10px 20px rgba(0, 0, 0, 0.03),
+                           0 20px 40px rgba(0, 0, 0, 0.02);
             }
         }
     </style>
@@ -1355,8 +1466,9 @@
                     </div>
                     <div id="alarmSettings" style="display: none; margin-left: 20px;">
                         <div style="margin-bottom: 10px;">
-                            <label class="form-label" style="margin-bottom: 5px;">알람 시간 (분 전)</label>
-                            <select class="form-select" id="alarmMinutes" style="width: 150px;">
+                            <label class="form-label" style="margin-bottom: 5px;">알람 시간</label>
+                            <select class="form-select" id="alarmMinutes" style="width: 200px;">
+                                <option value="0">⚡ 바로 활성화 (지정 시간에)</option>
                                 <option value="5">5분 전</option>
                                 <option value="10">10분 전</option>
                                 <option value="15" selected>15분 전</option>
@@ -1369,6 +1481,18 @@
                         <div style="margin-bottom: 10px;">
                             <label class="form-label" style="margin-bottom: 5px;">알람 메시지</label>
                             <input type="text" class="form-input" id="alarmMessage" placeholder="알람 메시지를 입력하세요 (선택사항)" style="font-size: 14px;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label class="form-label" style="margin-bottom: 5px;">⏰ 반복 알람 설정</label>
+                            <select class="form-select" id="alarmRepeat" style="width: 200px;">
+                                <option value="none">한 번만</option>
+                                <option value="1">1분마다 반복</option>
+                                <option value="5">5분마다 반복</option>
+                                <option value="10">10분마다 반복</option>
+                                <option value="15">15분마다 반복</option>
+                                <option value="30">30분마다 반복</option>
+                                <option value="60">1시간마다 반복</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1459,7 +1583,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">⚙️ 설정</h2>
-                <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+                <button class="modal-close" onclick="cancelSettings()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1510,7 +1634,7 @@
                     </select>
                 </div>
                 <button class="btn-primary" onclick="saveSettings()">설정 저장</button>
-                <button class="btn-secondary" onclick="closeModal('settingsModal')">취소</button>
+                <button class="btn-secondary" onclick="cancelSettings()">취소</button>
             </div>
         </div>
     </div>
@@ -1714,7 +1838,10 @@
                 alarm: enableAlarm ? {
                     enabled: true,
                     minutesBefore: parseInt(document.getElementById('alarmMinutes').value),
-                    message: document.getElementById('alarmMessage').value.trim() || title
+                    message: document.getElementById('alarmMessage').value.trim() || title,
+                    repeat: document.getElementById('alarmRepeat').value,
+                    repeatInterval: document.getElementById('alarmRepeat').value !== 'none' 
+                        ? parseInt(document.getElementById('alarmRepeat').value) : 0
                 } : { enabled: false },
                 timestamp: new Date().toISOString()
             };
@@ -1740,10 +1867,13 @@
             document.getElementById('enableAlarm').checked = false;
             document.getElementById('alarmSettings').style.display = 'none';
             document.getElementById('alarmMessage').value = '';
+            document.getElementById('alarmRepeat').value = 'none';
         }
 
         // 알람 관리 시스템
         let activeAlarms = new Map(); // 활성 알람 저장
+        let repeatingAlarms = new Map(); // 반복 알람 저장
+        let acknowledgedAlarms = new Set(); // 확인된 알람 저장
 
         function scheduleAlarm(schedule) {
             const scheduleDateTime = new Date(schedule.date + 'T' + schedule.time);
@@ -1752,16 +1882,64 @@
             
             if (alarmTime > now) {
                 const timeoutId = setTimeout(() => {
-                    showAlarmPopup(schedule);
+                    // 바로 활성화 옵션인 경우 특별한 메시지와 함께 표시
+                    if (schedule.alarm.minutesBefore === 0) {
+                        showAlarmPopup(schedule, false, true); // 세 번째 인자는 isImmediate
+                    } else {
+                        showAlarmPopup(schedule);
+                    }
+                    
                     activeAlarms.delete(schedule.id);
+                    
+                    // 반복 알람 시작
+                    if (schedule.alarm.repeatInterval > 0) {
+                        startRepeatingAlarm(schedule);
+                    }
                 }, alarmTime.getTime() - now.getTime());
                 
                 activeAlarms.set(schedule.id, timeoutId);
-                console.log(`알람이 설정되었습니다: ${schedule.title} - ${alarmTime.toLocaleString()}`);
+                
+                const alarmTypeMsg = schedule.alarm.minutesBefore === 0 
+                    ? `바로 활성화 - ${scheduleDateTime.toLocaleString()}`
+                    : `${schedule.alarm.minutesBefore}분 전 - ${alarmTime.toLocaleString()}`;
+                    
+                console.log(`알람이 설정되었습니다: ${schedule.title} - ${alarmTypeMsg}`);
+            } else if (schedule.alarm.minutesBefore === 0 && scheduleDateTime > now) {
+                // 바로 활성화이지만 일정 시간이 아직 미래인 경우
+                const timeoutId = setTimeout(() => {
+                    showAlarmPopup(schedule, false, true);
+                    activeAlarms.delete(schedule.id);
+                    
+                    if (schedule.alarm.repeatInterval > 0) {
+                        startRepeatingAlarm(schedule);
+                    }
+                }, scheduleDateTime.getTime() - now.getTime());
+                
+                activeAlarms.set(schedule.id, timeoutId);
+                console.log(`바로 활성화 알람이 설정되었습니다: ${schedule.title} - ${scheduleDateTime.toLocaleString()}`);
+            } else if (schedule.alarm.minutesBefore === 0 && scheduleDateTime <= now) {
+                // 바로 활성화이며 일정 시간이 이미 지난 경우 즉시 실행
+                showAlarmPopup(schedule, false, true);
+                if (schedule.alarm.repeatInterval > 0) {
+                    startRepeatingAlarm(schedule);
+                }
             }
         }
 
-        function showAlarmPopup(schedule) {
+        function startRepeatingAlarm(schedule) {
+            if (schedule.alarm.repeatInterval > 0) {
+                const intervalId = setInterval(() => {
+                    if (!acknowledgedAlarms.has(schedule.id)) {
+                        showAlarmPopup(schedule, true); // 반복 알람임을 표시
+                    }
+                }, schedule.alarm.repeatInterval * 60 * 1000); // 분 단위를 밀리초로 변환
+                
+                repeatingAlarms.set(schedule.id, intervalId);
+                console.log(`반복 알람이 설정되었습니다: ${schedule.title} - ${schedule.alarm.repeatInterval}분마다`);
+            }
+        }
+
+        function showAlarmPopup(schedule, isRepeating = false, isImmediate = false) {
             // 기존 알람 팝업이 있다면 제거
             const existingPopup = document.querySelector('.alarm-popup');
             if (existingPopup) {
@@ -1770,6 +1948,7 @@
 
             const popup = document.createElement('div');
             popup.className = 'alarm-popup';
+            popup.dataset.scheduleId = schedule.id;
             
             const scheduleDateTime = new Date(schedule.date + 'T' + schedule.time);
             const formatTime = scheduleDateTime.toLocaleString('ko-KR', {
@@ -1779,35 +1958,43 @@
                 minute: '2-digit'
             });
 
+            const repeatInfo = isRepeating && schedule.alarm.repeatInterval > 0 
+                ? `<div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 5px;">⏰ ${schedule.alarm.repeatInterval}분마다 반복</div>` 
+                : '';
+
             popup.innerHTML = `
                 <div class="alarm-popup-header">
                     <div class="alarm-popup-title">
-                        <span>🔔</span>
-                        <span>일정 알림</span>
+                        <span>${isImmediate ? '⚡' : '🔔'}</span>
+                        <span>${isRepeating ? '반복 알림' : isImmediate ? '바로 활성화 알림' : '일정 알림'}</span>
                     </div>
-                    <button class="alarm-popup-close" onclick="closeAlarmPopup(this)">✕</button>
+                    <button class="alarm-popup-close" onclick="dismissAlarmPopup(this)">✕</button>
                 </div>
                 <div class="alarm-popup-content">
                     <strong>${schedule.title}</strong>
                     ${schedule.description ? `<br><span style="font-size: 14px; opacity: 0.9;">${schedule.description}</span>` : ''}
+                    ${repeatInfo}
                 </div>
                 <div class="alarm-popup-time">
                     📅 ${formatTime}
                 </div>
                 <div class="alarm-popup-actions">
-                    <button class="alarm-popup-btn primary" onclick="closeAlarmPopup(this.parentElement.parentElement)">확인</button>
+                    <button class="alarm-popup-btn primary" onclick="acknowledgeAlarm('${schedule.id}', this.parentElement.parentElement)">확인</button>
                     <button class="alarm-popup-btn secondary" onclick="snoozeAlarm('${schedule.id}', this.parentElement.parentElement)">5분 후 다시 알림</button>
+                    ${isRepeating ? `<button class="alarm-popup-btn secondary" onclick="stopRepeatingAlarm('${schedule.id}', this.parentElement.parentElement)" style="background: rgba(229, 62, 62, 0.8);">반복 중단</button>` : ''}
                 </div>
             `;
 
             document.body.appendChild(popup);
 
-            // 10초 후 자동으로 닫기
-            setTimeout(() => {
-                if (popup.parentElement) {
-                    closeAlarmPopup(popup);
-                }
-            }, 10000);
+            // 반복 알람이 아닌 경우에만 자동으로 닫기
+            if (!isRepeating) {
+                setTimeout(() => {
+                    if (popup.parentElement) {
+                        dismissAlarmPopup(popup);
+                    }
+                }, 10000);
+            }
 
             // 브라우저 알림도 표시 (권한이 있는 경우)
             if (Notification.permission === 'granted') {
@@ -1818,13 +2005,40 @@
             }
         }
 
-        function closeAlarmPopup(popup) {
+        // 일반적인 팝업 닫기 (반복 알람은 계속됨)
+        function dismissAlarmPopup(popup) {
             popup.classList.add('fade-out');
             setTimeout(() => {
                 if (popup.parentElement) {
                     popup.remove();
                 }
             }, 300);
+        }
+
+        // 알람 확인 (반복 알람 중단)
+        function acknowledgeAlarm(scheduleId, popup) {
+            acknowledgedAlarms.add(scheduleId);
+            
+            // 반복 알람이 있다면 중단
+            if (repeatingAlarms.has(scheduleId)) {
+                clearInterval(repeatingAlarms.get(scheduleId));
+                repeatingAlarms.delete(scheduleId);
+                console.log(`반복 알람이 중단되었습니다: ${scheduleId}`);
+            }
+            
+            dismissAlarmPopup(popup);
+        }
+
+        // 반복 알람 중단
+        function stopRepeatingAlarm(scheduleId, popup) {
+            if (repeatingAlarms.has(scheduleId)) {
+                clearInterval(repeatingAlarms.get(scheduleId));
+                repeatingAlarms.delete(scheduleId);
+                acknowledgedAlarms.add(scheduleId);
+                console.log(`반복 알람이 수동으로 중단되었습니다: ${scheduleId}`);
+            }
+            
+            dismissAlarmPopup(popup);
         }
 
         function snoozeAlarm(scheduleId, popup) {
@@ -1836,7 +2050,7 @@
                 }
             }, 5 * 60 * 1000); // 5분
 
-            closeAlarmPopup(popup);
+            dismissAlarmPopup(popup);
         }
 
         // 브라우저 알림 권한 요청
@@ -1995,8 +2209,9 @@
             const container = document.querySelector('.calendar-container');
             if (container) {
                 const containerStyle = getComputedStyle(container);
-                console.log('Transform 속성:', containerStyle.transform);
+                console.log('Width 속성:', containerStyle.width);
                 console.log('Max-width 속성:', containerStyle.maxWidth);
+                console.log('글자 크기 독립성 확인: 달력 크기는 var(--font-scale)과 분리되어 적용됨');
             }
         }
 
@@ -2119,6 +2334,129 @@
             } catch (error) {
                 console.error('설정 로드 중 오류:', error);
             }
+        }
+
+        // 현재 적용된 설정을 모달에 로드하는 함수
+        let originalSettings = {}; // 원본 설정 저장용
+        
+        function loadCurrentSettingsToModal() {
+            try {
+                // 원본 설정 백업
+                originalSettings = {
+                    theme: document.documentElement.getAttribute('data-theme') || 'light',
+                    fontSize: document.documentElement.style.getPropertyValue('--font-scale') || '1.0',
+                    widthScale: document.documentElement.style.getPropertyValue('--width-scale') || '1.0',
+                    heightScale: document.documentElement.style.getPropertyValue('--height-scale') || '1.0',
+                    weekStart: localStorage.getItem('weekStart') || '일요일'
+                };
+                console.log('원본 설정 백업:', originalSettings);
+                
+                // 현재 적용된 테마를 모달에 설정
+                const themeSelect = document.getElementById('themeSelect');
+                if (themeSelect) {
+                    themeSelect.value = originalSettings.theme;
+                }
+                
+                // 현재 적용된 글꼴 크기를 모달에 설정
+                const fontSizeSlider = document.getElementById('fontSizeSlider');
+                if (fontSizeSlider) {
+                    fontSizeSlider.value = originalSettings.fontSize;
+                    updateSizeDisplay('font', originalSettings.fontSize);
+                }
+                
+                // 현재 적용된 달력 크기를 모달에 설정
+                const widthSlider = document.getElementById('widthSlider');
+                const heightSlider = document.getElementById('heightSlider');
+                if (widthSlider) {
+                    widthSlider.value = originalSettings.widthScale;
+                    updateSizeDisplay('width', originalSettings.widthScale);
+                }
+                if (heightSlider) {
+                    heightSlider.value = originalSettings.heightScale;
+                    updateSizeDisplay('height', originalSettings.heightScale);
+                }
+                
+                // 현재 적용된 주 시작일을 모달에 설정
+                const weekStartSelect = document.querySelector('#settingsModal select.form-select');
+                if (weekStartSelect) {
+                    weekStartSelect.value = originalSettings.weekStart;
+                }
+                
+            } catch (error) {
+                console.error('현재 설정 로드 중 오류:', error);
+            }
+        }
+        
+        // 설정 취소 (원본 설정으로 되돌리기)
+        function cancelSettings() {
+            try {
+                // 원본 설정으로 되돌리기
+                document.documentElement.setAttribute('data-theme', originalSettings.theme);
+                applyFontSize(parseFloat(originalSettings.fontSize));
+                applyCalendarSize(originalSettings.widthScale, originalSettings.heightScale);
+                
+                // 테마 버튼 아이콘 업데이트
+                const themeToggle = document.getElementById('themeToggle');
+                if (themeToggle) {
+                    themeToggle.textContent = originalSettings.theme === 'dark' ? '☀️' : '🌙';
+                }
+                
+                console.log('설정이 원래대로 되돌려졌습니다:', originalSettings);
+                closeModal('settingsModal');
+                
+            } catch (error) {
+                console.error('설정 취소 중 오류:', error);
+            }
+        }
+        
+        // 설정 모달 실시간 미리보기 이벤트 초기화
+        function initSettingsModalEvents() {
+            // 테마 선택 실시간 적용
+            const themeSelect = document.getElementById('themeSelect');
+            if (themeSelect) {
+                themeSelect.addEventListener('change', function() {
+                    document.documentElement.setAttribute('data-theme', this.value);
+                    const themeToggle = document.getElementById('themeToggle');
+                    if (themeToggle) {
+                        themeToggle.textContent = this.value === 'dark' ? '☀️' : '🌙';
+                    }
+                    console.log('테마 실시간 변경:', this.value);
+                });
+            }
+            
+            // 글꼴 크기 슬라이더 실시간 적용
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            if (fontSizeSlider) {
+                fontSizeSlider.addEventListener('input', function() {
+                    applyFontSize(parseFloat(this.value));
+                    updateSizeDisplay('font', this.value);
+                    console.log('글꼴 크기 실시간 변경:', this.value);
+                });
+            }
+            
+            // 달력 크기 슬라이더 실시간 적용
+            const widthSlider = document.getElementById('widthSlider');
+            if (widthSlider) {
+                widthSlider.addEventListener('input', function() {
+                    const heightValue = document.getElementById('heightSlider').value;
+                    applyCalendarSize(this.value, heightValue);
+                    updateSizeDisplay('width', this.value);
+                    console.log('달력 너비 실시간 변경:', this.value);
+                });
+            }
+            
+            const heightSlider = document.getElementById('heightSlider');
+            if (heightSlider) {
+                heightSlider.addEventListener('input', function() {
+                    const widthValue = document.getElementById('widthSlider').value;
+                    applyCalendarSize(widthValue, this.value);
+                    updateSizeDisplay('height', this.value);
+                    console.log('달력 높이 실시간 변경:', this.value);
+                });
+            }
+            
+            // 주 시작일 변경 시 즉시 달력 새로고침은 하지 않음 (저장 시에만)
+            console.log('설정 모달 실시간 미리보기 이벤트 등록 완료');
         }
 
         // 엑셀 내보내기 관련 함수들
@@ -3280,12 +3618,15 @@
                 settingsBtn.addEventListener('click', function() {
                     console.log('설정 버튼 클릭됨');
                     openModal('settingsModal');
-                    loadSettings(); // 현재 설정을 모달에 로드
+                    loadCurrentSettingsToModal(); // 현재 설정을 모달에 로드 (저장된 값이 아닌 현재 적용된 값)
                 });
                 console.log('설정 버튼 이벤트 등록 완료');
             } else {
                 console.error('설정 버튼을 찾을 수 없습니다');
             }
+
+            // 설정 모달 실시간 미리보기 이벤트
+            initSettingsModalEvents();
 
             // 메모장 모달 이벤트
             const closeMemoBtn = document.getElementById('closeMemo');
