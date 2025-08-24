@@ -131,18 +131,9 @@ class MediaManager {
             }
         });
         
-        // Close viewer with ESC key - multiple event types
+        // Close viewer with ESC key
         document.addEventListener('keydown', (e) => {
-            console.log('Key pressed:', e.key, 'Viewer open:', this.isViewerOpen());
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                this.closeViewer();
-            }
-        });
-        
-        // Additional keyup listener for reliability
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && this.isViewerOpen()) {
                 e.preventDefault();
                 this.closeViewer();
             }
@@ -368,7 +359,6 @@ class MediaManager {
     }
 
     openViewer(item) {
-        console.log('Opening viewer for:', item.name);
         const viewer = document.getElementById('mediaViewer');
         const viewerImage = document.getElementById('viewerImage');
         const viewerVideo = document.getElementById('viewerVideo');
@@ -401,7 +391,6 @@ class MediaManager {
             const existingListener = closeBtn.getAttribute('data-listener-added');
             if (!existingListener) {
                 closeBtn.addEventListener('click', (e) => {
-                    console.log('Direct close button clicked');
                     e.preventDefault();
                     e.stopPropagation();
                     this.closeViewer();
@@ -417,12 +406,9 @@ class MediaManager {
         
         // Add temporary body class to prevent scrolling
         document.body.style.overflow = 'hidden';
-        
-        console.log('Viewer opened successfully');
     }
 
     closeViewer() {
-        console.log('Closing viewer...'); // Debug log
         const viewer = document.getElementById('mediaViewer');
         const video = document.getElementById('viewerVideo');
         
@@ -437,7 +423,6 @@ class MediaManager {
         document.body.style.overflow = '';
         
         this.currentViewingItem = null;
-        console.log('Viewer closed'); // Debug log
     }
     
     isViewerOpen() {
