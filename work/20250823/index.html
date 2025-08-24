@@ -1905,11 +1905,21 @@
 
         // 모달 공통 함수
         function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'block';
+            } else {
+                console.warn('모달을 찾을 수 없습니다:', modalId);
+            }
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            } else {
+                console.warn('닫을 모달을 찾을 수 없습니다:', modalId);
+            }
         }
 
         // 공지 저장
@@ -3714,8 +3724,18 @@
             if (settingsBtn) {
                 settingsBtn.addEventListener('click', function() {
                     console.log('설정 버튼 클릭됨');
-                    openModal('settingsModal');
-                    loadCurrentSettingsToModal(); // 현재 설정을 모달에 로드 (저장된 값이 아닌 현재 적용된 값)
+                    
+                    // settingsModal이 존재하는지 확인
+                    const settingsModal = document.getElementById('settingsModal');
+                    console.log('settingsModal 찾기 결과:', settingsModal);
+                    
+                    if (settingsModal) {
+                        settingsModal.style.display = 'block';
+                        loadCurrentSettingsToModal(); // 현재 설정을 모달에 로드
+                        console.log('설정 모달이 열렸습니다');
+                    } else {
+                        console.error('settingsModal을 찾을 수 없습니다');
+                    }
                 });
                 console.log('설정 버튼 이벤트 등록 완료');
             } else {
