@@ -346,6 +346,12 @@
         try {
             showNotification('수동 동기화 시작...', 'info');
             
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateSyncStatus === 'function') {
+                window.updateSyncStatus('syncing', '동기화 중');
+            }
+            window.isCurrentlySyncing = true;
+            
             if (!window.isAuthenticated || typeof window.uploadBackupWithCustomName !== 'function') {
                 throw new Error('구글 드라이브가 연결되지 않았습니다.');
             }
@@ -358,6 +364,11 @@
                 localStorage.setItem('lastSyncTime', lastSyncTime.toString());
                 showNotification('수동 동기화 완료!', 'success');
                 updateSyncStatusUI();
+                
+                // 상태 인디케이터 업데이트
+                if (typeof window.updateSyncStatus === 'function') {
+                    window.updateSyncStatus('synced', '동기화됨', '방금 전');
+                }
             }
             
             return result;
@@ -365,7 +376,15 @@
         } catch (error) {
             console.error('수동 동기화 실패:', error);
             showNotification('수동 동기화 실패: ' + error.message, 'error');
+            
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateSyncStatus === 'function') {
+                window.updateSyncStatus('error', '동기화 실패', error.message);
+            }
+            
             throw error;
+        } finally {
+            window.isCurrentlySyncing = false;
         }
     }
 
