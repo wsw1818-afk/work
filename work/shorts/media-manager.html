@@ -20,6 +20,7 @@
         <nav class="tabs">
             <button class="tab-btn active" data-tab="images">📷 이미지</button>
             <button class="tab-btn" data-tab="videos">🎥 영상</button>
+            <button class="tab-btn" data-tab="categories">📁 카테고리</button>
             <button class="tab-btn" data-tab="upscale">🔄 업스케일 관리</button>
             <button class="tab-btn" data-tab="settings">⚙️ 설정</button>
         </nav>
@@ -31,6 +32,13 @@
             </button>
             <div class="drag-drop-area" id="dragDropArea">
                 <p>📁 파일을 드래그 & 드롭하세요</p>
+            </div>
+            <div class="category-selector" id="categorySelector" style="display: none;">
+                <label>카테고리 선택:</label>
+                <select id="uploadCategory">
+                    <option value="">카테고리 없음</option>
+                </select>
+                <button id="newCategoryBtn">+ 새 카테고리</button>
             </div>
         </div>
 
@@ -49,6 +57,9 @@
                 <option value="original">원본만</option>
                 <option value="upscaled">업스케일만</option>
             </select>
+            <select id="filterCategory">
+                <option value="all">모든 카테고리</option>
+            </select>
         </div>
 
         <div class="tab-content active" id="images-tab">
@@ -57,6 +68,18 @@
 
         <div class="tab-content" id="videos-tab">
             <div class="media-grid" id="videosGrid"></div>
+        </div>
+
+        <div class="tab-content" id="categories-tab">
+            <div class="categories-manager">
+                <div class="category-header">
+                    <h2>📁 카테고리별 콘텐츠 관리</h2>
+                    <button id="addCategoryBtn" class="add-category-btn">+ 새 카테고리 추가</button>
+                </div>
+                <div class="categories-grid" id="categoriesGrid">
+                    <!-- 카테고리 카드들이 여기 표시됨 -->
+                </div>
+            </div>
         </div>
 
         <div class="tab-content" id="upscale-tab">
@@ -113,6 +136,7 @@
             <p id="viewerDetails"></p>
             <div class="viewer-actions">
                 <button id="markAsUpscaled">🔄 업스케일로 표시</button>
+                <button id="changeCategoryBtn">📁 카테고리 변경</button>
                 <button id="deleteMedia">🗑️ 삭제</button>
                 <button id="downloadMedia">⬇️ 다운로드</button>
             </div>
@@ -120,6 +144,52 @@
     </div>
 
     <div class="toast" id="toast"></div>
+
+    <!-- 카테고리 추가 모달 -->
+    <div class="modal" id="categoryModal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h3>새 카테고리 추가</h3>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label>카테고리 이름:</label>
+                    <input type="text" id="categoryName" required placeholder="예: 여행, 요리, 게임 등">
+                </div>
+                <div class="form-group">
+                    <label>설명 (선택):</label>
+                    <textarea id="categoryDescription" placeholder="카테고리 설명을 입력하세요"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>색상:</label>
+                    <input type="color" id="categoryColor" value="#3498db">
+                </div>
+                <div class="form-group">
+                    <label>아이콘:</label>
+                    <select id="categoryIcon">
+                        <option value="📁">📁 기본</option>
+                        <option value="🎬">🎬 영화</option>
+                        <option value="🎮">🎮 게임</option>
+                        <option value="🍳">🍳 요리</option>
+                        <option value="✈️">✈️ 여행</option>
+                        <option value="📚">📚 교육</option>
+                        <option value="🏋️">🏋️ 운동</option>
+                        <option value="🎵">🎵 음악</option>
+                        <option value="🎨">🎨 예술</option>
+                        <option value="💻">💻 기술</option>
+                        <option value="🌱">🌱 라이프</option>
+                        <option value="🐾">🐾 동물</option>
+                        <option value="👗">👗 패션</option>
+                        <option value="💄">💄 뷰티</option>
+                        <option value="🏠">🏠 인테리어</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit">추가</button>
+                    <button type="button" id="cancelCategory">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

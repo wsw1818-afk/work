@@ -419,6 +419,153 @@
     }
 
     /**
+     * 사용자 지정 파일명으로 백업 업로드
+     */
+    async function uploadBackupWithCustomName(customFileName = '', silent = false) {
+        if (!isAuthenticated) {
+            const message = '먼저 구글 드라이브에 연결해주세요.';
+            if (!silent) showMessage(message, 'error');
+            throw new Error(message);
+        }
+
+        try {
+            if (!silent) showMessage('달력 메모 백업 중...', 'info');
+            
+            // 로컬스토리지에서 메모 데이터 가져오기
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+            const backupData = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                memos: memos,
+                metadata: {
+                    totalMemos: Object.keys(memos).length,
+                    createdBy: 'Korean Calendar App',
+                    description: '한국 달력 앱 메모 백업',
+                    customFileName: customFileName || null,
+                    autoSync: true
+                }
+            };
+
+            const backupContent = JSON.stringify(backupData, null, 2);
+            
+            // 파일명 처리
+            let fileName;
+            if (customFileName && customFileName.trim()) {
+                // 사용자 지정 파일명
+                fileName = customFileName.trim();
+                if (!fileName.endsWith('.json')) {
+                    fileName += '.json';
+                }
+            } else {
+                // 기본 파일명
+                fileName = `calendar-memos-backup-${new Date().toISOString().split('T')[0]}.json`;
+            }
+            
+            const result = await uploadBackupFile(fileName, backupContent);
+            
+            if (!silent) {
+                showMessage(`✅ 달력 메모 백업 완료! (${Object.keys(memos).length}개 메모) - ${fileName}`, 'success');
+            }
+            
+            return result;
+            
+        } catch (err) {
+            console.error('백업 실패:', err);
+            const message = `백업 실패: ${err.message}`;
+            if (!silent) showMessage(message, 'error');
+            throw err;
+        }
+    }
+
+    /**
+     * 파일명 입력 모달 표시
+     */
+    function showCustomBackupModal() {
+        const modal = createModal('📤 사용자 지정 백업');
+        const content = modal.querySelector('.modal-body');
+        
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        const defaultFileName = `내-달력-메모-${dateStr}-${timeStr}`;
+        
+        content.innerHTML = `
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">파일명을 지정하여 백업하세요</h3>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+                        구글 드라이브에 저장될 백업 파일의 이름을 설정할 수 있습니다.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #2c3e50;">
+                        파일명 <small style="color: #7f8c8d;">(확장자 .json은 자동으로 추가됩니다)</small>
+                    </label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                        <input type="text" id="customBackupFileName" 
+                               style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;" 
+                               value="${defaultFileName}" 
+                               placeholder="파일명을 입력하세요">
+                        <button onclick="window.generateRandomFileName()" 
+                                style="background: #3498db; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap;">
+                            🎲 랜덤생성
+                        </button>
+                    </div>
+                    <small style="color: #7f8c8d; font-size: 12px;">
+                        예: my-calendar-backup, 회사업무메모, 개인일정백업
+                    </small>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 16px; margin-right: 8px;">📊</span>
+                        <strong>백업 정보</strong>
+                    </div>
+                    <div style="font-size: 13px; color: #666; line-height: 1.4;">
+                        <div>• 현재 메모 개수: <span id="memoCount" style="font-weight: 600;">계산 중...</span></div>
+                        <div>• 백업 날짜: ${new Date().toLocaleString('ko-KR')}</div>
+                        <div>• 저장 위치: 구글 드라이브 앱 데이터 폴더</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <button onclick="window.performCustomBackup()" 
+                            style="flex: 1; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">
+                        📤 백업 시작
+                    </button>
+                    <button onclick="window.closeModal()" 
+                            style="background: #ecf0f1; color: #2c3e50; border: 1px solid #bdc3c7; padding: 15px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+                        취소
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+
+        // 메모 개수 계산
+        setTimeout(() => {
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+            const count = Object.keys(memos).length;
+            const countEl = document.getElementById('memoCount');
+            if (countEl) {
+                countEl.textContent = `${count}개`;
+            }
+        }, 100);
+
+        // 입력 필드에 포커스
+        setTimeout(() => {
+            const input = document.getElementById('customBackupFileName');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }, 200);
+    }
+
+    /**
      * 달력 메모 복원
      */
     async function restoreCalendarMemos() {
@@ -1171,6 +1318,49 @@
     window.backupCalendarMemos = backupCalendarMemos;
     window.restoreCalendarMemos = restoreCalendarMemos;
     window.showCloudSettingsModal = showCloudSettingsModal;
+    window.uploadBackupWithCustomName = uploadBackupWithCustomName;
+    window.showCustomBackupModal = showCustomBackupModal;
+    
+    /**
+     * 사용자 지정 백업 실행 함수
+     */
+    window.performCustomBackup = async function() {
+        const input = document.getElementById('customBackupFileName');
+        if (!input) return;
+        
+        const fileName = input.value.trim();
+        if (!fileName) {
+            showMessage('파일명을 입력해주세요.', 'error');
+            input.focus();
+            return;
+        }
+        
+        try {
+            await uploadBackupWithCustomName(fileName);
+            closeModal();
+        } catch (error) {
+            // 에러는 이미 uploadBackupWithCustomName에서 처리됨
+        }
+    };
+    
+    /**
+     * 랜덤 파일명 생성 함수
+     */
+    window.generateRandomFileName = function() {
+        const adjectives = ['멋진', '완벽한', '특별한', '소중한', '중요한', '유용한', '깔끔한', '똑똑한'];
+        const nouns = ['메모', '기록', '일정', '노트', '백업', '데이터', '자료', '문서'];
+        const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        
+        const randomFileName = `${randomAdj}-${randomNoun}-${randomNum}`;
+        
+        const input = document.getElementById('customBackupFileName');
+        if (input) {
+            input.value = randomFileName;
+            input.focus();
+        }
+    };
 
     /**
      * 클립보드에서 붙여넣기
