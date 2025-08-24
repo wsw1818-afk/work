@@ -80,6 +80,8 @@
                 client_id: CLIENT_ID,
                 scope: SCOPES,
                 callback: '', // 나중에 정의됨
+                // Cross-Origin-Opener-Policy 오류 해결을 위한 설정
+                ux_mode: 'popup',
                 // 24시간 지속되도록 설정
                 access_type: 'offline',
                 include_granted_scopes: true,
