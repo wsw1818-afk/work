@@ -43,6 +43,18 @@ class FolderMediaManager {
             this.loadDownloadFiles();
             this.loadCategories();
         });
+
+        this.socket.on('downloadFolderRecreated', (data) => {
+            console.log('📁 다운로드 폴더 재생성됨:', data);
+            this.showNotification(data.message);
+            this.loadDownloadFiles();
+        });
+
+        this.socket.on('downloadFolderCreated', (data) => {
+            console.log('📁 다운로드 폴더 생성됨:', data);
+            this.showNotification(data.message);
+            this.loadDownloadFiles();
+        });
     }
 
     updateConnectionStatus(connected) {
@@ -195,15 +207,96 @@ class FolderMediaManager {
     async loadDownloadFiles() {
         try {
             const response = await fetch('http://localhost:3000/api/downloads');
-            this.downloadFiles = await response.json();
-            this.displayDownloadFiles();
-            
-            // 파일 개수 업데이트
-            document.getElementById('downloadCount').textContent = 
-                `파일 ${this.downloadFiles.length}개 대기 중`;
+            if (response.ok) {
+                this.downloadFiles = await response.json();
+                this.displayDownloadFiles();
+                
+                // 파일 개수 업데이트
+                document.getElementById('downloadCount').textContent = 
+                    `파일 ${this.downloadFiles.length}개 대기 중`;
+            } else {
+                // 다운로드 폴더가 없을 경우
+                this.displayDownloadFolderMissing();
+            }
         } catch (error) {
             console.error('다운로드 파일 로드 오류:', error);
+            this.displayDownloadFolderMissing();
         }
+    }
+
+    displayDownloadFolderMissing() {
+        const container = document.getElementById('downloadFiles');
+        container.innerHTML = `
+            <div class="folder-missing">
+                <div class="missing-icon">📁❌</div>
+                <h3>다운로드 폴더를 찾을 수 없습니다</h3>
+                <p>다운로드 폴더가 삭제되었거나 접근할 수 없습니다.</p>
+                <button id="createDownloadFolderBtn" class="create-folder-btn">
+                    📁 다운로드 폴더 생성
+                </button>
+                <button id="openDownloadFolderBtn" class="open-folder-btn">
+                    📂 폴더 위치 열기
+                </button>
+            </div>
+        `;
+
+        // 다운로드 폴더 생성 버튼
+        document.getElementById('createDownloadFolderBtn').addEventListener('click', async () => {
+            await this.createDownloadFolder();
+        });
+
+        // 폴더 위치 열기 버튼 (Windows에서만 작동)
+        document.getElementById('openDownloadFolderBtn').addEventListener('click', () => {
+            // 부모 폴더 열기 요청
+            this.openMediaFolder();
+        });
+
+        // 파일 개수 업데이트
+        document.getElementById('downloadCount').textContent = '다운로드 폴더 없음';
+    }
+
+    async createDownloadFolder() {
+        try {
+            const response = await fetch('http://localhost:3000/api/create-download-folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.showNotification('✅ 다운로드 폴더가 생성되었습니다');
+                await this.loadDownloadFiles();
+            }
+        } catch (error) {
+            console.error('다운로드 폴더 생성 오류:', error);
+            this.showNotification('❌ 다운로드 폴더 생성 실패', 'error');
+        }
+    }
+
+    async checkFolderStatus() {
+        try {
+            const response = await fetch('http://localhost:3000/api/folder-status');
+            const status = await response.json();
+            
+            if (!status.downloadFolder) {
+                this.displayDownloadFolderMissing();
+            }
+            
+            return status;
+        } catch (error) {
+            console.error('폴더 상태 확인 오류:', error);
+            return null;
+        }
+    }
+
+    openMediaFolder() {
+        // 서버에 폴더 열기 요청 (Windows 환경에서만 작동)
+        fetch('http://localhost:3000/api/open-media-folder', {
+            method: 'POST'
+        }).catch(error => {
+            console.log('폴더 열기 기능은 Windows에서만 지원됩니다.');
+            this.showNotification('폴더를 수동으로 열어주세요: media/다운로드', 'info');
+        });
     }
 
     displayDownloadFiles() {

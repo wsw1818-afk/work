@@ -215,15 +215,84 @@ app.get('/api/downloads', async (req, res) => {
 // 파일을 카테고리로 이동
 app.post('/api/move-file', async (req, res) => {
     try {
+        // 다운로드 폴더 존재 확인
+        await ensureDownloadFolderExists();
+        
         const { fileName, category } = req.body;
         const oldPath = path.join(DOWNLOAD_PATH, fileName);
         const newPath = path.join(CATEGORIES_PATH, category, fileName);
+        
+        // 대상 카테고리 폴더 확인 및 생성
+        const categoryPath = path.join(CATEGORIES_PATH, category);
+        await fs.mkdir(categoryPath, { recursive: true });
         
         await fs.rename(oldPath, newPath);
         console.log(`📁 파일 이동: ${fileName} → ${category}`);
         
         io.emit('fileMoved', { fileName, category });
         res.json({ success: true, message: `파일이 '${category}' 카테고리로 이동됨` });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 다운로드 폴더 수동 생성 API
+app.post('/api/create-download-folder', async (req, res) => {
+    try {
+        await ensureDownloadFolderExists();
+        
+        // 클라이언트에 알림
+        io.emit('downloadFolderCreated', {
+            message: '다운로드 폴더가 생성되었습니다.',
+            path: DOWNLOAD_PATH
+        });
+        
+        res.json({ 
+            success: true, 
+            message: '다운로드 폴더가 생성되었습니다.',
+            path: DOWNLOAD_PATH 
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 폴더 상태 확인 API
+app.get('/api/folder-status', async (req, res) => {
+    try {
+        const status = {
+            baseFolder: false,
+            downloadFolder: false,
+            categoriesFolder: false,
+            categories: []
+        };
+        
+        // 기본 폴더 확인
+        try {
+            await fs.access(BASE_PATH);
+            status.baseFolder = true;
+        } catch {}
+        
+        // 다운로드 폴더 확인
+        try {
+            await fs.access(DOWNLOAD_PATH);
+            status.downloadFolder = true;
+        } catch {}
+        
+        // 카테고리 폴더 확인
+        try {
+            await fs.access(CATEGORIES_PATH);
+            status.categoriesFolder = true;
+            
+            const categories = await fs.readdir(CATEGORIES_PATH);
+            status.categories = categories.filter(async (cat) => {
+                const catPath = path.join(CATEGORIES_PATH, cat);
+                const stats = await fs.stat(catPath);
+                return stats.isDirectory();
+            });
+        } catch {}
+        
+        res.json(status);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -264,12 +333,43 @@ app.get('/api/categories/:name/files', async (req, res) => {
     }
 });
 
+// 미디어 폴더 열기 API (Windows에서만 작동)
+app.post('/api/open-media-folder', async (req, res) => {
+    try {
+        const { exec } = require('child_process');
+        
+        // Windows에서 탐색기로 폴더 열기
+        if (process.platform === 'win32') {
+            exec(`explorer "${BASE_PATH}"`, (error) => {
+                if (error) {
+                    console.error('폴더 열기 오류:', error);
+                    res.status(500).json({ error: '폴더를 열 수 없습니다' });
+                } else {
+                    res.json({ success: true, message: '폴더가 열렸습니다' });
+                }
+            });
+        } else {
+            res.status(400).json({ error: 'Windows에서만 지원됩니다' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // 파일 제공 (미디어 파일 직접 제공)
 app.use('/media', express.static(BASE_PATH));
 
 // 서버 시작
 server.listen(PORT, async () => {
     console.log(`🚀 서버가 포트 ${PORT}에서 실행 중입니다.`);
+    console.log(`📁 미디어 폴더: ${BASE_PATH}`);
+    console.log(`📥 다운로드 폴더: ${DOWNLOAD_PATH}`);
+    console.log(`📂 카테고리 폴더: ${CATEGORIES_PATH}`);
+    
     await initializeFolders();
     watchDownloadFolder();
+    startDownloadFolderCheck(); // 주기적 다운로드 폴더 확인 시작
+    
+    console.log('✅ 모든 시스템이 준비되었습니다.');
+    console.log('🌐 웹 인터페이스: http://localhost:3000/folder-manager.html');
 });

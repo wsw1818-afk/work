@@ -3740,17 +3740,40 @@
                 settingsBtn.addEventListener('click', function() {
                     console.log('설정 버튼 클릭됨');
                     
-                    // settingsModal이 존재하는지 확인
-                    const settingsModal = document.getElementById('settingsModal');
-                    console.log('settingsModal 찾기 결과:', settingsModal);
-                    
-                    if (settingsModal) {
-                        settingsModal.style.display = 'block';
-                        loadCurrentSettingsToModal(); // 현재 설정을 모달에 로드
-                        console.log('설정 모달이 열렸습니다');
-                    } else {
-                        console.error('settingsModal을 찾을 수 없습니다');
-                    }
+                    // DOM 완전 로드 후 다시 시도
+                    setTimeout(() => {
+                        console.log('DOM readyState:', document.readyState);
+                        console.log('전체 모달 ID 목록:', Array.from(document.querySelectorAll('.modal')).map(modal => modal.id));
+                        
+                        const settingsModal = document.getElementById('settingsModal');
+                        const settingsModalQuery = document.querySelector('#settingsModal');
+                        const settingsModalClass = document.querySelector('.modal#settingsModal');
+                        
+                        console.log('getElementById 결과:', settingsModal);
+                        console.log('querySelector 결과:', settingsModalQuery);
+                        console.log('class+id selector 결과:', settingsModalClass);
+                        
+                        const modalToUse = settingsModal || settingsModalQuery || settingsModalClass;
+                        
+                        if (modalToUse) {
+                            try {
+                                modalToUse.style.display = 'block';
+                                console.log('설정 모달이 열렸습니다:', modalToUse.id);
+                                
+                                // loadCurrentSettingsToModal 함수가 존재하는지 확인
+                                if (typeof loadCurrentSettingsToModal === 'function') {
+                                    loadCurrentSettingsToModal();
+                                } else {
+                                    console.warn('loadCurrentSettingsToModal 함수를 찾을 수 없습니다.');
+                                }
+                            } catch (error) {
+                                console.error('설정 모달 열기 중 오류:', error);
+                            }
+                        } else {
+                            console.error('settingsModal을 찾을 수 없습니다 - 모든 방법 실패');
+                            alert('설정 모달을 열 수 없습니다. 페이지를 새로고침해주세요.');
+                        }
+                    }, 100);
                 });
                 console.log('설정 버튼 이벤트 등록 완료');
             } else {
