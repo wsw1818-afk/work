@@ -11,7 +11,8 @@
       "Bash(taskkill:*)",
       "Bash(\"미디어매니저_실행.bat\")",
       "Bash(curl:*)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(start 미디어매니저_실행.bat)"
     ],
     "deny": [],
     "ask": []
