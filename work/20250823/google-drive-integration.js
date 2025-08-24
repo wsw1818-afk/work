@@ -1544,6 +1544,22 @@
             z-index: 10000;
         `;
 
+        // 백드롭 클릭 시 모달 닫기
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        const handleEsc = function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+
         const content = document.createElement('div');
         content.className = 'modal-content';
         content.style.cssText = `
@@ -1592,8 +1608,23 @@
     }
 
     window.closeModal = function() {
-        const modals = document.querySelectorAll('.drive-modal, .modal');
-        modals.forEach(modal => modal.remove());
+        const modals = document.querySelectorAll('.drive-modal, .sync-modal, .modal, [class*="modal"]');
+        modals.forEach(modal => {
+            if (modal && modal.parentNode) {
+                modal.remove();
+            }
+        });
+        
+        // 추가 안전 장치
+        const highZIndexElements = document.querySelectorAll('*');
+        highZIndexElements.forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (style.position === 'fixed' && 
+                (style.zIndex > 9999 || el.style.zIndex > 9999) &&
+                style.display !== 'none') {
+                el.remove();
+            }
+        });
     };
 
     function showMessage(message, type = 'info') {

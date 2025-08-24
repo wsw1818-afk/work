@@ -414,6 +414,22 @@
             z-index: 10000;
         `;
 
+        // 백드롭 클릭 시 모달 닫기
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                window.closeModal();
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        const handleEsc = function(e) {
+            if (e.key === 'Escape') {
+                window.closeModal();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+
         const content = document.createElement('div');
         content.className = 'modal-content';
         content.style.cssText = `
@@ -463,12 +479,26 @@
     // 전역 함수로 노출
     window.showSyncSettingsModal = showSyncSettingsModal;
 
-    // 닫기 함수 (기존 것이 없으면 추가)
-    if (!window.closeModal) {
-        window.closeModal = function() {
-            const modals = document.querySelectorAll('.sync-modal, .drive-modal, .modal');
-            modals.forEach(modal => modal.remove());
-        };
-    }
+    // 모달 닫기 함수 개선
+    window.closeModal = function() {
+        // 모든 종류의 모달 선택자 추가
+        const modals = document.querySelectorAll('.sync-modal, .drive-modal, .modal, [class*="modal"]');
+        modals.forEach(modal => {
+            if (modal && modal.parentNode) {
+                modal.remove();
+            }
+        });
+        
+        // 백드롭 클릭으로 모달이 닫히지 않는 경우를 위한 추가 처리
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (style.position === 'fixed' && 
+                (style.zIndex > 9999 || el.style.zIndex > 9999) &&
+                style.display !== 'none') {
+                el.remove();
+            }
+        });
+    };
 
 })();
