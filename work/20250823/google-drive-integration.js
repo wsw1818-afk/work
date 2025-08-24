@@ -11,6 +11,12 @@
     let gisInited = false;
     let isAuthenticated = false;
 
+    // 전역 변수로 노출하여 다른 스크립트에서 접근 가능하도록
+    window.gapiInited = false;
+    window.gisInited = false;
+    window.isAuthenticated = false;
+    window.tokenClient = null;
+
     // 이 값들은 실제 Google Cloud Console에서 발급받은 값으로 교체해야 합니다
     let CLIENT_ID = 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
     let API_KEY = 'YOUR_API_KEY_HERE';
@@ -39,10 +45,12 @@
                 discoveryDocs: [DISCOVERY_DOC],
             });
             gapiInited = true;
+            window.gapiInited = true;
             console.log('Google API 초기화 완료');
         } catch (error) {
             console.error('Google API 초기화 실패:', error);
             gapiInited = false;
+            window.gapiInited = false;
         }
         
         maybeEnableButtons();
@@ -65,11 +73,15 @@
                 scope: SCOPES,
                 callback: '', // 나중에 정의됨
             });
+            window.tokenClient = tokenClient;
             gisInited = true;
+            window.gisInited = true;
             console.log('Google Identity Services 초기화 완료');
         } catch (error) {
             console.error('Google Identity Services 초기화 실패:', error);
             gisInited = false;
+            window.gisInited = false;
+            window.tokenClient = null;
         }
         
         maybeEnableButtons();
@@ -108,6 +120,7 @@
             }
             
             isAuthenticated = true;
+            window.isAuthenticated = true;
             showMessage('구글 드라이브 연동 성공!', 'success');
             updateDriveButton();
             
@@ -135,6 +148,7 @@
         }
         
         isAuthenticated = false;
+        window.isAuthenticated = false;
         updateDriveButton();
         showMessage('구글 드라이브 연결이 해제되었습니다.', 'info');
     }
@@ -1734,6 +1748,16 @@
             window.CLIENT_ID = savedClientId;
             window.API_KEY = savedApiKey;
             console.log('저장된 Google Drive 설정을 불러왔습니다.');
+            
+            // 설정이 있으면 API 초기화 재시도
+            setTimeout(() => {
+                if (typeof gapi !== 'undefined' && !window.gapiInited) {
+                    initializeGapi();
+                }
+                if (typeof google !== 'undefined' && google.accounts && !window.gisInited) {
+                    initializeGis();
+                }
+            }, 1000);
         }
         
         // 버튼 초기 상태 설정

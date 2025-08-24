@@ -25,30 +25,24 @@
             <button class="tab-btn" data-tab="settings">⚙️ 설정</button>
         </nav>
 
-        <div class="upload-area">
-            <div class="upload-controls">
-                <div class="category-selector" id="categorySelector">
-                    <label>📁 카테고리 선택:</label>
-                    <select id="uploadCategory">
-                        <option value="">카테고리 선택하세요</option>
-                    </select>
-                    <button id="newCategoryBtn">+ 새 카테고리</button>
-                </div>
-                <div class="selected-category" id="selectedCategoryDisplay" style="display: none;">
-                    <span>선택된 카테고리: </span>
-                    <span id="selectedCategoryName"></span>
+        <div class="upload-area" id="uploadArea" style="display: none;">
+            <div class="category-workspace-header">
+                <button class="back-to-categories" id="backToCategories">← 카테고리 목록으로</button>
+                <div class="current-category-info">
+                    <span id="currentCategoryIcon"></span>
+                    <span id="currentCategoryName"></span>
                 </div>
             </div>
             <input type="file" id="fileInput" multiple accept="image/*,video/*" hidden>
-            <button class="upload-btn" id="uploadBtn" disabled>
-                <span>➕ 파일 업로드 (먼저 카테고리를 선택하세요)</span>
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                <span>➕ 파일 업로드</span>
             </button>
             <div class="drag-drop-area" id="dragDropArea">
-                <p>📁 카테고리 선택 후 파일을 드래그 & 드롭하세요</p>
+                <p>📁 파일을 드래그 & 드롭하세요</p>
             </div>
         </div>
 
-        <div class="filter-controls">
+        <div class="filter-controls" id="filterControls" style="display: none;">
             <input type="text" id="searchBox" placeholder="🔍 검색...">
             <select id="sortBy">
                 <option value="date-desc">최신순</option>
@@ -63,9 +57,6 @@
                 <option value="original">원본만</option>
                 <option value="upscaled">업스케일만</option>
             </select>
-            <select id="filterCategory">
-                <option value="all">모든 카테고리</option>
-            </select>
         </div>
 
         <div class="tab-content active" id="images-tab">
@@ -77,13 +68,45 @@
         </div>
 
         <div class="tab-content" id="categories-tab">
-            <div class="categories-manager">
+            <div class="categories-manager" id="categoriesManager">
                 <div class="category-header">
                     <h2>📁 카테고리별 콘텐츠 관리</h2>
                     <button id="addCategoryBtn" class="add-category-btn">+ 새 카테고리 추가</button>
                 </div>
                 <div class="categories-grid" id="categoriesGrid">
                     <!-- 카테고리 카드들이 여기 표시됨 -->
+                </div>
+            </div>
+            <div class="category-workspace" id="categoryWorkspace" style="display: none;">
+                <div class="workspace-header">
+                    <button class="back-btn" id="backBtn">← 뒤로</button>
+                    <h2 id="workspaceCategoryName"></h2>
+                    <div class="workspace-stats">
+                        <span id="workspaceImageCount">📷 0</span>
+                        <span id="workspaceVideoCount">🎥 0</span>
+                        <span id="workspaceSize">💾 0 MB</span>
+                    </div>
+                </div>
+                <div class="workspace-controls">
+                    <input type="text" id="workspaceSearch" placeholder="🔍 이 카테고리에서 검색...">
+                    <select id="workspaceSort">
+                        <option value="date-desc">최신순</option>
+                        <option value="date-asc">오래된순</option>
+                        <option value="name-asc">이름순</option>
+                        <option value="size-desc">크기순</option>
+                    </select>
+                </div>
+                <div class="workspace-upload">
+                    <input type="file" id="workspaceFileInput" multiple accept="image/*,video/*" hidden>
+                    <button class="workspace-upload-btn" onclick="document.getElementById('workspaceFileInput').click()">
+                        <span>➕ 이 카테고리에 파일 추가</span>
+                    </button>
+                    <div class="workspace-drag-area" id="workspaceDragArea">
+                        <p>📁 파일을 드래그 & 드롭하세요</p>
+                    </div>
+                </div>
+                <div class="workspace-media-grid" id="workspaceMediaGrid">
+                    <!-- 카테고리별 미디어 표시 -->
                 </div>
             </div>
         </div>

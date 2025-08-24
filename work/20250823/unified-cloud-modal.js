@@ -791,6 +791,9 @@
         }
         
         // 진단 결과 표시
+        const needsForceInit = diagnosticsText.includes('초기화 상태를 확인할 수 없습니다') || 
+                              diagnosticsText.includes('초기화가 완료되지 않았습니다');
+        
         const resultHtml = `
             <div style="text-align: left;">
                 <strong>🔍 시스템 진단 결과:</strong><br><br>
@@ -798,6 +801,11 @@
                 <br>
                 <strong>💡 추천 해결 방법:</strong><br>
                 ${getRecommendations(diagnostics).map(item => `• ${item}<br>`).join('')}
+                ${needsForceInit ? `<br>
+                <button onclick="window.forceInitializeAPIs()" 
+                        style="background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; margin-top: 10px;">
+                    🔧 강제 초기화 실행
+                </button>` : ''}
             </div>
         `;
         
@@ -831,12 +839,117 @@
             recommendations.push('모든 설정이 완료되면 "구글 드라이브 연결" 버튼을 클릭하세요.');
         }
         
+        if (diagnosticsText.includes('초기화 상태를 확인할 수 없습니다')) {
+            recommendations.push('아래 "강제 초기화" 버튼을 클릭하여 API를 다시 초기화하세요.');
+        }
+        
         if (recommendations.length === 0) {
             recommendations.push('모든 설정이 정상입니다. 연결을 시도해보세요.');
         }
         
         return recommendations;
     }
+
+    /**
+     * 강제 API 초기화
+     */
+    window.forceInitializeAPIs = async function() {
+        showTestResult('API 강제 초기화를 시작합니다...', 'info', 'apiTestResult');
+        
+        try {
+            const clientId = localStorage.getItem('googleDriveClientId');
+            const apiKey = localStorage.getItem('googleDriveApiKey');
+            
+            if (!clientId || !apiKey) {
+                throw new Error('저장된 API 설정을 찾을 수 없습니다. 먼저 API 키와 클라이언트 ID를 설정하세요.');
+            }
+            
+            // 전역 변수 초기화
+            window.gapiInited = false;
+            window.gisInited = false;
+            window.isAuthenticated = false;
+            window.tokenClient = null;
+            
+            let initResults = [];
+            
+            // 1. Google API 강제 초기화
+            if (typeof gapi !== 'undefined') {
+                try {
+                    showTestResult('Google API 초기화 중...', 'info', 'apiTestResult');
+                    
+                    await new Promise((resolve, reject) => {
+                        gapi.load('client', async () => {
+                            try {
+                                await gapi.client.init({
+                                    apiKey: apiKey,
+                                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                                });
+                                window.gapiInited = true;
+                                initResults.push('✅ Google API 초기화 성공');
+                                resolve();
+                            } catch (error) {
+                                window.gapiInited = false;
+                                initResults.push(`❌ Google API 초기화 실패: ${error.message}`);
+                                reject(error);
+                            }
+                        });
+                    });
+                } catch (error) {
+                    initResults.push(`❌ Google API 초기화 실패: ${error.message}`);
+                }
+            } else {
+                initResults.push('❌ Google API 라이브러리가 로드되지 않았습니다.');
+            }
+            
+            // 2. Google Identity Services 강제 초기화
+            if (typeof google !== 'undefined' && google.accounts) {
+                try {
+                    showTestResult('Google Identity Services 초기화 중...', 'info', 'apiTestResult');
+                    
+                    window.tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: clientId,
+                        scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
+                        callback: (response) => {
+                            if (response.error) {
+                                console.error('인증 실패:', response.error);
+                                return;
+                            }
+                            window.isAuthenticated = true;
+                            console.log('인증 성공');
+                        },
+                    });
+                    
+                    window.gisInited = true;
+                    initResults.push('✅ Google Identity Services 초기화 성공');
+                } catch (error) {
+                    window.gisInited = false;
+                    window.tokenClient = null;
+                    initResults.push(`❌ Google Identity Services 초기화 실패: ${error.message}`);
+                }
+            } else {
+                initResults.push('❌ Google Identity Services가 로드되지 않았습니다.');
+            }
+            
+            // 결과 표시
+            const resultHtml = `
+                <div style="text-align: left;">
+                    <strong>🔧 강제 초기화 결과:</strong><br><br>
+                    ${initResults.map(item => `${item}<br>`).join('')}
+                    <br>
+                    ${window.gapiInited && window.gisInited ? 
+                        '<strong style="color: #27ae60;">✅ 초기화 완료! 이제 구글 드라이브 연결을 시도할 수 있습니다.</strong>' :
+                        '<strong style="color: #e74c3c;">❌ 일부 초기화에 실패했습니다. 페이지를 새로고침해보세요.</strong>'
+                    }
+                </div>
+            `;
+            
+            showTestResult(resultHtml, window.gapiInited && window.gisInited ? 'success' : 'error', 'apiTestResult');
+            
+        } catch (error) {
+            console.error('강제 초기화 실패:', error);
+            showTestResult(`❌ 강제 초기화 실패: ${error.message}`, 'error', 'apiTestResult');
+        }
+    };
 
     /**
      * API 설정 테스트
