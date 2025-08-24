@@ -176,8 +176,12 @@
                                 🧪 API 연결 테스트
                             </button>
                             <button onclick="window.saveAPISettings()" 
-                                    style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 15px 35px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
+                                    style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 15px 35px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; margin-right: 15px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
                                 💾 설정 저장
+                            </button>
+                            <button onclick="window.diagnoseConnection()" 
+                                    style="background: linear-gradient(135deg, #e67e22, #f39c12); color: white; border: none; padding: 15px 35px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);">
+                                🔍 연결 진단
                             </button>
                         </div>
                         
@@ -405,6 +409,9 @@
         // 이벤트 리스너 및 초기화
         setupUnifiedModalEvents();
         updateCurrentMemoCount();
+        
+        // 연결 상태 실시간 모니터링 시작
+        startConnectionMonitoring();
     }
 
     /**
@@ -599,6 +606,135 @@
     }, 1000);
 
     /**
+     * 연결 진단 함수
+     */
+    window.diagnoseConnection = function() {
+        showTestResult('시스템 진단을 시작합니다...', 'info', 'apiTestResult');
+        
+        let diagnostics = [];
+        
+        // 1. Google API 라이브러리 로딩 확인
+        if (typeof gapi === 'undefined') {
+            diagnostics.push('❌ Google API 라이브러리가 로드되지 않았습니다.');
+        } else {
+            diagnostics.push('✅ Google API 라이브러리가 로드되었습니다.');
+        }
+        
+        // 2. Google Identity Services 확인
+        if (typeof google === 'undefined' || !google.accounts) {
+            diagnostics.push('❌ Google Identity Services가 로드되지 않았습니다.');
+        } else {
+            diagnostics.push('✅ Google Identity Services가 로드되었습니다.');
+        }
+        
+        // 3. 설정 확인
+        const clientId = localStorage.getItem('googleDriveClientId');
+        const apiKey = localStorage.getItem('googleDriveApiKey');
+        
+        if (!clientId) {
+            diagnostics.push('❌ 클라이언트 ID가 저장되지 않았습니다.');
+        } else {
+            diagnostics.push('✅ 클라이언트 ID가 저장되어 있습니다.');
+            
+            if (!clientId.includes('.apps.googleusercontent.com')) {
+                diagnostics.push('⚠️ 클라이언트 ID 형식이 올바르지 않을 수 있습니다.');
+            }
+        }
+        
+        if (!apiKey) {
+            diagnostics.push('❌ API 키가 저장되지 않았습니다.');
+        } else {
+            diagnostics.push('✅ API 키가 저장되어 있습니다.');
+            
+            if (!apiKey.startsWith('AIza')) {
+                diagnostics.push('⚠️ API 키 형식이 올바르지 않을 수 있습니다.');
+            }
+        }
+        
+        // 4. 초기화 상태 확인
+        if (typeof window.gapiInited !== 'undefined') {
+            if (window.gapiInited) {
+                diagnostics.push('✅ Google API가 초기화되었습니다.');
+            } else {
+                diagnostics.push('❌ Google API 초기화가 완료되지 않았습니다.');
+            }
+        } else {
+            diagnostics.push('❌ Google API 초기화 상태를 확인할 수 없습니다.');
+        }
+        
+        if (typeof window.gisInited !== 'undefined') {
+            if (window.gisInited) {
+                diagnostics.push('✅ Google Identity Services가 초기화되었습니다.');
+            } else {
+                diagnostics.push('❌ Google Identity Services 초기화가 완료되지 않았습니다.');
+            }
+        } else {
+            diagnostics.push('❌ Google Identity Services 초기화 상태를 확인할 수 없습니다.');
+        }
+        
+        // 5. 인증 상태 확인
+        if (typeof window.isAuthenticated !== 'undefined' && window.isAuthenticated) {
+            diagnostics.push('✅ 구글 드라이브에 인증되어 있습니다.');
+        } else {
+            diagnostics.push('❌ 구글 드라이브 인증이 필요합니다.');
+        }
+        
+        // 6. 토큰 클라이언트 확인
+        if (typeof window.tokenClient !== 'undefined' && window.tokenClient) {
+            diagnostics.push('✅ Token Client가 초기화되어 있습니다.');
+        } else {
+            diagnostics.push('❌ Token Client가 초기화되지 않았습니다.');
+        }
+        
+        // 진단 결과 표시
+        const resultHtml = `
+            <div style="text-align: left;">
+                <strong>🔍 시스템 진단 결과:</strong><br><br>
+                ${diagnostics.map(item => `${item}<br>`).join('')}
+                <br>
+                <strong>💡 추천 해결 방법:</strong><br>
+                ${getRecommendations(diagnostics).map(item => `• ${item}<br>`).join('')}
+            </div>
+        `;
+        
+        showTestResult(resultHtml, 'info', 'apiTestResult');
+    };
+    
+    /**
+     * 진단 결과에 따른 추천사항 생성
+     */
+    function getRecommendations(diagnostics) {
+        const recommendations = [];
+        const diagnosticsText = diagnostics.join(' ');
+        
+        if (diagnosticsText.includes('Google API 라이브러리가 로드되지 않았습니다')) {
+            recommendations.push('페이지를 새로고침하여 Google API 라이브러리를 다시 로드하세요.');
+        }
+        
+        if (diagnosticsText.includes('설정되지 않았습니다')) {
+            recommendations.push('위의 입력 필드에 클라이언트 ID와 API 키를 입력한 후 "설정 저장" 버튼을 클릭하세요.');
+        }
+        
+        if (diagnosticsText.includes('초기화가 완료되지 않았습니다')) {
+            recommendations.push('잠시 기다린 후 다시 시도하거나 페이지를 새로고침하세요.');
+        }
+        
+        if (diagnosticsText.includes('형식이 올바르지 않을 수 있습니다')) {
+            recommendations.push('Google Cloud Console에서 올바른 클라이언트 ID와 API 키를 다시 복사하세요.');
+        }
+        
+        if (diagnosticsText.includes('인증이 필요합니다')) {
+            recommendations.push('모든 설정이 완료되면 "구글 드라이브 연결" 버튼을 클릭하세요.');
+        }
+        
+        if (recommendations.length === 0) {
+            recommendations.push('모든 설정이 정상입니다. 연결을 시도해보세요.');
+        }
+        
+        return recommendations;
+    }
+
+    /**
      * API 설정 테스트
      */
     window.testAPISettings = async function() {
@@ -661,11 +797,147 @@
     /**
      * 구글 드라이브 연결
      */
-    window.connectToDrive = function() {
-        if (typeof window.handleAuthClick === 'function') {
-            window.handleAuthClick();
-        } else {
-            showTestResult('구글 드라이브 연결 함수를 찾을 수 없습니다. 페이지를 새로고침해주세요.', 'error', 'apiTestResult');
+    window.connectToDrive = async function() {
+        showTestResult('구글 드라이브 연결 시도 중...', 'info', 'apiTestResult');
+        
+        try {
+            // 1. API 초기화 상태 확인
+            if (typeof gapi === 'undefined') {
+                throw new Error('Google API 라이브러리가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+            }
+            
+            if (typeof google === 'undefined' || !google.accounts) {
+                throw new Error('Google Identity Services가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+            }
+            
+            // 2. 설정 확인
+            const clientId = localStorage.getItem('googleDriveClientId');
+            const apiKey = localStorage.getItem('googleDriveApiKey');
+            
+            if (!clientId || !apiKey) {
+                throw new Error('API 설정이 저장되지 않았습니다. 위에서 API 키와 클라이언트 ID를 설정하고 저장하세요.');
+            }
+            
+            // 3. GAPI 초기화 확인
+            if (!window.gapiInited) {
+                showTestResult('Google API 초기화 중... 잠시 후 다시 시도해주세요.', 'info', 'apiTestResult');
+                
+                // GAPI 수동 초기화 시도
+                await new Promise((resolve, reject) => {
+                    gapi.load('client', async () => {
+                        try {
+                            await gapi.client.init({
+                                apiKey: apiKey,
+                                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                            });
+                            window.gapiInited = true;
+                            resolve();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                });
+            }
+            
+            // 4. Token Client 초기화 확인
+            if (!window.tokenClient && window.gisInited) {
+                window.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
+                    callback: (response) => {
+                        if (response.error) {
+                            let errorMessage = '인증에 실패했습니다.';
+                            let recommendations = [];
+                            
+                            switch(response.error) {
+                                case 'access_denied':
+                                    errorMessage = '사용자가 권한 요청을 거부했습니다.';
+                                    recommendations = [
+                                        '구글 계정에 로그인되어 있는지 확인하세요',
+                                        '팝업 차단기가 활성화되어 있지 않은지 확인하세요',
+                                        '다시 연결을 시도해보세요'
+                                    ];
+                                    break;
+                                case 'popup_closed_by_user':
+                                    errorMessage = '인증 창이 사용자에 의해 닫혔습니다.';
+                                    recommendations = [
+                                        '인증 창에서 "허용" 버튼을 클릭해야 합니다',
+                                        '팝업 차단기를 비활성화하고 다시 시도하세요'
+                                    ];
+                                    break;
+                                case 'invalid_client':
+                                    errorMessage = '클라이언트 ID가 올바르지 않습니다.';
+                                    recommendations = [
+                                        'Google Cloud Console에서 올바른 클라이언트 ID를 복사하세요',
+                                        '클라이언트 ID가 .apps.googleusercontent.com으로 끝나는지 확인하세요',
+                                        '승인된 JavaScript 원본에 현재 도메인이 추가되어 있는지 확인하세요'
+                                    ];
+                                    break;
+                                default:
+                                    errorMessage = `인증 오류: ${response.error}`;
+                                    recommendations = [
+                                        '페이지를 새로고침하고 다시 시도하세요',
+                                        'Google Cloud Console에서 설정을 다시 확인하세요',
+                                        '브라우저의 팝업 차단을 해제하세요'
+                                    ];
+                            }
+                            
+                            const errorHtml = `
+                                <div style="text-align: left;">
+                                    <strong>❌ ${errorMessage}</strong><br><br>
+                                    <strong>💡 해결 방법:</strong><br>
+                                    ${recommendations.map(item => `• ${item}<br>`).join('')}
+                                </div>
+                            `;
+                            
+                            showTestResult(errorHtml, 'error', 'apiTestResult');
+                            return;
+                        }
+                        
+                        window.isAuthenticated = true;
+                        
+                        // 연결 성공 시 추가 정보 표시
+                        const successHtml = `
+                            <div style="text-align: left;">
+                                <strong>✅ 구글 드라이브 연결 성공!</strong><br><br>
+                                <strong>🎉 이제 사용할 수 있는 기능:</strong><br>
+                                • 자동 메모 백업<br>
+                                • 사용자 지정 파일명으로 백업<br>
+                                • 백업 파일에서 복원<br>
+                                • 실시간 동기화<br><br>
+                                <em>2초 후 모달이 새로고침됩니다...</em>
+                            </div>
+                        `;
+                        
+                        showTestResult(successHtml, 'success', 'apiTestResult');
+                        
+                        // 모달 새로고침하여 연결된 상태 표시
+                        setTimeout(() => {
+                            window.closeModal();
+                            setTimeout(() => {
+                                window.showUnifiedCloudModal();
+                            }, 500);
+                        }, 2000);
+                    },
+                });
+            }
+            
+            // 5. 인증 시작
+            if (window.tokenClient) {
+                showTestResult('Google 인증 창이 열립니다. 계정을 선택하고 권한을 허용해주세요.', 'info', 'apiTestResult');
+                
+                if (gapi.client.getToken() === null) {
+                    window.tokenClient.requestAccessToken({prompt: 'consent'});
+                } else {
+                    window.tokenClient.requestAccessToken({prompt: ''});
+                }
+            } else {
+                throw new Error('Token Client 초기화에 실패했습니다. 클라이언트 ID를 확인해주세요.');
+            }
+            
+        } catch (error) {
+            console.error('구글 드라이브 연결 오류:', error);
+            showTestResult(`❌ 연결 실패: ${error.message}`, 'error', 'apiTestResult');
         }
     };
 

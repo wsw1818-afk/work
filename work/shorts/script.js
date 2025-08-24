@@ -25,6 +25,7 @@ class MediaManager {
         this.updateStats();
         this.updateCategoryFilters();
         this.loadCategories();
+        this.updateUploadUI();
     }
 
     setupEventListeners() {
@@ -37,16 +38,32 @@ class MediaManager {
 
         // File upload
         const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        
         fileInput.addEventListener('change', (e) => {
-            this.showCategorySelector();
-            this.pendingFiles = e.target.files;
+            if (this.selectedUploadCategory) {
+                this.handleFileUpload(e.target.files);
+            } else {
+                alert('먼저 카테고리를 선택해주세요!');
+                e.target.value = '';
+            }
+        });
+        
+        uploadBtn.addEventListener('click', () => {
+            if (this.selectedUploadCategory) {
+                document.getElementById('fileInput').click();
+            } else {
+                alert('먼저 카테고리를 선택해주세요!');
+            }
         });
 
         // Drag and drop
         const dragDropArea = document.getElementById('dragDropArea');
         dragDropArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dragDropArea.classList.add('dragover');
+            if (this.selectedUploadCategory) {
+                dragDropArea.classList.add('dragover');
+            }
         });
 
         dragDropArea.addEventListener('dragleave', () => {
@@ -56,7 +73,11 @@ class MediaManager {
         dragDropArea.addEventListener('drop', (e) => {
             e.preventDefault();
             dragDropArea.classList.remove('dragover');
-            this.handleFileUpload(e.dataTransfer.files);
+            if (this.selectedUploadCategory) {
+                this.handleFileUpload(e.dataTransfer.files);
+            } else {
+                alert('먼저 카테고리를 선택해주세요!');
+            }
         });
 
         // Search and filter
@@ -142,11 +163,7 @@ class MediaManager {
         // Upload category selector
         document.getElementById('uploadCategory')?.addEventListener('change', (e) => {
             this.selectedUploadCategory = e.target.value;
-            if (this.pendingFiles) {
-                this.handleFileUpload(this.pendingFiles);
-                this.pendingFiles = null;
-                this.hideCategorySelector();
-            }
+            this.updateUploadUI();
         });
     }
 
@@ -169,9 +186,25 @@ class MediaManager {
         if (tabName === 'categories') {
             this.displayCategories();
         }
+        
+        // Reset category filter when switching tabs
+        if (tabName === 'images' || tabName === 'videos') {
+            const filterCategory = document.getElementById('filterCategory');
+            if (filterCategory && filterCategory.value !== 'all') {
+                // Keep the category filter if it was set
+            }
+        }
     }
 
     handleFileUpload(files) {
+        if (!this.selectedUploadCategory) {
+            alert('카테고리를 먼저 선택해주세요!');
+            return;
+        }
+        
+        const categoryName = this.getCategoryName(this.selectedUploadCategory);
+        let uploadCount = 0;
+        
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
                 const reader = new FileReader();
@@ -185,20 +218,24 @@ class MediaManager {
                         dateAdded: new Date().toISOString(),
                         isUpscaled: false,
                         originalId: null,
-                        category: this.selectedUploadCategory || null
+                        category: this.selectedUploadCategory
                     };
                     this.mediaItems.push(mediaItem);
                     this.saveToLocalStorage();
                     this.filterAndDisplayMedia();
                     this.updateStats();
-                    const categoryName = this.getCategoryName(this.selectedUploadCategory);
-                    const categoryMsg = categoryName ? ` (${categoryName})` : '';
-                    this.showToast(`✅ ${file.name} 업로드 완료${categoryMsg}`);
+                    uploadCount++;
                 };
                 reader.readAsDataURL(file);
             }
         });
-        this.selectedUploadCategory = null;
+        
+        if (uploadCount > 0) {
+            this.showToast(`✅ ${uploadCount}개 파일이 '${categoryName}' 카테고리에 업로드되었습니다`);
+        }
+        
+        // Reset file input
+        document.getElementById('fileInput').value = '';
     }
 
     filterAndDisplayMedia() {
@@ -597,18 +634,29 @@ class MediaManager {
         this.showToast(`✅ '${name}' 카테고리가 추가되었습니다`);
     }
 
-    showCategorySelector() {
-        const selector = document.getElementById('categorySelector');
-        if (selector) {
-            selector.style.display = 'block';
-            this.updateCategoryFilters();
-        }
-    }
-
-    hideCategorySelector() {
-        const selector = document.getElementById('categorySelector');
-        if (selector) {
-            selector.style.display = 'none';
+    updateUploadUI() {
+        const uploadBtn = document.getElementById('uploadBtn');
+        const dragDropArea = document.getElementById('dragDropArea');
+        const selectedCategoryDisplay = document.getElementById('selectedCategoryDisplay');
+        const selectedCategoryName = document.getElementById('selectedCategoryName');
+        
+        if (this.selectedUploadCategory) {
+            const category = this.categories.find(cat => cat.id === this.selectedUploadCategory);
+            if (category) {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = `<span>➕ ${category.icon} ${category.name} 카테고리에 파일 업로드</span>`;
+                dragDropArea.innerHTML = `<p>📁 ${category.icon} ${category.name} 카테고리로 파일을 드래그 & 드롭하세요</p>`;
+                dragDropArea.style.borderColor = category.color;
+                selectedCategoryDisplay.style.display = 'block';
+                selectedCategoryName.textContent = `${category.icon} ${category.name}`;
+                selectedCategoryName.style.color = category.color;
+            }
+        } else {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span>➕ 파일 업로드 (먼저 카테고리를 선택하세요)</span>';
+            dragDropArea.innerHTML = '<p>📁 카테고리 선택 후 파일을 드래그 & 드롭하세요</p>';
+            dragDropArea.style.borderColor = '#ddd';
+            selectedCategoryDisplay.style.display = 'none';
         }
     }
 

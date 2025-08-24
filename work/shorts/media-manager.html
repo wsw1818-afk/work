@@ -26,19 +26,25 @@
         </nav>
 
         <div class="upload-area">
+            <div class="upload-controls">
+                <div class="category-selector" id="categorySelector">
+                    <label>📁 카테고리 선택:</label>
+                    <select id="uploadCategory">
+                        <option value="">카테고리 선택하세요</option>
+                    </select>
+                    <button id="newCategoryBtn">+ 새 카테고리</button>
+                </div>
+                <div class="selected-category" id="selectedCategoryDisplay" style="display: none;">
+                    <span>선택된 카테고리: </span>
+                    <span id="selectedCategoryName"></span>
+                </div>
+            </div>
             <input type="file" id="fileInput" multiple accept="image/*,video/*" hidden>
-            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                <span>➕ 파일 업로드</span>
+            <button class="upload-btn" id="uploadBtn" disabled>
+                <span>➕ 파일 업로드 (먼저 카테고리를 선택하세요)</span>
             </button>
             <div class="drag-drop-area" id="dragDropArea">
-                <p>📁 파일을 드래그 & 드롭하세요</p>
-            </div>
-            <div class="category-selector" id="categorySelector" style="display: none;">
-                <label>카테고리 선택:</label>
-                <select id="uploadCategory">
-                    <option value="">카테고리 없음</option>
-                </select>
-                <button id="newCategoryBtn">+ 새 카테고리</button>
+                <p>📁 카테고리 선택 후 파일을 드래그 & 드롭하세요</p>
             </div>
         </div>
 
