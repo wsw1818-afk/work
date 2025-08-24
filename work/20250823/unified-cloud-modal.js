@@ -609,12 +609,14 @@
      * 통합 모달 생성
      */
     function createUnifiedModal(title) {
+        console.log('🔧 [수정된 버전] createUnifiedModal 함수 실행 중 - 안전한 모달 제거 로직');
         // 기존 통합 클라우드 모달만 제거 (다른 모달은 유지)
         const existingUnifiedModals = document.querySelectorAll('.unified-modal, .sync-modal, .drive-modal');
+        console.log('🔍 제거 대상 모달들:', existingUnifiedModals.length, '개 발견');
         existingUnifiedModals.forEach(modal => {
             if (modal && modal.parentNode) {
-                modal.remove();
                 console.log(`🚪 통합 클라우드 모달 제거: ${modal.className}`);
+                modal.remove();
             }
         });
         
