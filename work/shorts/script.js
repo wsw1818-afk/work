@@ -114,13 +114,10 @@ class MediaManager {
 
         // Media viewer close events - multiple approaches for reliability
         document.addEventListener('click', (e) => {
-            console.log('Document click detected:', e.target.className, e.target.id);
-            
             // Check for close button click (multiple ways)
             if (e.target.classList.contains('close-viewer') || 
                 e.target.closest('.close-viewer') ||
                 (e.target.tagName === 'SPAN' && e.target.textContent === '×')) {
-                console.log('Close button clicked');
                 e.preventDefault();
                 e.stopPropagation();
                 this.closeViewer();
@@ -129,7 +126,6 @@ class MediaManager {
             
             // Close viewer by clicking outside content
             if (e.target.id === 'mediaViewer') {
-                console.log('Outside viewer clicked');
                 this.closeViewer();
                 return;
             }
@@ -772,17 +768,24 @@ class MediaManager {
 
     deleteCategory(categoryId) {
         if (confirm('정말로 이 카테고리를 삭제하시겠습니까? 콘텐츠는 유지됩니다.')) {
-            this.categories = this.categories.filter(cat => cat.id !== categoryId);
-            // Remove category from all media items
-            this.mediaItems.forEach(item => {
-                if (item.category === categoryId) {
-                    item.category = null;
+            // Find and remove the category
+            const categoryIndex = this.categories.findIndex(cat => cat.id === categoryId);
+            if (categoryIndex > -1) {
+                this.categories.splice(categoryIndex, 1);
+                
+                // Remove category from media items (more efficient)
+                let hasChanges = false;
+                for (let i = 0; i < this.mediaItems.length; i++) {
+                    if (this.mediaItems[i].category === categoryId) {
+                        this.mediaItems[i].category = null;
+                        hasChanges = true;
+                    }
                 }
-            });
-            this.saveToLocalStorage();
-            this.updateCategoryFilters();
-            this.displayCategories();
-            this.showToast('🗑️ 카테고리가 삭제되었습니다');
+                
+                this.saveToLocalStorage();
+                this.displayCategories();
+                this.showToast('🗑️ 카테고리가 삭제되었습니다');
+            }
         }
     }
 
@@ -811,7 +814,6 @@ class MediaManager {
         
         this.categories.push(newCategory);
         this.saveToLocalStorage();
-        this.updateCategoryFilters();
         
         if (this.currentTab === 'categories') {
             this.displayCategories();
