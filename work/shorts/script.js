@@ -100,6 +100,7 @@ class MediaManager {
         // Media viewer close events - use event delegation
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('close-viewer')) {
+                console.log('Close button clicked'); // Debug log
                 e.preventDefault();
                 e.stopPropagation();
                 this.closeViewer();
@@ -107,6 +108,7 @@ class MediaManager {
             
             // Close viewer by clicking outside content
             if (e.target.id === 'mediaViewer') {
+                console.log('Outside viewer clicked'); // Debug log
                 this.closeViewer();
             }
         });
