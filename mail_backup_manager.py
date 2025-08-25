@@ -445,12 +445,219 @@ class MailBackupManager:
         )
         
         if pst_file:
+            # 순차적으로 시도: Python 라이브러리 -> readpst -> Outlook COM
+            methods = [
+                ("Python 라이브러리", self.import_pst_using_python),
+                ("readpst 도구", self.import_pst_using_readpst),
+                ("Outlook COM", self.import_pst_using_outlook_com)
+            ]
+            
+            for method_name, method_func in methods:
+                try:
+                    print(f"시도 중: {method_name}")
+                    method_func(pst_file)
+                    break  # 성공하면 종료
+                except Exception as e:
+                    print(f"{method_name} 실패: {str(e)}")
+                    continue
+            else:
+                # 모든 방법이 실패한 경우
+                messagebox.showerror("오류", 
+                    "PST 파일을 읽을 수 없습니다.\n\n"
+                    "다음 중 하나를 설치해주세요:\n"
+                    "1. pip install pst-extractor\n"
+                    "2. libpst (readpst 도구)\n"
+                    "3. Microsoft Outlook")
+    
+    def import_pst_using_python(self, pst_file):
+        """Python 라이브러리를 사용하여 PST 파일 읽기"""
+        progress = None
+        try:
+            # pst-extractor 라이브러리 시도
             try:
-                # libpst를 사용해서 PST 파일 읽기 (readpst 명령어 사용)
-                self.import_pst_using_readpst(pst_file)
-            except Exception as e:
-                # 실패하면 Outlook COM을 사용
-                self.import_pst_using_outlook_com(pst_file)
+                import pst_extractor
+                
+                progress = tk.Toplevel(self.root)
+                progress.title("PST 파일 읽기 중...")
+                progress.geometry("450x150")
+                
+                ttk.Label(progress, text="Python 라이브러리로 PST 파일을 읽는 중...").pack(pady=10)
+                progress_bar = ttk.Progressbar(progress, mode='indeterminate')
+                progress_bar.pack(pady=10)
+                progress_bar.start()
+                
+                status_label = ttk.Label(progress, text="")
+                status_label.pack(pady=5)
+                
+                progress.update()
+                
+                imported = 0
+                
+                # PST 파일 열기
+                with pst_extractor.PstExtractor(pst_file) as pst:
+                    # 모든 폴더 순회
+                    for folder in pst.folders():
+                        folder_name = f"PST/{folder.name}" if folder.name else "PST/Root"
+                        status_label.config(text=f"처리 중: {folder_name}")
+                        progress.update()
+                        
+                        # 폴더의 모든 메시지 처리
+                        for message in folder.messages():
+                            try:
+                                # 메일 정보 추출
+                                subject = message.subject or "(제목 없음)"
+                                sender = message.sender_email or message.sender_name or "unknown"
+                                
+                                # 날짜 처리
+                                date = message.delivery_time
+                                if date:
+                                    date_str = date.strftime("%Y-%m-%d %H:%M:%S")
+                                else:
+                                    date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                
+                                # 본문 처리
+                                body = message.plain_text_body or message.html_body or ""
+                                
+                                # 받는 사람
+                                recipients = ", ".join([r.email or r.name for r in message.recipients]) if message.recipients else ""
+                                
+                                # 데이터베이스에 저장
+                                self.conn.execute('''
+                                    INSERT OR IGNORE INTO mails 
+                                    (subject, sender, recipients, date, body, folder, raw_content)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                                ''', (subject, sender, recipients, date_str, body, folder_name, body))
+                                
+                                # 첨부파일 처리
+                                for attachment in message.attachments:
+                                    if attachment.filename:
+                                        self.save_attachment_from_pst(attachment, subject, sender, date_str)
+                                
+                                imported += 1
+                                
+                            except Exception as e:
+                                print(f"메시지 처리 오류: {str(e)}")
+                                continue
+                
+                self.conn.commit()
+                progress_bar.stop()
+                progress.destroy()
+                
+                if imported > 0:
+                    messagebox.showinfo("완료", f"PST 파일에서 {imported}개의 메일을 가져왔습니다.")
+                    self.load_mails_from_db()
+                else:
+                    raise Exception("가져올 메일이 없습니다.")
+                    
+            except ImportError:
+                # pypff 라이브러리 시도
+                import pypff
+                
+                if progress:
+                    progress.destroy()
+                    
+                progress = tk.Toplevel(self.root)
+                progress.title("PST 파일 읽기 중...")
+                progress.geometry("450x150")
+                
+                ttk.Label(progress, text="pypff 라이브러리로 PST 파일을 읽는 중...").pack(pady=10)
+                progress_bar = ttk.Progressbar(progress, mode='indeterminate')
+                progress_bar.pack(pady=10)
+                progress_bar.start()
+                
+                progress.update()
+                
+                # pypff를 사용한 PST 파일 처리
+                pst = pypff.file()
+                pst.open(pst_file)
+                
+                imported = self.process_pypff_folder(pst.root_folder, "PST")
+                
+                pst.close()
+                progress_bar.stop()
+                progress.destroy()
+                
+                if imported > 0:
+                    messagebox.showinfo("완료", f"PST 파일에서 {imported}개의 메일을 가져왔습니다.")
+                    self.load_mails_from_db()
+                else:
+                    raise Exception("가져올 메일이 없습니다.")
+                    
+        except ImportError:
+            if progress:
+                progress.destroy()
+            raise Exception("Python PST 라이브러리가 설치되어 있지 않습니다.\n설치: pip install pst-extractor 또는 pip install pypff")
+        except Exception as e:
+            if progress:
+                progress.destroy()
+            raise Exception(f"Python 라이브러리로 PST 읽기 실패: {str(e)}")
+    
+    def save_attachment_from_pst(self, attachment, subject, sender, date_str):
+        """PST 첨부파일 저장"""
+        try:
+            if not os.path.exists("attachments"):
+                os.makedirs("attachments")
+            
+            # 안전한 파일명 생성
+            safe_filename = "".join(c for c in attachment.filename if c.isalnum() or c in "._- ")
+            filepath = os.path.join("attachments", f"{date_str}_{safe_filename}")
+            
+            # 파일 저장
+            with open(filepath, 'wb') as f:
+                f.write(attachment.data)
+            
+            # 데이터베이스에 기록
+            self.conn.execute('''
+                INSERT OR IGNORE INTO attachments 
+                (mail_subject, mail_sender, mail_date, filename, filepath, size)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (subject, sender, date_str, attachment.filename, filepath, len(attachment.data)))
+            
+        except Exception as e:
+            print(f"첨부파일 저장 오류: {str(e)}")
+    
+    def process_pypff_folder(self, folder, folder_path):
+        """pypff 폴더 처리"""
+        imported = 0
+        
+        try:
+            # 현재 폴더의 메시지 처리
+            for message in folder.sub_messages:
+                try:
+                    subject = message.subject or "(제목 없음)"
+                    sender = message.sender_name or "unknown"
+                    
+                    # 날짜 처리
+                    if hasattr(message, 'delivery_time') and message.delivery_time:
+                        date_str = str(message.delivery_time)[:19]
+                    else:
+                        date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    
+                    body = message.plain_text_body or ""
+                    
+                    # 데이터베이스에 저장
+                    self.conn.execute('''
+                        INSERT OR IGNORE INTO mails 
+                        (subject, sender, recipients, date, body, folder, raw_content)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (subject, sender, "", date_str, body, folder_path, body))
+                    
+                    imported += 1
+                    
+                except Exception as e:
+                    print(f"pypff 메시지 처리 오류: {str(e)}")
+                    continue
+            
+            # 하위 폴더 재귀 처리
+            for sub_folder in folder.sub_folders:
+                if sub_folder.name:
+                    sub_path = f"{folder_path}/{sub_folder.name}"
+                    imported += self.process_pypff_folder(sub_folder, sub_path)
+                    
+        except Exception as e:
+            print(f"pypff 폴더 처리 오류: {str(e)}")
+        
+        return imported
     
     def import_pst_using_readpst(self, pst_file):
         import subprocess
@@ -488,13 +695,8 @@ class MailBackupManager:
                     
             except FileNotFoundError:
                 progress.destroy()
-                messagebox.showwarning("경고", 
-                    "readpst 도구를 찾을 수 없습니다.\n\n"
-                    "설치 방법:\n"
-                    "Windows: libpst를 다운로드하여 설치\n"
-                    "또는 Outlook이 설치된 경우 COM 방식을 사용합니다.")
-                # COM 방식으로 재시도
-                self.import_pst_using_outlook_com(pst_file)
+                # readpst를 찾을 수 없으면 예외를 발생시켜 다음 방법 시도
+                raise Exception("readpst 도구를 찾을 수 없습니다.")
             except Exception as e:
                 progress.destroy()
                 messagebox.showerror("오류", f"PST 파일 읽기 실패:\n{str(e)}")
