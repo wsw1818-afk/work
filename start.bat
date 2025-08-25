@@ -25,13 +25,38 @@ if errorlevel 1 goto run
 cls
 echo.
 echo Starting program...
+echo Checking required packages...
+
+REM Check if required packages are installed
+python -c "import chardet, email, sqlite3, tkinter" 2>nul
+if errorlevel 1 (
+    echo.
+    echo Installing required packages...
+    pip install chardet extract-msg
+    echo.
+)
+
+echo.
+echo Running Mail Backup Manager...
 echo.
 python mail_backup_manager.py
 if errorlevel 1 (
     echo.
-    echo ERROR: Python is not installed or program not found
-    echo Please install Python first or select option 3 for auto-install
+    echo ==========================================
+    echo ERROR: Failed to run the program
+    echo ==========================================
+    echo.
+    echo Possible causes:
+    echo 1. Missing packages (chardet, extract-msg)
+    echo 2. Python path issues
+    echo 3. File not found
+    echo.
+    echo Trying to install packages again...
+    pip install chardet extract-msg
+    echo.
+    echo Please try running again or contact support.
 )
+echo.
 pause
 goto menu
 
