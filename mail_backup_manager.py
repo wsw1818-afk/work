@@ -445,9 +445,8 @@ class MailBackupManager:
         )
         
         if pst_file:
-            # 순차적으로 시도: Python 라이브러리 -> readpst -> Outlook COM
+            # 순차적으로 시도: readpst -> Outlook COM
             methods = [
-                ("Python 라이브러리", self.import_pst_using_python),
                 ("readpst 도구", self.import_pst_using_readpst),
                 ("Outlook COM", self.import_pst_using_outlook_com)
             ]
@@ -465,9 +464,10 @@ class MailBackupManager:
                 messagebox.showerror("오류", 
                     "PST 파일을 읽을 수 없습니다.\n\n"
                     "다음 중 하나를 설치해주세요:\n"
-                    "1. pip install pst-extractor\n"
-                    "2. libpst (readpst 도구)\n"
-                    "3. Microsoft Outlook")
+                    "1. libpst 도구 (readpst.exe)\n"
+                    "   - https://www.five-ten-sg.com/libpst/\n"
+                    "2. Microsoft Outlook\n"
+                    "   - 설치 후 프로그램 재시작")
     
     def import_pst_using_python(self, pst_file):
         """Python 라이브러리를 사용하여 PST 파일 읽기"""
@@ -711,6 +711,13 @@ class MailBackupManager:
         import subprocess
         import tempfile
         
+        # readpst.exe 경로 찾기
+        readpst_cmd = "readpst"
+        tools_readpst = os.path.join(os.path.dirname(__file__), "tools", "readpst.exe")
+        
+        if os.path.exists(tools_readpst):
+            readpst_cmd = tools_readpst
+        
         with tempfile.TemporaryDirectory() as temp_dir:
             progress = tk.Toplevel(self.root)
             progress.title("PST 파일 변환 중...")
@@ -724,7 +731,7 @@ class MailBackupManager:
             
             try:
                 # readpst 명령어로 PST를 mbox로 변환
-                cmd = ["readpst", "-M", "-o", temp_dir, pst_file]
+                cmd = [readpst_cmd, "-M", "-o", temp_dir, pst_file]
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
                 
                 if result.returncode == 0:
