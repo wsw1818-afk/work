@@ -571,7 +571,12 @@ class MailBackupManager:
                 pst = pypff.file()
                 pst.open(pst_file)
                 
-                imported = self.process_pypff_folder(pst.root_folder, "PST")
+                # root_folder 가져오기
+                root = pst.get_root_folder()
+                if root:
+                    imported = self.process_pypff_folder(root, "PST")
+                else:
+                    imported = 0
                 
                 pst.close()
                 progress_bar.stop()
@@ -622,18 +627,55 @@ class MailBackupManager:
         
         try:
             # 현재 폴더의 메시지 처리
-            for message in folder.sub_messages:
+            for i in range(folder.get_number_of_sub_messages()):
                 try:
-                    subject = message.subject or "(제목 없음)"
-                    sender = message.sender_name or "unknown"
+                    message = folder.get_sub_message(i)
+                    
+                    # 메시지 속성 안전하게 가져오기
+                    subject = "(제목 없음)"
+                    if hasattr(message, 'subject'):
+                        try:
+                            subject = message.subject or "(제목 없음)"
+                        except:
+                            pass
+                    
+                    sender = "unknown"
+                    if hasattr(message, 'sender_name'):
+                        try:
+                            sender = message.sender_name or "unknown"
+                        except:
+                            pass
                     
                     # 날짜 처리
-                    if hasattr(message, 'delivery_time') and message.delivery_time:
-                        date_str = str(message.delivery_time)[:19]
-                    else:
-                        date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    if hasattr(message, 'delivery_time'):
+                        try:
+                            if message.delivery_time:
+                                date_str = str(message.delivery_time)[:19]
+                        except:
+                            pass
                     
-                    body = message.plain_text_body or ""
+                    # 본문 처리 - pypff는 다른 방식으로 본문에 접근
+                    body = ""
+                    try:
+                        # plain text body 시도
+                        if hasattr(message, 'get_plain_text_body'):
+                            text_body = message.get_plain_text_body()
+                            if text_body:
+                                body = text_body.decode('utf-8', errors='ignore')
+                        elif hasattr(message, 'plain_text_body'):
+                            body = str(message.plain_text_body) if message.plain_text_body else ""
+                    except:
+                        try:
+                            # HTML body 시도
+                            if hasattr(message, 'get_html_body'):
+                                html_body = message.get_html_body()
+                                if html_body:
+                                    body = html_body.decode('utf-8', errors='ignore')
+                            elif hasattr(message, 'html_body'):
+                                body = str(message.html_body) if message.html_body else ""
+                        except:
+                            body = ""
                     
                     # 데이터베이스에 저장
                     self.conn.execute('''
@@ -649,10 +691,16 @@ class MailBackupManager:
                     continue
             
             # 하위 폴더 재귀 처리
-            for sub_folder in folder.sub_folders:
-                if sub_folder.name:
-                    sub_path = f"{folder_path}/{sub_folder.name}"
-                    imported += self.process_pypff_folder(sub_folder, sub_path)
+            for i in range(folder.get_number_of_sub_folders()):
+                try:
+                    sub_folder = folder.get_sub_folder(i)
+                    if sub_folder and hasattr(sub_folder, 'name'):
+                        folder_name = sub_folder.name or f"Folder_{i}"
+                        sub_path = f"{folder_path}/{folder_name}"
+                        imported += self.process_pypff_folder(sub_folder, sub_path)
+                except Exception as e:
+                    print(f"하위 폴더 처리 오류: {str(e)}")
+                    continue
                     
         except Exception as e:
             print(f"pypff 폴더 처리 오류: {str(e)}")
