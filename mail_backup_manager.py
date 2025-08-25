@@ -500,6 +500,7 @@ class MailBackupManager:
                 messagebox.showerror("오류", f"PST 파일 읽기 실패:\n{str(e)}")
     
     def import_pst_using_outlook_com(self, pst_file):
+        progress = None
         try:
             import win32com.client
             
@@ -543,11 +544,14 @@ class MailBackupManager:
                 messagebox.showinfo("알림", "가져올 메일이 없거나 PST 파일을 읽을 수 없습니다.")
                 
         except ImportError:
+            if progress:
+                progress.destroy()
             messagebox.showerror("오류", 
                 "pywin32 패키지가 설치되어 있지 않습니다.\n\n"
                 "설치 명령: pip install pywin32")
         except Exception as e:
-            progress.destroy()
+            if progress:
+                progress.destroy()
             messagebox.showerror("오류", f"PST 파일 읽기 실패:\n{str(e)}")
     
     def process_outlook_folder(self, folder, folder_name):
