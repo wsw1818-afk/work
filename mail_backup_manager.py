@@ -110,6 +110,7 @@ class MailBackupManager:
         menubar.add_cascade(label="파일", menu=file_menu)
         file_menu.add_command(label="메일 가져오기 (EML/MSG)", command=self.import_mails)
         file_menu.add_command(label="폴더 가져오기", command=self.import_folder)
+        file_menu.add_command(label="PST 파일 가져오기 (Outlook)", command=self.import_pst_file)
         file_menu.add_separator()
         file_menu.add_command(label="백업 생성", command=self.create_backup)
         file_menu.add_command(label="백업 복원", command=self.restore_backup)
@@ -129,6 +130,7 @@ class MailBackupManager:
         
         ttk.Button(toolbar, text="📥 메일 가져오기", command=self.import_mails).pack(side=tk.LEFT, padx=2)
         ttk.Button(toolbar, text="📁 폴더 가져오기", command=self.import_folder).pack(side=tk.LEFT, padx=2)
+        ttk.Button(toolbar, text="📮 PST 가져오기", command=self.import_pst_file).pack(side=tk.LEFT, padx=2)
         ttk.Separator(toolbar, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=5)
         
         ttk.Label(toolbar, text="검색:").pack(side=tk.LEFT, padx=5)
@@ -435,6 +437,258 @@ class MailBackupManager:
             self.conn.commit()
         except sqlite3.IntegrityError:
             pass
+    
+    def import_pst_file(self):
+        pst_file = filedialog.askopenfilename(
+            title="PST 파일 선택",
+            filetypes=[("PST files", "*.pst"), ("All files", "*.*")]
+        )
+        
+        if pst_file:
+            try:
+                # libpst를 사용해서 PST 파일 읽기 (readpst 명령어 사용)
+                self.import_pst_using_readpst(pst_file)
+            except Exception as e:
+                # 실패하면 Outlook COM을 사용
+                self.import_pst_using_outlook_com(pst_file)
+    
+    def import_pst_using_readpst(self, pst_file):
+        import subprocess
+        import tempfile
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            progress = tk.Toplevel(self.root)
+            progress.title("PST 파일 변환 중...")
+            progress.geometry("450x150")
+            
+            ttk.Label(progress, text="PST 파일을 mbox 형식으로 변환하는 중...").pack(pady=10)
+            progress_text = tk.Text(progress, height=5, width=50)
+            progress_text.pack(pady=5)
+            
+            progress.update()
+            
+            try:
+                # readpst 명령어로 PST를 mbox로 변환
+                cmd = ["readpst", "-M", "-o", temp_dir, pst_file]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+                
+                if result.returncode == 0:
+                    progress_text.insert(tk.END, "변환 완료! 메일을 가져오는 중...\n")
+                    progress.update()
+                    
+                    # 변환된 mbox 파일들을 찾아서 읽기
+                    imported = self.import_mbox_files(temp_dir)
+                    
+                    progress.destroy()
+                    messagebox.showinfo("완료", f"PST 파일에서 {imported}개의 메일을 가져왔습니다.")
+                    self.load_mails_from_db()
+                else:
+                    progress.destroy()
+                    raise Exception(f"readpst 실행 실패: {result.stderr}")
+                    
+            except FileNotFoundError:
+                progress.destroy()
+                messagebox.showwarning("경고", 
+                    "readpst 도구를 찾을 수 없습니다.\n\n"
+                    "설치 방법:\n"
+                    "Windows: libpst를 다운로드하여 설치\n"
+                    "또는 Outlook이 설치된 경우 COM 방식을 사용합니다.")
+                # COM 방식으로 재시도
+                self.import_pst_using_outlook_com(pst_file)
+            except Exception as e:
+                progress.destroy()
+                messagebox.showerror("오류", f"PST 파일 읽기 실패:\n{str(e)}")
+    
+    def import_pst_using_outlook_com(self, pst_file):
+        try:
+            import win32com.client
+            
+            progress = tk.Toplevel(self.root)
+            progress.title("PST 파일 읽기 중...")
+            progress.geometry("400x100")
+            
+            ttk.Label(progress, text="Outlook COM을 사용하여 PST 파일을 읽는 중...").pack(pady=10)
+            progress_bar = ttk.Progressbar(progress, mode='indeterminate')
+            progress_bar.pack(pady=10)
+            progress_bar.start()
+            
+            progress.update()
+            
+            # Outlook COM 객체 생성
+            outlook = win32com.client.Dispatch("Outlook.Application")
+            namespace = outlook.GetNamespace("MAPI")
+            
+            # PST 파일을 Outlook에 추가
+            namespace.AddStore(pst_file)
+            
+            imported = 0
+            
+            # 모든 저장소에서 추가된 PST 찾기
+            for store in namespace.Stores:
+                if pst_file.lower() in store.FilePath.lower():
+                    root_folder = store.GetRootFolder()
+                    imported += self.process_outlook_folder(root_folder, "PST")
+                    
+                    # PST 파일 연결 해제
+                    namespace.RemoveStore(root_folder)
+                    break
+            
+            progress_bar.stop()
+            progress.destroy()
+            
+            if imported > 0:
+                messagebox.showinfo("완료", f"PST 파일에서 {imported}개의 메일을 가져왔습니다.")
+                self.load_mails_from_db()
+            else:
+                messagebox.showinfo("알림", "가져올 메일이 없거나 PST 파일을 읽을 수 없습니다.")
+                
+        except ImportError:
+            messagebox.showerror("오류", 
+                "pywin32 패키지가 설치되어 있지 않습니다.\n\n"
+                "설치 명령: pip install pywin32")
+        except Exception as e:
+            progress.destroy()
+            messagebox.showerror("오류", f"PST 파일 읽기 실패:\n{str(e)}")
+    
+    def process_outlook_folder(self, folder, folder_name):
+        imported = 0
+        
+        try:
+            # 폴더의 모든 메일 처리
+            for message in folder.Items:
+                try:
+                    if hasattr(message, 'Subject'):  # 메일인지 확인
+                        mail_data = {
+                            'subject': message.Subject or '(제목 없음)',
+                            'sender': str(message.SenderEmailAddress) if hasattr(message, 'SenderEmailAddress') else '',
+                            'sender_name': str(message.SenderName) if hasattr(message, 'SenderName') else '',
+                            'recipients': str(message.To) if hasattr(message, 'To') else '',
+                            'cc': str(message.CC) if hasattr(message, 'CC') else '',
+                            'bcc': str(message.BCC) if hasattr(message, 'BCC') else '',
+                            'date': message.ReceivedTime.strftime('%Y-%m-%d %H:%M:%S') if hasattr(message, 'ReceivedTime') else '',
+                            'body_text': str(message.Body) if hasattr(message, 'Body') else '',
+                            'body_html': str(message.HTMLBody) if hasattr(message, 'HTMLBody') else '',
+                            'message_id': str(message.EntryID) if hasattr(message, 'EntryID') else f"pst_{imported}_{datetime.datetime.now().timestamp()}",
+                            'folder': folder_name
+                        }
+                        
+                        # 첨부파일 처리
+                        attachments = []
+                        if hasattr(message, 'Attachments'):
+                            for attachment in message.Attachments:
+                                if hasattr(attachment, 'FileName') and attachment.FileName:
+                                    filename = attachment.FileName
+                                    attachments.append(filename)
+                                    
+                                    # 첨부파일 저장
+                                    att_path = os.path.join(self.attachments_dir, f"{mail_data['message_id']}_{filename}")
+                                    try:
+                                        attachment.SaveAsFile(att_path)
+                                    except:
+                                        pass  # 첨부파일 저장 실패는 무시
+                        
+                        # 데이터베이스에 저장
+                        headers = json.dumps({
+                            'Subject': mail_data['subject'],
+                            'From': mail_data['sender'],
+                            'To': mail_data['recipients'],
+                            'Date': mail_data['date']
+                        })
+                        attachments_json = json.dumps(attachments)
+                        
+                        try:
+                            self.cursor.execute('''
+                                INSERT OR REPLACE INTO mails 
+                                (subject, sender, sender_name, recipients, cc, bcc, date, body_text, body_html, 
+                                 headers, attachments, folder, import_date, message_id)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (mail_data['subject'], mail_data['sender'], mail_data['sender_name'], 
+                                  mail_data['recipients'], mail_data['cc'], mail_data['bcc'], 
+                                  mail_data['date'], mail_data['body_text'], mail_data['body_html'],
+                                  headers, attachments_json, mail_data['folder'], 
+                                  datetime.datetime.now().isoformat(), mail_data['message_id']))
+                            self.conn.commit()
+                            imported += 1
+                        except sqlite3.IntegrityError:
+                            pass  # 중복 메일은 무시
+                        
+                except Exception as e:
+                    continue  # 개별 메일 처리 실패는 무시
+            
+            # 하위 폴더도 처리
+            for subfolder in folder.Folders:
+                subfolder_name = f"{folder_name}/{subfolder.Name}"
+                imported += self.process_outlook_folder(subfolder, subfolder_name)
+                
+        except Exception as e:
+            pass  # 폴더 처리 실패는 무시
+        
+        return imported
+    
+    def import_mbox_files(self, directory):
+        import mailbox
+        imported = 0
+        
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.endswith('.mbox') or file.endswith('.mbx'):
+                    mbox_path = os.path.join(root, file)
+                    try:
+                        mbox = mailbox.mbox(mbox_path)
+                        for message in mbox:
+                            try:
+                                # mbox 메시지를 email 객체로 변환
+                                subject = message.get('Subject', '(제목 없음)')
+                                sender = message.get('From', '')
+                                recipients = message.get('To', '')
+                                date_str = message.get('Date', '')
+                                
+                                # 메시지 ID 생성
+                                message_id = message.get('Message-ID', f"mbox_{imported}_{datetime.datetime.now().timestamp()}")
+                                
+                                # 본문 추출
+                                body_text = ""
+                                body_html = ""
+                                
+                                if message.is_multipart():
+                                    for part in message.walk():
+                                        if part.get_content_type() == "text/plain":
+                                            payload = part.get_payload(decode=True)
+                                            if payload:
+                                                body_text = payload.decode('utf-8', errors='ignore')
+                                        elif part.get_content_type() == "text/html":
+                                            payload = part.get_payload(decode=True)
+                                            if payload:
+                                                body_html = payload.decode('utf-8', errors='ignore')
+                                else:
+                                    payload = message.get_payload(decode=True)
+                                    if payload:
+                                        body_text = payload.decode('utf-8', errors='ignore')
+                                
+                                # 데이터베이스에 저장
+                                headers = json.dumps(dict(message.items()))
+                                
+                                try:
+                                    self.cursor.execute('''
+                                        INSERT OR REPLACE INTO mails 
+                                        (subject, sender, sender_name, recipients, date, body_text, body_html, 
+                                         headers, folder, import_date, message_id)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    ''', (subject, sender, self.extract_name_from_email(sender), 
+                                          recipients, date_str, body_text, body_html,
+                                          headers, "PST/MBOX", datetime.datetime.now().isoformat(), message_id))
+                                    self.conn.commit()
+                                    imported += 1
+                                except sqlite3.IntegrityError:
+                                    pass
+                                    
+                            except Exception as e:
+                                continue
+                                
+                    except Exception as e:
+                        continue
+        
+        return imported
     
     def import_msg_file(self, file_path):
         try:

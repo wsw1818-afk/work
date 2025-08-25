@@ -52,7 +52,7 @@ exit /b 1
 :found
 echo.
 echo Installing required packages...
-%PYTHON_EXE% -m pip install chardet extract-msg --quiet
+%PYTHON_EXE% -m pip install chardet extract-msg pywin32 --quiet
 
 echo.
 echo Starting Mail Backup Manager...
