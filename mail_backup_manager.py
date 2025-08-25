@@ -86,7 +86,7 @@ class MailBackupManager:
                 import_date TEXT,
                 message_id TEXT UNIQUE,
                 in_reply_to TEXT,
-                references TEXT
+                mail_references TEXT
             )
         ''')
         
@@ -427,7 +427,7 @@ class MailBackupManager:
             self.cursor.execute('''
                 INSERT OR REPLACE INTO mails 
                 (subject, sender, sender_name, recipients, cc, bcc, date, body_text, body_html, 
-                 headers, attachments, file_path, import_date, message_id, in_reply_to, references)
+                 headers, attachments, file_path, import_date, message_id, in_reply_to, mail_references)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (subject, sender, sender_name, recipients, cc, bcc, date_str, body_text, body_html,
                   headers, attachments_json, file_path, datetime.datetime.now().isoformat(),
