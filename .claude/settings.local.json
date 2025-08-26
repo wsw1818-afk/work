@@ -12,7 +12,8 @@
       "Bash(\"미디어매니저_실행.bat\")",
       "Bash(curl:*)",
       "Bash(cmd /c:*)",
-      "Bash(start 미디어매니저_실행.bat)"
+      "Bash(start 미디어매니저_실행.bat)",
+      "Bash(git revert:*)"
     ],
     "deny": [],
     "ask": []

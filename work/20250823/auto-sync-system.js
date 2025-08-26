@@ -9,11 +9,40 @@
     let customFileName = localStorage.getItem('customFileName') || '';
     let syncIntervalId = null;
     let dataChangeTimer = null;
+    
+    // 중복 방지를 위한 변수들
+    let currentSyncPromise = null; // 현재 진행 중인 동기화 Promise
+    let pendingSync = null; // 대기 중인 동기화 요청
+    let syncDebounceTimer = null; // 디바운스 타이머
+    let lastSyncedDataHash = null; // 마지막 동기화된 데이터 해시
+    let lastChangeDetectionTime = 0; // 마지막 변경 감지 시간
 
     // 원본 localStorage 메서드 백업
     const originalSetItem = localStorage.setItem;
     const originalRemoveItem = localStorage.removeItem;
     const originalClear = localStorage.clear;
+
+    /**
+     * 데이터 해시 생성 (간단한 해시)
+     */
+    function generateDataHash(data) {
+        const str = typeof data === 'string' ? data : JSON.stringify(data);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // 32비트 정수로 변환
+        }
+        return hash.toString();
+    }
+
+    /**
+     * 현재 메모 데이터의 해시 계산
+     */
+    function getCurrentDataHash() {
+        const memos = localStorage.getItem('calendarMemos') || '{}';
+        return generateDataHash(memos);
+    }
 
     /**
      * localStorage 변경 감지 시스템
@@ -69,44 +98,166 @@
     }
 
     /**
-     * 데이터 변경 처리
+     * 데이터 변경 처리 (강화된 중복 방지)
      */
     function handleDataChange(type, key, data) {
-        console.log(`📝 메모 데이터 변경 감지: ${type}`, { key, data });
+        const now = Date.now();
+        console.log(`📝 메모 데이터 변경 감지: ${type}`, { key, data, timestamp: new Date(now).toLocaleTimeString() });
         
         if (!autoSyncEnabled) {
             console.log('자동 동기화가 비활성화되어 있습니다.');
             return;
         }
 
-        // 기존 타이머 클리어 (연속 변경 시 마지막 변경만 처리)
-        if (dataChangeTimer) {
-            clearTimeout(dataChangeTimer);
+        // 현재 데이터 해시 계산
+        const currentDataHash = getCurrentDataHash();
+        
+        // 데이터가 실제로 변경되지 않았으면 무시
+        if (lastSyncedDataHash && currentDataHash === lastSyncedDataHash) {
+            console.log('🚫 데이터 내용이 변경되지 않음 - 동기화 생략');
+            return;
         }
 
-        // 2초 후 동기화 (연속 변경 방지)
-        dataChangeTimer = setTimeout(() => {
-            performAutoSync(type, key);
-        }, 2000);
+        // 너무 짧은 시간 내 중복 호출 방지 (1초 이내)
+        if (now - lastChangeDetectionTime < 1000) {
+            console.log(`🚫 너무 짧은 간격의 변경 감지 (${now - lastChangeDetectionTime}ms) - 무시`);
+            return;
+        }
+        
+        lastChangeDetectionTime = now;
+
+        // 현재 동기화 진행 중이면 대기열에 추가
+        if (currentSyncPromise) {
+            console.log('🔄 동기화 진행 중 - 대기열에 최신 요청으로 갱신');
+            pendingSync = { type, key, data, hash: currentDataHash, timestamp: now };
+            return;
+        }
+
+        // 기존 디바운스 타이머 클리어
+        if (syncDebounceTimer) {
+            clearTimeout(syncDebounceTimer);
+            console.log('⏰ 기존 디바운스 타이머 클리어');
+        }
+
+        // 3초 디바운스 (연속 변경 시 마지막 변경만 처리)
+        syncDebounceTimer = setTimeout(() => {
+            // 다시 한 번 데이터 변경 확인
+            const finalDataHash = getCurrentDataHash();
+            if (lastSyncedDataHash && finalDataHash === lastSyncedDataHash) {
+                console.log('🚫 최종 확인: 데이터가 변경되지 않음 - 동기화 취소');
+                return;
+            }
+            
+            console.log(`🚀 디바운스 완료 - 동기화 실행 (해시: ${finalDataHash})`);
+            performAutoSyncSafe(type, key, finalDataHash);
+        }, 3000);
+        
+        console.log(`⏰ 3초 디바운스 타이머 시작 (해시: ${currentDataHash})`);
     }
 
     /**
-     * 자동 동기화 실행
+     * 안전한 자동 동기화 실행 (중복 방지)
      */
-    async function performAutoSync(changeType, changedKey) {
+    async function performAutoSyncSafe(changeType, changedKey, dataHash = null) {
+        // 이미 진행 중인 동기화가 있으면 대기열에 추가
+        if (currentSyncPromise) {
+            console.log('🔄 동기화 진행 중 - 새 요청을 대기열에 추가');
+            const currentDataHash = dataHash || getCurrentDataHash();
+            pendingSync = { type: changeType, key: changedKey, hash: currentDataHash, timestamp: Date.now() };
+            return;
+        }
+
         try {
-            console.log('🔄 자동 동기화 시작...');
+            // 최종 데이터 변경 확인
+            const finalDataHash = dataHash || getCurrentDataHash();
+            if (lastSyncedDataHash && finalDataHash === lastSyncedDataHash) {
+                console.log('🚫 동기화 시작 전 최종 확인: 데이터 변경 없음 - 취소');
+                return;
+            }
+
+            console.log(`🚀 동기화 시작 - 데이터 해시: ${finalDataHash}`);
+            
+            // 동기화 시작
+            currentSyncPromise = performAutoSync(changeType, changedKey);
+            await currentSyncPromise;
+            
+            // 동기화 성공 시 해시 업데이트
+            lastSyncedDataHash = finalDataHash;
+            console.log(`✅ 동기화 성공 - 해시 업데이트: ${finalDataHash}`);
+            
+            // 동기화 완료 후 대기 중인 요청이 있으면 처리
+            if (pendingSync) {
+                console.log('🔄 대기 중인 동기화 요청 처리 중...');
+                const pending = pendingSync;
+                pendingSync = null; // 먼저 클리어
+                
+                // 대기 중인 요청의 데이터가 현재와 다른지 확인
+                const currentDataHash = getCurrentDataHash();
+                if (pending.hash !== currentDataHash) {
+                    console.log(`🔄 대기 요청 데이터 변경 감지 (${pending.hash} → ${currentDataHash}) - 3초 후 실행`);
+                    setTimeout(() => {
+                        performAutoSyncSafe(pending.type, pending.key, currentDataHash);
+                    }, 3000);
+                } else {
+                    console.log('🚫 대기 요청과 현재 데이터가 동일 - 스킵');
+                }
+            }
+            
+        } catch (error) {
+            console.error('안전한 동기화 실행 실패:', error);
+        } finally {
+            currentSyncPromise = null;
+        }
+    }
+
+    /**
+     * 자동 동기화 실행 (재시도 로직 포함)
+     */
+    async function performAutoSync(changeType, changedKey, retryCount = 0) {
+        const maxRetries = 3;
+        const retryDelay = 2000; // 2초
+        
+        try {
+            const retryText = retryCount > 0 ? ` (재시도 ${retryCount}/${maxRetries})` : '';
+            console.log(`🔄 자동 동기화 시작...${retryText}`);
             
             // 상태 인디케이터 업데이트
             if (typeof window.updateSyncStatus === 'function') {
-                window.updateSyncStatus('syncing', '동기화 중');
+                const statusText = retryCount > 0 ? `동기화 재시도 중 (${retryCount}/${maxRetries})` : '동기화 중';
+                window.updateSyncStatus('syncing', statusText);
             }
             window.isCurrentlySyncing = true;
             
-            // 구글 드라이브 연결 상태 확인
-            if (!window.isAuthenticated || typeof window.uploadBackupWithCustomName !== 'function') {
-                console.log('구글 드라이브가 연결되지 않았거나 업로드 함수가 없습니다.');
-                showNotification('자동 동기화 실패: 구글 드라이브 연결 확인 필요', 'error');
+            // 구글 드라이브 연결 상태 확인 (강화된 확인)
+            const hasAccessToken = localStorage.getItem('googleDriveAccessToken') || localStorage.getItem('googleAccessToken');
+            const hasTokenData = localStorage.getItem('googleDriveToken');
+            const hasGapiToken = typeof gapi !== 'undefined' && gapi.client && gapi.client.getToken();
+            const isWindowAuthenticated = window.isAuthenticated;
+            
+            // 토큰이 있는지 다중 검증
+            const hasValidToken = hasAccessToken || hasTokenData || hasGapiToken;
+            const isConnected = isWindowAuthenticated || hasValidToken;
+            
+            console.log('🔍 동기화 연결 상태 상세:', {
+                isWindowAuthenticated,
+                hasAccessToken: !!hasAccessToken,
+                hasTokenData: !!hasTokenData,
+                hasGapiToken: !!hasGapiToken,
+                isConnected,
+                hasUploadFunction: typeof window.uploadBackupWithCustomName === 'function'
+            });
+            
+            if (!isConnected || typeof window.uploadBackupWithCustomName !== 'function') {
+                console.log('❌ 구글 드라이브가 연결되지 않았거나 업로드 함수가 없습니다.');
+                
+                let errorMessage = '자동 동기화 실패: ';
+                if (!isConnected) {
+                    errorMessage += '구글 드라이브 연결 필요';
+                } else {
+                    errorMessage += '백업 함수 로드 오류';
+                }
+                
+                showNotification(errorMessage, 'error');
                 
                 // 상태 인디케이터 업데이트
                 if (typeof window.updateSyncStatus === 'function') {
@@ -140,15 +291,54 @@
             }
             
         } catch (error) {
-            console.error('자동 동기화 실패:', error);
-            showNotification('자동 동기화 실패: ' + error.message, 'error');
+            console.error(`❌ 자동 동기화 실패 (시도 ${retryCount + 1}/${maxRetries + 1}):`, error);
+            
+            // 재시도 가능한 오류인지 확인
+            const isRetryableError = 
+                error.message.includes('네트워크') ||
+                error.message.includes('network') ||
+                error.message.includes('timeout') ||
+                error.message.includes('503') ||
+                error.message.includes('502') ||
+                error.message.includes('500') ||
+                (error.status >= 500 && error.status < 600);
+            
+            // 재시도 로직
+            if (retryCount < maxRetries && isRetryableError) {
+                console.log(`🔄 ${retryDelay/1000}초 후 재시도 예정... (${retryCount + 1}/${maxRetries})`);
+                
+                // 상태 인디케이터 업데이트
+                if (typeof window.updateSyncStatus === 'function') {
+                    window.updateSyncStatus('retrying', '재시도 대기중', `${retryDelay/1000}초 후`);
+                }
+                
+                // 지연 후 재시도
+                setTimeout(() => {
+                    performAutoSync(changeType, changedKey, retryCount + 1);
+                }, retryDelay);
+                
+                return; // finally 블록으로 가지 않고 여기서 종료
+            }
+            
+            // 최종 실패
+            const finalError = retryCount > 0 
+                ? `자동 동기화 최종 실패 (${retryCount + 1}회 시도): ${error.message}`
+                : `자동 동기화 실패: ${error.message}`;
+                
+            showNotification(finalError, 'error');
             
             // 상태 인디케이터 업데이트
             if (typeof window.updateSyncStatus === 'function') {
-                window.updateSyncStatus('error', '동기화 실패', error.message);
+                const errorStatus = retryCount > 0 
+                    ? `${retryCount + 1}회 시도 후 실패`
+                    : '동기화 실패';
+                window.updateSyncStatus('error', errorStatus, error.message);
             }
         } finally {
-            window.isCurrentlySyncing = false;
+            // 재시도 중이 아닐 때만 동기화 상태 해제
+            if (retryCount >= maxRetries || !window.isCurrentlySyncing) {
+                window.isCurrentlySyncing = false;
+            }
         }
     }
 
@@ -188,9 +378,9 @@
             syncIntervalId = setInterval(() => {
                 const timeSinceLastSync = Date.now() - lastSyncTime;
                 
-                // 마지막 동기화 후 설정된 간격이 지났으면 실행
-                if (timeSinceLastSync >= syncInterval) {
-                    performAutoSync('periodic', null);
+                // 마지막 동기화 후 설정된 간격이 지났고 현재 동기화 중이 아니면 실행
+                if (timeSinceLastSync >= syncInterval && !currentSyncPromise) {
+                    performAutoSyncSafe('periodic', null);
                 }
             }, Math.min(syncInterval, 60000)); // 최대 1분마다 체크
             
@@ -340,20 +530,51 @@
     }
 
     /**
-     * 수동 동기화 실행
+     * 수동 동기화 실행 (중복 방지)
      */
     async function performManualSync(fileName = '') {
+        // 이미 동기화 진행 중이면 중단
+        if (currentSyncPromise) {
+            showNotification('❌ 동기화가 이미 진행 중입니다. 잠시 후 다시 시도해주세요.', 'warning');
+            return false;
+        }
+        
         try {
             showNotification('수동 동기화 시작...', 'info');
             
             // 상태 인디케이터 업데이트
             if (typeof window.updateSyncStatus === 'function') {
-                window.updateSyncStatus('syncing', '동기화 중');
+                window.updateSyncStatus('syncing', '수동 동기화 중');
             }
             window.isCurrentlySyncing = true;
             
-            if (!window.isAuthenticated || typeof window.uploadBackupWithCustomName !== 'function') {
-                throw new Error('구글 드라이브가 연결되지 않았습니다.');
+            // 구글 드라이브 연결 상태 확인 (강화된 확인)
+            const hasAccessToken = localStorage.getItem('googleDriveAccessToken') || localStorage.getItem('googleAccessToken');
+            const hasTokenData = localStorage.getItem('googleDriveToken');
+            const hasGapiToken = typeof gapi !== 'undefined' && gapi.client && gapi.client.getToken();
+            const isWindowAuthenticated = window.isAuthenticated;
+            
+            // 토큰이 있는지 다중 검증
+            const hasValidToken = hasAccessToken || hasTokenData || hasGapiToken;
+            const isConnected = isWindowAuthenticated || hasValidToken;
+            
+            console.log('🔍 수동 동기화 연결 상태 상세:', {
+                isWindowAuthenticated,
+                hasAccessToken: !!hasAccessToken,
+                hasTokenData: !!hasTokenData,
+                hasGapiToken: !!hasGapiToken,
+                isConnected,
+                hasUploadFunction: typeof window.uploadBackupWithCustomName === 'function'
+            });
+            
+            if (!isConnected || typeof window.uploadBackupWithCustomName !== 'function') {
+                let errorMessage = '구글 드라이브가 연결되지 않았습니다.';
+                if (!isConnected) {
+                    errorMessage = '구글 드라이브에 로그인이 필요합니다.';
+                } else if (typeof window.uploadBackupWithCustomName !== 'function') {
+                    errorMessage = '백업 함수가 로드되지 않았습니다.';
+                }
+                throw new Error(errorMessage);
             }
             
             const syncFileName = fileName || generateSyncFileName('manual', null);
@@ -389,10 +610,35 @@
     }
 
     /**
+     * 자동 동기화 강제 활성화
+     */
+    function enableAutoSync() {
+        console.log('🔄 자동 동기화 강제 활성화');
+        autoSyncEnabled = true;
+        localStorage.setItem('autoSyncEnabled', 'true');
+        
+        // 정기 동기화 시작
+        startPeriodicSync();
+        
+        // UI 업데이트
+        updateSyncStatusUI();
+        
+        // 첫 번째 동기화 실행 (3초 후, 중복 방지)
+        setTimeout(() => {
+            if (window.isAuthenticated && !currentSyncPromise) {
+                performAutoSyncSafe('enabled', 'system');
+            }
+        }, 3000);
+        
+        return true;
+    }
+
+    /**
      * 전역 함수로 노출
      */
     window.autoSyncSystem = {
         toggle: toggleAutoSync,
+        enable: enableAutoSync,
         setSyncInterval: setSyncInterval,
         setCustomFileName: setCustomFileName,
         performManualSync: performManualSync,
@@ -407,6 +653,10 @@
      * 초기화
      */
     function initialize() {
+        // 현재 데이터 해시 설정 (초기화 시 기준점 설정)
+        lastSyncedDataHash = getCurrentDataHash();
+        console.log(`🔧 초기 데이터 해시 설정: ${lastSyncedDataHash}`);
+        
         // localStorage 모니터링 시작
         setupLocalStorageMonitoring();
         
@@ -421,7 +671,7 @@
         }, 1000);
         
         console.log('🔄 자동 동기화 시스템 초기화 완료');
-        console.log('설정:', { autoSyncEnabled, syncInterval, customFileName, lastSyncTime });
+        console.log('설정:', { autoSyncEnabled, syncInterval, customFileName, lastSyncTime, initialHash: lastSyncedDataHash });
     }
 
     // 페이지 로드 완료 후 초기화

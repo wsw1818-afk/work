@@ -1,6 +1,35 @@
 // 통합 클라우드 설정 모달
 (function() {
     'use strict';
+    
+    // 테스트 결과 표시 함수
+    function showTestResult(message, type, targetId = 'testResult') {
+        // 메시지 표시 방법을 여러 방법으로 시도
+        
+        // 1. 지정된 ID의 요소에 표시 시도
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+            targetElement.style.display = 'block';
+            targetElement.innerHTML = message.replace(/\n/g, '<br>');
+            targetElement.className = `test-result ${type === 'success' ? 'success' : type === 'error' ? 'error' : 'info'}`;
+            return;
+        }
+        
+        // 2. 알림 시스템 사용 시도
+        if (typeof window.showNotification === 'function') {
+            const duration = type === 'success' ? 3000 : type === 'error' ? 5000 : 2000;
+            window.showNotification(message, type, duration);
+            return;
+        }
+        
+        // 3. 콘솔 로그
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // 4. 간단한 알럿 (오류인 경우만)
+        if (type === 'error') {
+            alert(message);
+        }
+    }
 
     /**
      * 통합 클라우드 설정 모달 표시
@@ -78,8 +107,12 @@
                         ` : isConfigured ? `
                             <div style="margin-top: 15px;">
                                 <button onclick="window.connectToDrive()" 
-                                        style="background: #27ae60; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
-                                    🔗 구글 드라이브 연결
+                                        style="background: #27ae60; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; margin-right: 10px;">
+                                    🔐 Google Drive 인증
+                                </button>
+                                <button onclick="window.showManualAuthDialog()" 
+                                        style="background: #f39c12; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                                    🔐 수동 인증
                                 </button>
                             </div>
                         ` : `
@@ -700,6 +733,203 @@
         return modal;
     }
 
+    /**
+     * 클립보드에서 붙여넣기
+     */
+    window.pasteFromClipboard = async function(fieldId) {
+        try {
+            const text = await navigator.clipboard.readText();
+            const field = document.getElementById(fieldId);
+            if (field && text.trim()) {
+                field.value = text.trim();
+                showTestResult(`✅ ${fieldId === 'clientId' ? '클라이언트 ID' : 'API 키'}가 붙여넣기되었습니다.`, 'success', 'apiTestResult');
+            }
+        } catch (error) {
+            console.error('클립보드 읽기 실패:', error);
+            showTestResult('❌ 클립보드 읽기 실패. 직접 입력해주세요.', 'error', 'apiTestResult');
+        }
+    };
+
+    /**
+     * 파일명 미리보기
+     */
+    window.previewSyncFileName = function() {
+        const customFileNameInput = document.getElementById('customFileNamePrefix');
+        const previewDiv = document.getElementById('fileNamePreview');
+        
+        if (!customFileNameInput || !previewDiv) return;
+        
+        const prefix = customFileNameInput.value.trim();
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
+        
+        let fileName;
+        if (prefix) {
+            fileName = `${prefix}-${dateStr}-${timeStr}.json`;
+        } else {
+            fileName = `달력메모-변경-${dateStr}-${timeStr}.json`;
+        }
+        
+        previewDiv.innerHTML = `<strong>파일명 미리보기:</strong><br>${fileName}`;
+        previewDiv.style.display = 'block';
+    };
+
+    /**
+     * 수동 동기화 테스트
+     */
+    window.performTestSync = async function() {
+        try {
+            showTestResult('🧪 수동 동기화 테스트 시작...', 'info', 'syncTestResult');
+            
+            if (!window.isAuthenticated) {
+                showTestResult('❌ 구글 드라이브가 연결되지 않았습니다.', 'error', 'syncTestResult');
+                return;
+            }
+            
+            if (typeof window.performQuickBackup !== 'function') {
+                showTestResult('❌ 백업 함수를 찾을 수 없습니다.', 'error', 'syncTestResult');
+                return;
+            }
+            
+            // 빠른 백업 실행
+            await window.performQuickBackup();
+            showTestResult('✅ 수동 동기화 테스트 완료!', 'success', 'syncTestResult');
+            
+        } catch (error) {
+            console.error('수동 동기화 테스트 실패:', error);
+            showTestResult(`❌ 테스트 실패: ${error.message}`, 'error', 'syncTestResult');
+        }
+    };
+
+    /**
+     * 통합 설정 저장 함수
+     */
+    window.saveUnifiedSettings = function() {
+        try {
+            console.log('💾 통합 설정 저장 시작...');
+            
+            let savedSettings = [];
+            let hasChanges = false;
+            
+            // API 설정 저장 (연결 설정 탭)
+            const clientIdInput = document.getElementById('clientId');
+            const apiKeyInput = document.getElementById('apiKey');
+            
+            if (clientIdInput && apiKeyInput) {
+                const clientId = clientIdInput.value.trim();
+                const apiKey = apiKeyInput.value.trim();
+                
+                if (clientId && apiKey) {
+                    const currentClientId = localStorage.getItem('googleDriveClientId');
+                    const currentApiKey = localStorage.getItem('googleDriveApiKey');
+                    
+                    if (clientId !== currentClientId || apiKey !== currentApiKey) {
+                        localStorage.setItem('googleDriveClientId', clientId);
+                        localStorage.setItem('googleDriveApiKey', apiKey);
+                        window.CLIENT_ID = clientId;
+                        window.API_KEY = apiKey;
+                        savedSettings.push('🔑 API 설정');
+                        hasChanges = true;
+                    }
+                }
+            }
+            
+            // 자동 동기화 설정 저장 (동기화 탭)
+            const autoSyncCheckbox = document.getElementById('autoSyncEnabled');
+            const syncIntervalSlider = document.getElementById('syncIntervalSlider');
+            const customFileNameInput = document.getElementById('customFileNamePrefix');
+            
+            if (autoSyncCheckbox) {
+                const isEnabled = autoSyncCheckbox.checked;
+                const currentEnabled = localStorage.getItem('autoSyncEnabled') === 'true';
+                
+                if (isEnabled !== currentEnabled) {
+                    localStorage.setItem('autoSyncEnabled', isEnabled.toString());
+                    savedSettings.push('🔄 자동 동기화 활성화 상태');
+                    hasChanges = true;
+                    
+                    // 자동 동기화 시스템에 변경사항 적용
+                    if (window.autoSyncSystem) {
+                        window.autoSyncSystem.toggle(isEnabled);
+                    }
+                }
+            }
+            
+            if (syncIntervalSlider) {
+                const intervalMinutes = parseInt(syncIntervalSlider.value);
+                const intervalMs = intervalMinutes * 60 * 1000;
+                const currentInterval = parseInt(localStorage.getItem('syncInterval') || '300000');
+                
+                if (intervalMs !== currentInterval) {
+                    localStorage.setItem('syncInterval', intervalMs.toString());
+                    savedSettings.push('⏱️ 동기화 간격');
+                    hasChanges = true;
+                    
+                    // 자동 동기화 시스템에 간격 변경 적용 (재시작 필요)
+                    if (window.autoSyncSystem) {
+                        // 간격 변경은 시스템 재시작 필요
+                        console.log('🔄 동기화 간격 변경됨:', intervalMs / 60000, '분');
+                    }
+                }
+            }
+            
+            if (customFileNameInput) {
+                const customFileName = customFileNameInput.value.trim();
+                const currentFileName = localStorage.getItem('customFileName') || '';
+                
+                if (customFileName !== currentFileName) {
+                    localStorage.setItem('customFileName', customFileName);
+                    savedSettings.push('📝 파일명 접두사');
+                    hasChanges = true;
+                    
+                    // 자동 동기화 시스템에 파일명 변경 적용
+                    if (window.autoSyncSystem) {
+                        window.autoSyncSystem.setCustomFileName(customFileName);
+                    }
+                }
+            }
+            
+            // 결과 표시
+            if (hasChanges && savedSettings.length > 0) {
+                const message = `✅ 설정이 저장되었습니다!\n\n저장된 항목:\n${savedSettings.map(item => `• ${item}`).join('\n')}`;
+                
+                // 사용자에게 알림
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification('💾 설정이 저장되었습니다!', 'success', 3000);
+                }
+                
+                // 테스트 결과 영역에 표시
+                showTestResult(message, 'success', 'apiTestResult');
+                showTestResult(message, 'success', 'syncTestResult');
+                
+                console.log('✅ 통합 설정 저장 완료:', savedSettings);
+                
+                // 설정이 API 관련이라면 새로고침 제안
+                const needsReload = savedSettings.some(setting => setting.includes('API'));
+                if (needsReload) {
+                    setTimeout(() => {
+                        if (confirm('API 설정이 변경되었습니다. 변경사항을 적용하려면 페이지를 새로고침해야 합니다.\n지금 새로고침하시겠습니까?')) {
+                            location.reload();
+                        }
+                    }, 2000);
+                }
+                
+            } else {
+                const message = '💡 변경된 설정이 없습니다.';
+                showTestResult(message, 'info', 'apiTestResult');
+                showTestResult(message, 'info', 'syncTestResult');
+                console.log('💡 변경된 설정 없음');
+            }
+            
+        } catch (error) {
+            console.error('설정 저장 실패:', error);
+            const errorMessage = `❌ 설정 저장 실패: ${error.message}`;
+            showTestResult(errorMessage, 'error', 'apiTestResult');
+            showTestResult(errorMessage, 'error', 'syncTestResult');
+        }
+    };
+
     // 전역 함수로 노출
     window.showUnifiedCloudModal = showUnifiedCloudModal;
 
@@ -1020,380 +1250,170 @@
     };
 
     /**
-     * 구글 드라이브 연결
+     * 구글 드라이브 연결 (간단 로그인)
      */
     window.connectToDrive = async function() {
-        showTestResult('구글 드라이브 연결 시도 중...', 'info', 'apiTestResult');
+        showTestResult('Google Identity Services를 사용한 간단 로그인을 시도합니다...', 'info', 'apiTestResult');
         
         try {
-            // 1. API 초기화 상태 확인
-            if (typeof gapi === 'undefined') {
-                throw new Error('Google API 라이브러리가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
-            }
-            
-            if (typeof google === 'undefined' || !google.accounts) {
-                throw new Error('Google Identity Services가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
-            }
-            
-            // 2. 설정 확인
-            const clientId = localStorage.getItem('googleDriveClientId');
-            const apiKey = localStorage.getItem('googleDriveApiKey');
-            
-            if (!clientId || !apiKey) {
-                throw new Error('API 설정이 저장되지 않았습니다. 위에서 API 키와 클라이언트 ID를 설정하고 저장하세요.');
-            }
-            
-            // 3. GAPI 초기화 확인
-            if (!window.gapiInited) {
-                showTestResult('Google API 초기화 중... 잠시 후 다시 시도해주세요.', 'info', 'apiTestResult');
+            // Google Identity Services로 간단 로그인
+            if (typeof google !== 'undefined' && google.accounts) {
+                const CLIENT_ID = localStorage.getItem('googleDriveClientId');
                 
-                // GAPI 수동 초기화 시도
-                await new Promise((resolve, reject) => {
-                    gapi.load('client', async () => {
-                        try {
-                            await gapi.client.init({
-                                apiKey: apiKey,
-                                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                            });
-                            window.gapiInited = true;
-                            resolve();
-                        } catch (error) {
-                            reject(error);
-                        }
-                    });
-                });
-            }
-            
-            // 4. Token Client 초기화 확인
-            if (!window.tokenClient && window.gisInited) {
-                window.tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: clientId,
-                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
-                    callback: (response) => {
-                        if (response.error) {
-                            let errorMessage = '인증에 실패했습니다.';
-                            let recommendations = [];
-                            
-                            switch(response.error) {
-                                case 'access_denied':
-                                    errorMessage = '사용자가 권한 요청을 거부했습니다.';
-                                    recommendations = [
-                                        '구글 계정에 로그인되어 있는지 확인하세요',
-                                        '팝업 차단기가 활성화되어 있지 않은지 확인하세요',
-                                        '다시 연결을 시도해보세요'
-                                    ];
-                                    break;
-                                case 'popup_closed_by_user':
-                                    errorMessage = '인증 창이 사용자에 의해 닫혔습니다.';
-                                    recommendations = [
-                                        '인증 창에서 "허용" 버튼을 클릭해야 합니다',
-                                        '팝업 차단기를 비활성화하고 다시 시도하세요'
-                                    ];
-                                    break;
-                                case 'invalid_client':
-                                    errorMessage = '클라이언트 ID가 올바르지 않습니다.';
-                                    recommendations = [
-                                        'Google Cloud Console에서 올바른 클라이언트 ID를 복사하세요',
-                                        '클라이언트 ID가 .apps.googleusercontent.com으로 끝나는지 확인하세요',
-                                        '승인된 JavaScript 원본에 현재 도메인이 추가되어 있는지 확인하세요'
-                                    ];
-                                    break;
-                                default:
-                                    errorMessage = `인증 오류: ${response.error}`;
-                                    recommendations = [
-                                        '페이지를 새로고침하고 다시 시도하세요',
-                                        'Google Cloud Console에서 설정을 다시 확인하세요',
-                                        '브라우저의 팝업 차단을 해제하세요'
-                                    ];
-                            }
-                            
-                            const errorHtml = `
-                                <div style="text-align: left;">
-                                    <strong>❌ ${errorMessage}</strong><br><br>
-                                    <strong>💡 해결 방법:</strong><br>
-                                    ${recommendations.map(item => `• ${item}<br>`).join('')}
-                                </div>
-                            `;
-                            
-                            showTestResult(errorHtml, 'error', 'apiTestResult');
-                            return;
-                        }
-                        
-                        window.isAuthenticated = true;
-                        
-                        // 연결 성공 시 추가 정보 표시
-                        const successHtml = `
-                            <div style="text-align: left;">
-                                <strong>✅ 구글 드라이브 연결 성공!</strong><br><br>
-                                <strong>🎉 이제 사용할 수 있는 기능:</strong><br>
-                                • 자동 메모 백업<br>
-                                • 사용자 지정 파일명으로 백업<br>
-                                • 백업 파일에서 복원<br>
-                                • 실시간 동기화<br><br>
-                                <em>2초 후 모달이 새로고침됩니다...</em>
-                            </div>
-                        `;
-                        
-                        showTestResult(successHtml, 'success', 'apiTestResult');
-                        
-                        // 모달 새로고침하여 연결된 상태 표시
-                        setTimeout(() => {
-                            window.closeModal();
-                            setTimeout(() => {
-                                window.showUnifiedCloudModal();
-                            }, 500);
-                        }, 2000);
-                    },
-                });
-            }
-            
-            // 5. 인증 시작
-            if (window.tokenClient) {
-                showTestResult('Google 인증 창이 열립니다. 계정을 선택하고 권한을 허용해주세요.', 'info', 'apiTestResult');
-                
-                if (gapi.client.getToken() === null) {
-                    window.tokenClient.requestAccessToken({prompt: 'consent'});
-                } else {
-                    window.tokenClient.requestAccessToken({prompt: ''});
+                if (!CLIENT_ID || CLIENT_ID === 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com') {
+                    showTestResult('❌ 먼저 Google 클라이언트 ID를 설정해주세요.', 'error', 'apiTestResult');
+                    return;
                 }
+                
+                // Google Identity Services 토큰 클라이언트 초기화
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile',
+                    callback: (tokenResponse) => {
+                        if (tokenResponse.access_token) {
+                            console.log('✅ Google 로그인 성공!');
+                            localStorage.setItem('googleAccessToken', tokenResponse.access_token);
+                            
+                            // 사용자 정보 가져오기
+                            fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`)
+                                .then(response => response.json())
+                                .then(userInfo => {
+                                    showTestResult(`🎉 Google 로그인 완료! 환영합니다, ${userInfo.name}님!`, 'success', 'apiTestResult');
+                                    
+                                    // 토큰 데이터 완전 저장 (만료 시간 포함)
+                                    const tokenData = {
+                                        access_token: tokenResponse.access_token,
+                                        token_type: 'Bearer',
+                                        expires_in: tokenResponse.expires_in || 3600,
+                                        expires_at: Date.now() + ((tokenResponse.expires_in || 3600) * 1000),
+                                        scope: tokenResponse.scope || 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile'
+                                    };
+                                    
+                                    // 완전한 토큰 데이터 저장
+                                    localStorage.setItem('googleDriveToken', JSON.stringify(tokenData));
+                                    localStorage.setItem('googleDriveAccessToken', tokenResponse.access_token);
+                                    localStorage.setItem('googleAccessToken', tokenResponse.access_token);
+                                    
+                                    console.log('💾 토큰 데이터 완전 저장 완료:', tokenData);
+                                    
+                                    // Google Drive API 초기화
+                                    if (typeof gapi !== 'undefined' && gapi.client) {
+                                        gapi.client.setToken({
+                                            access_token: tokenResponse.access_token,
+                                            token_type: 'Bearer',
+                                            expires_in: tokenResponse.expires_in || 3600
+                                        });
+                                        
+                                        console.log('🔧 GAPI 토큰 설정 완료');
+                                    }
+                                    
+                                    // 전역 인증 상태 업데이트
+                                    window.isAuthenticated = true;
+                                    
+                                    // google-drive-integration.js 상태도 동기화
+                                    if (typeof window.updateDriveButton === 'function') {
+                                        window.updateDriveButton();
+                                    }
+                                    
+                                    // 상태 인디케이터 업데이트
+                                    if (typeof window.updateDriveStatus === 'function') {
+                                        window.updateDriveStatus('connected', '연결됨', userInfo.name);
+                                    }
+                                    
+                                    // 상태창이 열려있다면 즉시 업데이트
+                                    if (typeof window.refreshSyncStatus === 'function') {
+                                        setTimeout(() => {
+                                            window.refreshSyncStatus();
+                                        }, 500);
+                                    }
+                                    
+                                    // 기존 인증 상태 업데이트 함수 호출
+                                    if (typeof window.updateAuthStatus === 'function') {
+                                        window.updateAuthStatus();
+                                    }
+                                    
+                                    console.log('✅ 모든 인증 상태 동기화 완료');
+                                    
+                                    // 자동 동기화 활성화 제안
+                                    setTimeout(() => {
+                                        if (confirm('Google Drive 로그인이 완료되었습니다.\n자동 동기화 기능을 활성화하시겠습니까?\n(달력 데이터가 5분마다 자동으로 Google Drive에 백업됩니다)')) {
+                                            enableAutoSync();
+                                        }
+                                    }, 2000);
+                                })
+                                .catch(error => {
+                                    console.error('사용자 정보 가져오기 실패:', error);
+                                    showTestResult('🎉 Google 로그인 완료!', 'success', 'apiTestResult');
+                                });
+                        } else {
+                            showTestResult('❌ 로그인에 실패했습니다.', 'error', 'apiTestResult');
+                        }
+                    },
+                    error_callback: (error) => {
+                        console.error('Google 로그인 오류:', error);
+                        showTestResult('❌ Google 로그인 중 오류가 발생했습니다.', 'error', 'apiTestResult');
+                    }
+                });
+                
+                // 토큰 요청
+                tokenClient.requestAccessToken({prompt: 'consent'});
+                
             } else {
-                throw new Error('Token Client 초기화에 실패했습니다. 클라이언트 ID를 확인해주세요.');
+                showTestResult('❌ Google Identity Services가 로드되지 않았습니다.', 'error', 'apiTestResult');
             }
-            
         } catch (error) {
-            console.error('구글 드라이브 연결 오류:', error);
-            showTestResult(`❌ 연결 실패: ${error.message}`, 'error', 'apiTestResult');
+            console.error('Google 로그인 오류:', error);
+            showTestResult('❌ Google 로그인 중 오류가 발생했습니다: ' + error.message, 'error', 'apiTestResult');
         }
+        
+        return;
     };
 
     /**
-     * 구글 드라이브 연결 해제
+     * 자동 동기화 활성화 함수
      */
-    window.disconnectDrive = function() {
-        if (typeof window.handleSignoutClick === 'function') {
-            if (confirm('구글 드라이브 연결을 해제하시겠습니까?')) {
-                window.handleSignoutClick();
+    window.enableAutoSync = function() {
+        try {
+            // 자동 동기화 설정 활성화
+            localStorage.setItem('autoSyncEnabled', 'true');
+            localStorage.setItem('syncInterval', '300000'); // 5분
+            
+            // 자동 동기화 시스템에 알림
+            if (typeof window.autoSyncSystem !== 'undefined' && window.autoSyncSystem.enable) {
+                window.autoSyncSystem.enable();
+                console.log('✅ 자동 동기화 활성화됨');
+                
+                // 사용자에게 알림
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification('🔄 자동 동기화가 활성화되었습니다! (5분 간격)', 'success', 3000);
+                } else {
+                    alert('🔄 자동 동기화가 활성화되었습니다! (5분 간격)');
+                }
+            } else {
+                // 페이지 새로고침으로 자동 동기화 시작
+                console.log('자동 동기화 시스템 재로드 필요');
                 setTimeout(() => {
-                    window.closeModal();
+                    if (confirm('자동 동기화 활성화를 위해 페이지를 새로고침하시겠습니까?')) {
+                        location.reload();
+                    }
                 }, 1000);
             }
-        } else {
-            showTestResult('연결 해제 함수를 찾을 수 없습니다.', 'error', 'apiTestResult');
-        }
-    };
-
-    /**
-     * 드라이브 연결 테스트
-     */
-    window.testDriveConnection = async function() {
-        showTestResult('구글 드라이브 연결 테스트 중...', 'info', 'apiTestResult');
-        
-        try {
-            if (!window.isAuthenticated) {
-                throw new Error('구글 드라이브가 연결되지 않았습니다.');
-            }
-            
-            if (typeof gapi !== 'undefined' && gapi.client) {
-                await gapi.client.drive.about.get({ fields: 'user' });
-            }
-            
-            showTestResult('✅ 구글 드라이브 연결이 정상적으로 작동합니다!', 'success', 'apiTestResult');
-            
         } catch (error) {
-            showTestResult('❌ 연결 테스트 실패: ' + error.message, 'error', 'apiTestResult');
+            console.error('자동 동기화 활성화 실패:', error);
+            alert('자동 동기화 활성화에 실패했습니다: ' + error.message);
         }
     };
 
-    /**
-     * 즉시 백업 실행
-     */
-    window.performQuickBackup = async function() {
-        try {
-            if (typeof window.backupCalendarMemos === 'function') {
-                await window.backupCalendarMemos();
-                showTestResult('✅ 즉시 백업이 완료되었습니다!', 'success', 'syncTestResult');
-            } else {
-                throw new Error('백업 함수를 찾을 수 없습니다.');
-            }
-        } catch (error) {
-            showTestResult('❌ 백업 실패: ' + error.message, 'error', 'syncTestResult');
-        }
-    };
-
-    /**
-     * 복원 모달 표시
-     */
-    window.showRestoreModal = function() {
-        if (typeof window.restoreCalendarMemos === 'function') {
-            window.restoreCalendarMemos();
-        } else {
-            showTestResult('복원 함수를 찾을 수 없습니다.', 'error', 'syncTestResult');
-        }
-    };
-
-    /**
-     * 동기화 파일명 미리보기
-     */
-    window.previewSyncFileName = function() {
-        const prefix = document.getElementById('customFileNamePrefix').value.trim();
-        const now = new Date();
-        const dateStr = now.toISOString().split('T')[0];
-        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
-        
-        let preview;
-        if (prefix) {
-            preview = `${prefix}-${dateStr}-${timeStr}.json`;
-        } else {
-            preview = `달력메모-수정-${dateStr}-${timeStr}.json`;
-        }
-        
-        const previewDiv = document.getElementById('fileNamePreview');
-        if (previewDiv) {
-            previewDiv.innerHTML = `<strong>미리보기:</strong> ${preview}`;
-            previewDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                previewDiv.style.display = 'none';
-            }, 5000);
-        }
-    };
-
-    /**
-     * 통합 설정 저장
-     */
-    window.saveUnifiedSettings = function() {
-        try {
-            // 자동 동기화 설정 저장
-            const autoSyncCheckbox = document.getElementById('autoSyncEnabled');
-            const intervalSlider = document.getElementById('syncIntervalSlider');
-            const customPrefix = document.getElementById('customFileNamePrefix');
-            
-            const autoSyncSystem = window.autoSyncSystem;
-            if (autoSyncSystem && autoSyncCheckbox && intervalSlider && customPrefix) {
-                const enabled = autoSyncCheckbox.checked;
-                const interval = parseInt(intervalSlider.value);
-                const prefix = customPrefix.value.trim();
-                
-                autoSyncSystem.toggle(enabled);
-                autoSyncSystem.setSyncInterval(interval);
-                autoSyncSystem.setCustomFileName(prefix);
-                
-                showTestResult('✅ 자동 동기화 설정이 저장되었습니다!', 'success', 'syncTestResult');
-            }
-
-            // API 설정이 있으면 저장
-            const clientIdInput = document.getElementById('clientId');
-            const apiKeyInput = document.getElementById('apiKey');
-            
-            if (clientIdInput && apiKeyInput) {
-                const clientId = clientIdInput.value.trim();
-                const apiKey = apiKeyInput.value.trim();
-                
-                if (clientId && apiKey) {
-                    localStorage.setItem('googleDriveClientId', clientId);
-                    localStorage.setItem('googleDriveApiKey', apiKey);
-                    window.CLIENT_ID = clientId;
-                    window.API_KEY = apiKey;
-                }
-            }
-            
-            setTimeout(() => {
-                window.closeModal();
-            }, 1500);
-            
-        } catch (error) {
-            console.error('설정 저장 실패:', error);
-            showTestResult('설정 저장 실패: ' + error.message, 'error', 'syncTestResult');
-        }
-    };
-
-    /**
-     * 테스트 결과 표시 함수
-     */
-    function showTestResult(message, type, elementId) {
-        const testResult = document.getElementById(elementId);
-        if (!testResult) return;
-        
-        testResult.style.display = 'block';
-        
-        // HTML로 렌더링하여 줄바꿈 처리
-        testResult.innerHTML = message.replace(/\n/g, '<br>');
-        testResult.className = `test-result ${type}`;
-        
-        const colors = {
-            success: { background: '#d4edda', color: '#155724', border: '1px solid #c3e6cb' },
-            error: { background: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb' },
-            info: { background: '#d1ecf1', color: '#0c5460', border: '1px solid #bee5eb' }
-        };
-        
-        const color = colors[type] || colors.info;
-        Object.assign(testResult.style, color);
-        testResult.style.borderRadius = '8px';
-        testResult.style.padding = '12px 15px';
-        testResult.style.lineHeight = '1.5';
-    }
-
-    /**
-     * 클립보드에서 붙여넣기 (재사용)
-     */
-    window.pasteFromClipboard = async function(inputId) {
-        try {
-            const text = await navigator.clipboard.readText();
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.value = text;
-                showTestResult('붙여넣기 완료!', 'success', 'apiTestResult');
-            }
-        } catch (err) {
-            try {
-                const input = document.getElementById(inputId);
-                if (input) {
-                    input.focus();
-                    input.select();
-                    document.execCommand('paste');
-                }
-            } catch (fallbackErr) {
-                showTestResult('클립보드 접근 권한이 필요합니다. Ctrl+V를 사용해주세요.', 'info', 'apiTestResult');
-            }
-        }
-    };
-
-    // 동기화 테스트 함수들 (기존 함수 재사용)
-    if (!window.testSyncConnection) {
-        window.testSyncConnection = async function() {
-            showTestResult('연결 테스트 중...', 'info', 'syncTestResult');
-            
-            try {
-                if (!window.isAuthenticated) {
-                    throw new Error('구글 드라이브가 연결되지 않았습니다.');
-                }
-                
-                if (typeof window.uploadBackupWithCustomName !== 'function') {
-                    throw new Error('업로드 함수를 찾을 수 없습니다.');
-                }
-                
-                if (typeof gapi !== 'undefined' && gapi.client) {
-                    await gapi.client.drive.about.get({ fields: 'user' });
-                }
-                
-                showTestResult('✅ 동기화 시스템이 정상적으로 작동합니다!', 'success', 'syncTestResult');
-                
-            } catch (error) {
-                showTestResult('❌ 연결 테스트 실패: ' + error.message, 'error', 'syncTestResult');
-            }
-        };
-    }
-
-    if (!window.performTestSync) {
-        window.performTestSync = async function() {
-            const autoSyncSystem = window.autoSyncSystem;
-            if (!autoSyncSystem) {
-                showTestResult('자동 동기화 시스템을 찾을 수 없습니다.', 'error', 'syncTestResult');
+    // 테스트 함수들 정의
+    if (!window.testManualSync) {
+        window.testManualSync = async function() {
+            if (typeof window.autoSyncSystem === 'undefined') {
+                showTestResult('❌ 자동 동기화 시스템이 로드되지 않았습니다.', 'error', 'syncTestResult');
                 return;
             }
-            
+
             try {
-                showTestResult('수동 동기화 실행 중...', 'info', 'syncTestResult');
+                showTestResult('수동 동기화 테스트 시작...', 'info', 'syncTestResult');
                 await autoSyncSystem.performManualSync('테스트-동기화');
                 showTestResult('✅ 수동 동기화 완료!', 'success', 'syncTestResult');
             } catch (error) {
@@ -1410,6 +1430,152 @@
                 '동기화 기록이 없습니다.';
                 
             showTestResult(historyText, 'info', 'syncTestResult');
+        };
+    }
+
+    // 즉시 백업 함수
+    if (!window.performQuickBackup) {
+        window.performQuickBackup = async function() {
+            try {
+                console.log('📤 즉시 백업 시작...');
+                
+                // 디버깅 정보 출력
+                console.log('🔍 즉시 백업 시작 전 상태:', {
+                    isAuthenticated: window.isAuthenticated,
+                    hasUploadFunction: typeof window.uploadBackupWithCustomName === 'function',
+                    gapiInited: window.gapiInited,
+                    gisInited: window.gisInited
+                });
+                
+                if (!window.isAuthenticated) {
+                    console.log('❌ 백업 실패: 인증되지 않음');
+                    throw new Error('먼저 구글 드라이브에 연결해주세요.');
+                }
+                
+                if (typeof window.uploadBackupWithCustomName !== 'function') {
+                    console.log('❌ 백업 실패: 업로드 함수 없음');
+                    throw new Error('백업 함수가 로드되지 않았습니다. 페이지를 새로고침하거나 google-drive-integration.js 파일을 확인하세요.');
+                }
+                
+                showTestResult('📤 즉시 백업 중...', 'info');
+                
+                const now = new Date();
+                const dateStr = now.toISOString().split('T')[0];
+                const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
+                const fileName = `달력메모-즉시백업-${dateStr}-${timeStr}.json`;
+                
+                const result = await window.uploadBackupWithCustomName(fileName, false);
+                
+                if (result) {
+                    showTestResult('✅ 즉시 백업 완료!', 'success');
+                    
+                    // 자동 동기화 시스템의 마지막 동기화 시간도 업데이트
+                    if (window.autoSyncSystem) {
+                        localStorage.setItem('lastSyncTime', Date.now().toString());
+                        window.autoSyncSystem.updateUI();
+                    }
+                } else {
+                    showTestResult('❌ 즉시 백업 실패', 'error');
+                }
+                
+            } catch (error) {
+                console.error('즉시 백업 실패:', error);
+                const errorMessage = error && error.message ? error.message : '알 수 없는 오류가 발생했습니다';
+                showTestResult('❌ 즉시 백업 실패: ' + errorMessage, 'error');
+            }
+        };
+    }
+    
+    // 드라이브 연결 테스트 함수
+    if (!window.testDriveConnection) {
+        window.testDriveConnection = async function() {
+            try {
+                console.log('🧪 드라이브 연결 테스트 시작...');
+                showTestResult('🧪 구글 드라이브 연결 테스트 중...', 'info');
+                
+                // 기본 연결 상태 확인
+                const hasToken = localStorage.getItem('googleDriveAccessToken');
+                const hasGapiToken = typeof gapi !== 'undefined' && gapi.client && gapi.client.getToken();
+                
+                if (!hasToken && !hasGapiToken) {
+                    showTestResult('❌ 토큰이 없습니다. 먼저 로그인하세요.', 'error');
+                    return;
+                }
+                
+                if (typeof gapi === 'undefined' || !gapi.client) {
+                    showTestResult('❌ Google API가 로드되지 않았습니다.', 'error');
+                    return;
+                }
+                
+                // 드라이브 API 테스트
+                const response = await gapi.client.drive.about.get({ fields: 'user' });
+                
+                if (response && response.result && response.result.user) {
+                    const user = response.result.user;
+                    showTestResult(`✅ 연결 성공!\n사용자: ${user.displayName}\n이메일: ${user.emailAddress}`, 'success');
+                } else {
+                    showTestResult('❌ 사용자 정보를 가져올 수 없습니다.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('드라이브 연결 테스트 실패:', error);
+                
+                let errorMessage = '❌ 연결 테스트 실패: ';
+                if (error.status === 401) {
+                    errorMessage += '인증이 만료되었습니다. 다시 로그인하세요.';
+                } else if (error.status === 403) {
+                    errorMessage += 'API 권한이 없습니다. Google Cloud Console 설정을 확인하세요.';
+                } else {
+                    errorMessage += error.message || '알 수 없는 오류';
+                }
+                
+                showTestResult(errorMessage, 'error');
+            }
+        };
+    }
+    
+    // 동기화 연결 테스트 함수
+    if (!window.testSyncConnection) {
+        window.testSyncConnection = async function() {
+            try {
+                console.log('🔄 동기화 연결 테스트 시작...');
+                showTestResult('🔄 동기화 연결 테스트 중...', 'info');
+                
+                // 연결 상태 확인
+                const hasAccessToken = localStorage.getItem('googleDriveAccessToken') || localStorage.getItem('googleAccessToken');
+                const hasTokenData = localStorage.getItem('googleDriveToken');
+                const hasGapiToken = typeof gapi !== 'undefined' && gapi.client && gapi.client.getToken();
+                const isWindowAuthenticated = window.isAuthenticated;
+                
+                const connectionStatus = {
+                    '인증 상태': isWindowAuthenticated ? '✅' : '❌',
+                    '액세스 토큰': hasAccessToken ? '✅' : '❌',
+                    '토큰 데이터': hasTokenData ? '✅' : '❌',
+                    'GAPI 토큰': hasGapiToken ? '✅' : '❌',
+                    '백업 함수': typeof window.uploadBackupWithCustomName === 'function' ? '✅' : '❌',
+                    '자동 동기화': window.autoSyncSystem ? (window.autoSyncSystem.isEnabled() ? '✅ 활성' : '⏸️ 비활성') : '❌'
+                };
+                
+                let resultMessage = '🔍 동기화 시스템 상태:\n';
+                for (const [key, value] of Object.entries(connectionStatus)) {
+                    resultMessage += `${key}: ${value}\n`;
+                }
+                
+                // 전체적인 상태 판단
+                const isFullyConnected = isWindowAuthenticated && hasAccessToken && hasGapiToken && typeof window.uploadBackupWithCustomName === 'function';
+                
+                if (isFullyConnected) {
+                    resultMessage += '\n✅ 동기화 시스템 정상 작동!';
+                    showTestResult(resultMessage, 'success', 'syncTestResult');
+                } else {
+                    resultMessage += '\n⚠️ 일부 구성 요소에 문제 있음';
+                    showTestResult(resultMessage, 'warning', 'syncTestResult');
+                }
+                
+            } catch (error) {
+                console.error('동기화 연결 테스트 실패:', error);
+                showTestResult('❌ 동기화 연결 테스트 실패: ' + error.message, 'error', 'syncTestResult');
+            }
         };
     }
 

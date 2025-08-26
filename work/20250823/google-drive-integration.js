@@ -17,9 +17,43 @@
     window.isAuthenticated = false;
     window.tokenClient = null;
 
-    // 이 값들은 실제 Google Cloud Console에서 발급받은 값으로 교체해야 합니다
-    let CLIENT_ID = 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
-    let API_KEY = 'YOUR_API_KEY_HERE';
+    // Google Cloud Console에서 발급받은 실제 값들
+    // 임시로 localStorage에서 불러오거나 사용자가 설정할 수 있도록 수정
+    let CLIENT_ID = localStorage.getItem('google_client_id') || 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
+    let API_KEY = localStorage.getItem('google_api_key') || 'YOUR_API_KEY_HERE';
+
+    /**
+     * API 키와 클라이언트 ID 설정 함수
+     */
+    function setGoogleApiCredentials(clientId, apiKey) {
+        if (clientId && clientId !== 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com') {
+            CLIENT_ID = clientId;
+            localStorage.setItem('google_client_id', clientId);
+            console.log('✅ 클라이언트 ID가 설정되었습니다.');
+        }
+        
+        if (apiKey && apiKey !== 'YOUR_API_KEY_HERE') {
+            API_KEY = apiKey;
+            localStorage.setItem('google_api_key', apiKey);
+            console.log('✅ API 키가 설정되었습니다.');
+        }
+        
+        // 전역 변수 업데이트
+        window.CLIENT_ID = CLIENT_ID;
+        window.API_KEY = API_KEY;
+        
+        // API 재초기화
+        if (typeof gapi !== 'undefined') {
+            initializeGapi();
+        }
+        if (typeof google !== 'undefined' && google.accounts) {
+            initializeGis();
+        }
+    }
+
+    // 전역 함수로 노출
+    window.setGoogleApiCredentials = setGoogleApiCredentials;
+    window.showManualAuthDialog = showManualAuthDialog;
 
     /**
      * Google API 라이브러리 초기화
@@ -76,21 +110,22 @@
         }
 
         try {
+            // 토큰 클라이언트 초기화 (Implicit flow - 클라이언트 전용)
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: SCOPES,
-                callback: '', // 나중에 정의됨
-                // 24시간 지속되도록 설정
-                access_type: 'offline',
-                include_granted_scopes: true,
-                // 더 긴 토큰 생명 주기를 위한 설정
-                prompt: 'consent',
-                max_age: 86400 // 24시간 (초 단위)
+                callback: onTokenResponse, // 콜백 함수 직접 지정
+                error_callback: onTokenError,
+                // 팝업 차단 방지 설정
+                enable_granular_consent: false,
+                plugin_name: 'CalendarApp'
             });
+            
             window.tokenClient = tokenClient;
             gisInited = true;
             window.gisInited = true;
-            console.log('Google Identity Services 초기화 완료 - 24시간 지속 설정');
+            console.log('✅ Google Identity Services 초기화 완료');
+            
         } catch (error) {
             console.error('Google Identity Services 초기화 실패:', error);
             gisInited = false;
@@ -102,6 +137,172 @@
         
         // 기존 토큰이 있고 유효하면 자동 인증
         checkAndRestoreToken();
+    }
+
+    /**
+     * 토큰 에러 콜백
+     */
+    function onTokenError(error) {
+        console.error('❌ 토큰 획득 오류:', error);
+        
+        if (error.type === 'popup_closed' || error.message === 'Popup window closed') {
+            console.log('🔄 팝업이 닫혔습니다. 수동 인증 모드로 전환합니다.');
+            showMessage('팝업이 닫혔습니다. 수동 인증 모드로 전환합니다.', 'warning');
+            
+            // 1초 후 수동 인증 다이얼로그 표시
+            setTimeout(() => {
+                showManualAuthDialog();
+            }, 1000);
+            
+        } else if (error.type === 'popup_blocked') {
+            console.log('🔄 팝업이 차단되었습니다. 수동 인증 모드로 전환합니다.');
+            showMessage('팝업이 차단되었습니다. 수동 인증 모드로 전환합니다.', 'warning');
+            
+            // 즉시 수동 인증 다이얼로그 표시
+            setTimeout(() => {
+                showManualAuthDialog();
+            }, 500);
+            
+        } else if (error.message && (error.message.includes('redirect_uri_mismatch') || error.message.includes('Cross-Origin'))) {
+            console.log('🔄 Cross-Origin 또는 redirect URI 오류. 수동 인증 모드로 전환합니다.');
+            showMessage('Cross-Origin 정책 오류가 발생했습니다. 수동 인증 모드로 전환합니다.', 'warning');
+            
+            setTimeout(() => {
+                showManualAuthDialog();
+            }, 1000);
+            
+        } else {
+            console.log('🔄 인증 오류가 발생했습니다. 수동 인증 모드로 전환합니다.');
+            showMessage(`인증 오류가 발생했습니다. 수동 인증을 시도합니다: ${error.type || error.message}`, 'warning');
+            
+            setTimeout(() => {
+                showManualAuthDialog();
+            }, 1500);
+        }
+    }
+    
+    /**
+     * 토큰 성공 콜백
+     */
+    function onTokenResponse(tokenResponse) {
+        console.log('✅ 토큰 응답 받음:', tokenResponse);
+        
+        if (tokenResponse.error) {
+            onTokenError(tokenResponse);
+            return;
+        }
+        
+        // 토큰 저장
+        const tokenData = {
+            access_token: tokenResponse.access_token,
+            token_type: 'Bearer',
+            expires_at: Date.now() + (tokenResponse.expires_in * 1000)
+        };
+        
+        saveToken(tokenData);
+        
+        // GAPI에 토큰 설정
+        if (gapiInited) {
+            gapi.client.setToken({
+                access_token: tokenResponse.access_token,
+                token_type: 'Bearer',
+                expires_in: tokenResponse.expires_in
+            });
+        }
+        
+        isAuthenticated = true;
+        window.isAuthenticated = true;
+        
+        console.log('🎉 Google Drive 인증 완료!');
+        showMessage('Google Drive 연동 성공!', 'success');
+        
+        // UI 업데이트
+        updateAuthStatus();
+        maybeEnableButtons();
+    }
+
+    /**
+     * URL에서 인증 코드 확인 (Redirect 방식) - 더 이상 사용하지 않음
+     */
+    function checkForAuthorizationCode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        
+        if (error) {
+            console.error('OAuth 인증 오류:', error);
+            // URL 정리
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
+        
+        if (code && state === 'calendar_app_oauth_state') {
+            console.log('✅ 인증 코드 획득:', code.substring(0, 20) + '...');
+            
+            // 인증 코드를 사용해 액세스 토큰 교환
+            exchangeCodeForToken(code);
+            
+            // URL 정리 (인증 코드 제거)
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+    
+    /**
+     * 인증 코드를 액세스 토큰으로 교환
+     */
+    async function exchangeCodeForToken(code) {
+        try {
+            console.log('🔄 액세스 토큰 교환 중...');
+            
+            // Google OAuth2 토큰 엔드포인트에 요청
+            const response = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    client_id: CLIENT_ID,
+                    code: code,
+                    grant_type: 'authorization_code',
+                    redirect_uri: window.location.origin + window.location.pathname
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`토큰 교환 실패: ${response.status}`);
+            }
+            
+            const tokenData = await response.json();
+            console.log('✅ 액세스 토큰 획득 성공');
+            
+            // 토큰을 GAPI에 설정
+            if (gapiInited) {
+                gapi.client.setToken({
+                    access_token: tokenData.access_token,
+                    token_type: 'Bearer',
+                    expires_in: tokenData.expires_in
+                });
+            }
+            
+            // 토큰 저장
+            saveToken({
+                access_token: tokenData.access_token,
+                token_type: 'Bearer',
+                expires_at: Date.now() + (tokenData.expires_in * 1000),
+                refresh_token: tokenData.refresh_token
+            });
+            
+            isAuthenticated = true;
+            window.isAuthenticated = true;
+            console.log('🎉 Google Drive 인증 완료!');
+            
+            // UI 업데이트
+            updateAuthStatus();
+            
+        } catch (error) {
+            console.error('토큰 교환 오류:', error);
+        }
     }
 
     /**
@@ -169,72 +370,142 @@
     }
 
     /**
-     * 기존 토큰 확인 및 복원
+     * 기존 토큰 확인 및 복원 (강화된 버전)
      */
     function checkAndRestoreToken() {
-        console.log('토큰 복원 시작 - gapiInited:', gapiInited, 'gisInited:', gisInited);
+        console.log('🔄 토큰 복원 시작 - gapiInited:', gapiInited, 'gisInited:', gisInited);
         
         const savedToken = getSavedToken();
-        if (savedToken && gapiInited) {
-            console.log('저장된 토큰 발견, 자동 인증 시도...', {
+        if (savedToken) {
+            console.log('💾 저장된 토큰 발견:', {
                 expires_at: new Date(savedToken.expires_at),
-                remaining_hours: Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60))
+                remaining_hours: Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60)),
+                is_expired: savedToken.expires_at <= Date.now()
             });
             
-            try {
-                // GAPI에 토큰 설정
-                gapi.client.setToken({
-                    access_token: savedToken.access_token,
-                    token_type: savedToken.token_type || 'Bearer',
-                    expires_in: Math.floor((savedToken.expires_at - Date.now()) / 1000)
-                });
-                
-                // 토큰 유효성 테스트
-                testTokenValidity(savedToken);
-                
-            } catch (error) {
-                console.error('토큰 복원 중 오류 발생:', error);
+            // 토큰 만료 확인
+            if (savedToken.expires_at <= Date.now()) {
+                console.log('⚠️ 저장된 토큰이 만료됨, 삭제 중...');
                 localStorage.removeItem('googleDriveToken');
-                console.log('손상된 토큰을 삭제했습니다.');
+                localStorage.removeItem('googleDriveAccessToken');
+                window.isAuthenticated = false;
+                updateDriveButton();
+                return;
             }
-        } else if (savedToken && !gapiInited) {
-            console.log('토큰은 있지만 GAPI가 초기화되지 않음. 잠시 후 재시도...');
-            setTimeout(() => {
-                checkAndRestoreToken();
-            }, 1000);
+            
+            if (gapiInited) {
+                try {
+                    // GAPI에 토큰 설정
+                    gapi.client.setToken({
+                        access_token: savedToken.access_token,
+                        token_type: savedToken.token_type || 'Bearer',
+                        expires_in: Math.floor((savedToken.expires_at - Date.now()) / 1000)
+                    });
+                    
+                    // 즉시 인증 상태 설정 (API 호출 전에)
+                    isAuthenticated = true;
+                    window.isAuthenticated = true;
+                    
+                    // localStorage에도 access_token 저장 (다른 시스템들이 사용)
+                    localStorage.setItem('googleDriveAccessToken', savedToken.access_token);
+                    
+                    console.log('✅ GAPI 토큰 설정 완료, 유효성 검사 중...');
+                    
+                    // 토큰 유효성 테스트 (비동기)
+                    testTokenValidity(savedToken);
+                    
+                } catch (error) {
+                    console.error('❌ 토큰 복원 중 오류 발생:', error);
+                    clearAllTokens();
+                }
+            } else {
+                console.log('⏳ GAPI 미준비, 1초 후 재시도...');
+                setTimeout(() => {
+                    checkAndRestoreToken();
+                }, 1000);
+            }
         } else {
-            console.log('저장된 유효한 토큰이 없습니다.');
+            console.log('📭 저장된 토큰이 없습니다.');
+            // 기존 localStorage 토큰들도 정리
+            if (localStorage.getItem('googleDriveAccessToken')) {
+                console.log('🧹 불완전한 토큰 데이터 정리 중...');
+                clearAllTokens();
+            }
         }
     }
 
     /**
-     * 토큰 유효성 테스트
+     * 모든 토큰 데이터 정리
+     */
+    function clearAllTokens() {
+        localStorage.removeItem('googleDriveToken');
+        localStorage.removeItem('googleDriveAccessToken');
+        if (typeof gapi !== 'undefined' && gapi.client) {
+            gapi.client.setToken(null);
+        }
+        isAuthenticated = false;
+        window.isAuthenticated = false;
+        updateDriveButton();
+        console.log('🧹 모든 토큰 데이터 정리 완료');
+    }
+
+    /**
+     * 토큰 유효성 테스트 (강화된 버전)
      */
     async function testTokenValidity(savedToken) {
         try {
-            // Drive API로 간단한 요청을 보내서 토큰이 유효한지 확인
-            const response = await gapi.client.drive.about.get({ fields: 'user' });
+            console.log('🧪 토큰 유효성 검사 시작...');
             
-            if (response && response.result) {
-                // 토큰이 유효함
-                isAuthenticated = true;
-                window.isAuthenticated = true;
+            // Drive API로 간단한 요청을 보내서 토큰이 유효한지 확인
+            const response = await gapi.client.drive.about.get({ 
+                fields: 'user,storageQuota' 
+            });
+            
+            if (response && response.result && response.result.user) {
+                // 토큰이 유효함 - 이미 위에서 인증 상태 설정됨
                 updateDriveButton();
                 
+                const user = response.result.user;
                 const remainingTime = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
-                console.log(`구글 드라이브 자동 인증 성공! 토큰 남은 시간: ${remainingTime}시간`);
-                showMessage(`구글 드라이브 자동 연결됨 (${remainingTime}시간 유효)`, 'success');
+                
+                console.log(`✅ 구글 드라이브 자동 인증 성공!`);
+                console.log(`👤 사용자: ${user.displayName} (${user.emailAddress})`);
+                console.log(`⏰ 토큰 남은 시간: ${remainingTime}시간`);
+                
+                showMessage(`✅ 구글 드라이브 자동 연결됨\n👤 ${user.displayName}\n⏰ ${remainingTime}시간 유효`, 'success');
                 
                 // 상태 인디케이터 업데이트
                 if (typeof window.updateDriveStatus === 'function') {
                     window.updateDriveStatus('connected', '연결됨', `${remainingTime}시간 남음`);
                 }
                 
+                // 동기화 상태 창 업데이트
+                if (typeof window.updateSyncStatus === 'function') {
+                    window.updateSyncStatus('connected', '연결됨', `${user.displayName}`);
+                }
+                
+                // 자동 동기화 시스템에 알림 (중복 활성화 방지)
+                if (typeof window.autoSyncSystem !== 'undefined' && window.autoSyncSystem.enable) {
+                    console.log('🔄 자동 동기화 시스템 활성화 확인...');
+                    // 이미 활성화되어 있지 않은 경우에만 활성화
+                    if (!window.autoSyncSystem.isEnabled()) {
+                        console.log('🔄 자동 동기화 시스템 활성화 중...');
+                        setTimeout(() => {
+                            if (typeof window.autoSyncSystem.enable === 'function') {
+                                window.autoSyncSystem.enable();
+                            }
+                        }, 2000);
+                    } else {
+                        console.log('✅ 자동 동기화가 이미 활성화되어 있음');
+                    }
+                }
+                
                 // 토큰 만료 30분 전에 자동 갱신 시도
                 const renewTime = savedToken.expires_at - Date.now() - (30 * 60 * 1000);
                 if (renewTime > 0) {
+                    console.log(`⏰ ${Math.floor(renewTime / (1000 * 60))}분 후 토큰 자동 갱신 예정`);
                     setTimeout(() => {
-                        console.log('토큰 자동 갱신 시도...');
+                        console.log('🔄 토큰 자동 갱신 시도...');
                         silentTokenRenewal();
                     }, renewTime);
                 }
@@ -243,11 +514,20 @@
                 throw new Error('토큰 검증 응답이 올바르지 않음');
             }
         } catch (error) {
-            console.warn('저장된 토큰이 유효하지 않음:', error.message);
-            localStorage.removeItem('googleDriveToken');
-            isAuthenticated = false;
-            window.isAuthenticated = false;
-            updateDriveButton();
+            console.warn('❌ 저장된 토큰이 유효하지 않음:', error.message);
+            
+            // 401 오류 (인증 만료)인 경우
+            if (error.status === 401) {
+                console.log('🔄 인증 만료로 토큰 정리 및 재인증 필요');
+                showMessage('구글 드라이브 인증이 만료되었습니다. 다시 로그인해 주세요.', 'warning');
+            }
+            
+            clearAllTokens();
+            
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateDriveStatus === 'function') {
+                window.updateDriveStatus('disconnected', '연결 안됨', '재로그인 필요');
+            }
         }
     }
 
@@ -286,72 +566,318 @@
      * 인증 버튼 클릭 핸들러
      */
     function handleAuthClick() {
-        tokenClient.callback = async (resp) => {
-            if (resp.error !== undefined) {
-                showMessage('인증 실패: ' + resp.error, 'error');
+        console.log('🔧 handleAuthClick 함수 호출됨');
+        console.log('📊 초기화 상태:', {
+            gisInited: gisInited,
+            tokenClient: !!tokenClient,
+            gapiInited: gapiInited,
+            CLIENT_ID: CLIENT_ID.substring(0, 20) + '...'
+        });
+        
+        if (!gisInited || !tokenClient) {
+            console.error('❌ Google Identity Services 초기화 실패');
+            console.log('상세 상태:', { gisInited, tokenClient: !!tokenClient });
+            showMessage('Google Identity Services가 초기화되지 않았습니다.', 'error');
+            return;
+        }
+        
+        try {
+            console.log('🚀 Google OAuth 인증 시작');
+            
+            // 현재 프로토콜 확인
+            const isFile = window.location.protocol === 'file:';
+            const isLocalhost = window.location.hostname === 'localhost';
+            
+            console.log('🔍 실행 환경:', { isFile, isLocalhost, protocol: window.location.protocol });
+            
+            if (isFile) {
+                console.warn('⚠️ file:// 프로토콜에서는 Google OAuth가 제한됩니다.');
+                showMessage('file:// 프로토콜에서는 Google 인증이 제한됩니다. 수동 인증 모드로 전환합니다.', 'warning');
+                
+                // 수동 인증 모드로 전환
+                showManualAuthDialog();
                 return;
             }
             
-            // 토큰 저장
-            saveTokenData(resp);
+            // 기존 토큰 확인
+            const hasToken = gapi.client.getToken() !== null;
+            
+            if (!hasToken) {
+                // 처음 인증 - consent 화면 표시
+                console.log('처음 인증 - 전체 권한 요청');
+                try {
+                    tokenClient.requestAccessToken({ 
+                        prompt: 'consent'
+                    });
+                } catch (requestError) {
+                    console.error('토큰 요청 실패:', requestError);
+                    
+                    // redirect_uri_mismatch 오류인 경우 수동 인증으로 전환
+                    if (requestError.message && requestError.message.includes('redirect_uri_mismatch')) {
+                        console.log('🔄 redirect_uri_mismatch 오류 감지, 수동 인증 모드로 전환');
+                        showMessage('리다이렉트 URI 오류가 발생했습니다. 수동 인증 모드로 전환합니다.', 'warning');
+                        showManualAuthDialog();
+                    } else {
+                        showMessage('인증 요청에 실패했습니다. 수동 인증을 시도하거나 페이지를 새로고침해주세요.', 'error');
+                    }
+                }
+            } else {
+                // 토큰 갱신
+                console.log('토큰 갱신 시도');
+                try {
+                    tokenClient.requestAccessToken({ 
+                        prompt: ''
+                    });
+                } catch (refreshError) {
+                    console.error('토큰 갱신 실패:', refreshError);
+                    showMessage('토큰 갱신에 실패했습니다. 다시 로그인해주세요.', 'error');
+                }
+            }
+            
+        } catch (error) {
+            console.error('인증 시작 오류:', error);
+            showMessage('인증 시작에 실패했습니다: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 인증 상태 업데이트
+     */
+    function updateAuthStatus() {
+        const driveBtn = document.getElementById('driveBtn');
+        const cloudSettingsBtn = document.getElementById('cloudSettingsBtn');
+        
+        if (isAuthenticated) {
+            if (driveBtn) {
+                driveBtn.textContent = '☁️ Google Drive 연결됨';
+                driveBtn.style.backgroundColor = '#4CAF50';
+            }
+            if (cloudSettingsBtn) {
+                cloudSettingsBtn.textContent = '☁️ 클라우드 설정 (연결됨)';
+            }
+            
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateDriveStatus === 'function') {
+                window.updateDriveStatus('connected', '연결됨', '인증 완료');
+            }
+        } else {
+            if (driveBtn) {
+                driveBtn.textContent = '☁️ Google Drive 연결';
+                driveBtn.style.backgroundColor = '';
+            }
+            if (cloudSettingsBtn) {
+                cloudSettingsBtn.textContent = '☁️ 클라우드 설정';
+            }
+            
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateDriveStatus === 'function') {
+                window.updateDriveStatus('disconnected', '연결 안 됨', '인증 필요');
+            }
+        }
+    }
+
+    /**
+     * 수동 인증 다이얼로그 표시
+     */
+    function showManualAuthDialog() {
+        if (!CLIENT_ID || CLIENT_ID === 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com') {
+            showMessage('먼저 Google API 키와 클라이언트 ID를 설정해주세요.', 'error');
+            return;
+        }
+        
+        // OAuth URL 생성
+        const authUrl = generateOAuthUrl();
+        
+        const dialog = `
+            <div id="manualAuthModal" style="
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 10000; display: flex;
+                align-items: center; justify-content: center;
+            ">
+                <div style="
+                    background: white; padding: 30px; border-radius: 10px;
+                    max-width: 600px; width: 90%; max-height: 80%;
+                    overflow-y: auto;
+                ">
+                    <h2>🔐 Google Drive 수동 인증</h2>
+                    
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="margin: 0; color: #2d5016;"><strong>💡 이 방법은 Cross-Origin 오류를 완전히 우회합니다!</strong></p>
+                    </div>
+                    
+                    <p><strong>1단계:</strong> 아래 버튼을 클릭하여 Google 인증 페이지를 여세요.</p>
+                    <p><button onclick="openAuthWindow()" style="
+                        background: #4285f4; color: white; padding: 12px 24px;
+                        border: none; border-radius: 8px; cursor: pointer;
+                        margin: 10px 0; font-weight: 600; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+                    ">🚀 Google 인증 페이지 열기</button></p>
+                    
+                    <div id="authStatus" style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                        <p style="margin: 0;">⏳ 인증 진행 중... 새 창에서 Google 로그인을 완료하세요.</p>
+                    </div>
+                    
+                    <p><strong>2단계:</strong> Google 계정으로 로그인하고 Drive 권한을 승인하세요.</p>
+                    <p><strong>3단계:</strong> 인증이 완료되면 자동으로 코드가 입력됩니다. (수동 입력도 가능)</p>
+                    
+                    <div style="margin: 20px 0;">
+                        <input type="text" id="authCodeInput" placeholder="인증 코드를 입력하세요..."
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" />
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <button onclick="handleManualAuth()" style="
+                            background: #28a745; color: white; padding: 10px 20px;
+                            border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;
+                        ">✅ 인증</button>
+                        <button onclick="closeManualAuthModal()" style="
+                            background: #6c757d; color: white; padding: 10px 20px;
+                            border: none; border-radius: 5px; cursor: pointer;
+                        ">❌ 취소</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', dialog);
+        
+        // 인증 창 열기 함수
+        window.openAuthWindow = function() {
+            const authStatus = document.getElementById('authStatus');
+            authStatus.style.display = 'block';
+            
+            const authWindow = window.open(authUrl, 'googleAuth', 'width=500,height=600');
+            
+            // 메시지 리스너로 코드 받기
+            const messageListener = function(event) {
+                if (event.data && event.data.type === 'oauth_code') {
+                    const authCodeInput = document.getElementById('authCodeInput');
+                    if (authCodeInput) {
+                        authCodeInput.value = event.data.code;
+                        authStatus.innerHTML = '<p style="margin: 0; color: #28a745;">✅ 인증 코드를 받았습니다! "✅ 인증" 버튼을 클릭하세요.</p>';
+                    }
+                    window.removeEventListener('message', messageListener);
+                }
+            };
+            
+            window.addEventListener('message', messageListener);
+            
+            // 창이 닫혔는지 확인
+            const checkClosed = setInterval(() => {
+                if (authWindow.closed) {
+                    clearInterval(checkClosed);
+                    const authCodeInput = document.getElementById('authCodeInput');
+                    if (!authCodeInput.value) {
+                        authStatus.innerHTML = '<p style="margin: 0; color: #dc3545;">❌ 인증이 취소되었거나 실패했습니다. 다시 시도하거나 수동으로 코드를 입력하세요.</p>';
+                    }
+                    window.removeEventListener('message', messageListener);
+                }
+            }, 1000);
+        };
+        
+        // 전역 함수 등록
+        window.handleManualAuth = handleManualAuth;
+        window.closeManualAuthModal = closeManualAuthModal;
+    }
+    
+    /**
+     * OAuth URL 생성
+     */
+    function generateOAuthUrl() {
+        const params = new URLSearchParams({
+            client_id: CLIENT_ID,
+            redirect_uri: 'http://localhost:8080/oauth/callback',
+            scope: SCOPES,
+            response_type: 'code',
+            access_type: 'offline',
+            prompt: 'consent'
+        });
+        
+        return `https://accounts.google.com/o/oauth2/auth?${params.toString()}`;
+    }
+    
+    /**
+     * 수동 인증 처리
+     */
+    async function handleManualAuth() {
+        const authCode = document.getElementById('authCodeInput').value.trim();
+        
+        if (!authCode) {
+            alert('인증 코드를 입력해주세요.');
+            return;
+        }
+        
+        try {
+            console.log('🔄 인증 코드로 토큰 교환 중...');
+            
+            const response = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    client_id: CLIENT_ID,
+                    code: authCode,
+                    grant_type: 'authorization_code',
+                    redirect_uri: 'http://localhost:8080/oauth/callback'
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`토큰 교환 실패: ${response.status}`);
+            }
+            
+            const tokenData = await response.json();
+            console.log('✅ 토큰 획득 성공');
+            
+            // 토큰 저장 및 설정
+            const tokenInfo = {
+                access_token: tokenData.access_token,
+                token_type: 'Bearer',
+                expires_at: Date.now() + (tokenData.expires_in * 1000),
+                refresh_token: tokenData.refresh_token
+            };
+            
+            saveToken(tokenInfo);
+            
+            if (gapiInited) {
+                gapi.client.setToken({
+                    access_token: tokenData.access_token,
+                    token_type: 'Bearer',
+                    expires_in: tokenData.expires_in
+                });
+            }
             
             isAuthenticated = true;
             window.isAuthenticated = true;
             
-            const expiresIn = Math.floor(resp.expires_in / 3600);
-            showMessage(`구글 드라이브 연동 성공! (${expiresIn}시간 유효)`, 'success');
-            updateDriveButton();
+            closeManualAuthModal();
+            showMessage('🎉 Google Drive 인증 완료!', 'success');
+            updateAuthStatus();
             
-            // 상태 인디케이터 업데이트
-            if (typeof window.updateDriveStatus === 'function') {
-                window.updateDriveStatus('connected', '연결됨', `${expiresIn}시간 유효`);
+        } catch (error) {
+            console.error('수동 인증 실패:', error);
+            alert('인증에 실패했습니다: ' + error.message);
+        }
+    }
+    
+    /**
+     * 수동 인증 모달 닫기
+     */
+    function closeManualAuthModal() {
+        const modal = document.getElementById('manualAuthModal');
+        if (modal) {
+            modal.remove();
+            console.log('✅ 수동 인증 모달 닫힘');
+            
+            // 전역 함수 정리 (안전하게)
+            if (window.handleManualAuth) {
+                delete window.handleManualAuth;
             }
-            
-            // 기본 파일 목록 표시
-            listFiles();
-        };
-
-        // 현재 상태 확인
-        const savedToken = getSavedToken();
-        const currentGapiToken = gapi.client.getToken();
-        const lastConsentTime = localStorage.getItem('lastGoogleConsentTime');
-        const now = Date.now();
-        const oneDayMs = 24 * 60 * 60 * 1000;
-        
-        console.log('인증 시작 상태:', {
-            savedToken: !!savedToken,
-            currentGapiToken: !!currentGapiToken,
-            lastConsentTime: lastConsentTime ? new Date(parseInt(lastConsentTime)) : null,
-            isAuthenticated: isAuthenticated
-        });
-        
-        // 이미 인증되어 있다면 토큰만 갱신
-        if (isAuthenticated && (savedToken || currentGapiToken)) {
-            console.log('이미 인증된 상태, 토큰 갱신만 수행');
-            tokenClient.requestAccessToken({prompt: ''});
-            return;
-        }
-        
-        // 24시간 consent 로직
-        let shouldPromptConsent = false;
-        if (!lastConsentTime || (now - parseInt(lastConsentTime)) > oneDayMs) {
-            shouldPromptConsent = true;
-            localStorage.setItem('lastGoogleConsentTime', now.toString());
-        }
-
-        if (!savedToken && !currentGapiToken) {
-            // 처음 인증이거나 토큰이 전혀 없음
-            if (shouldPromptConsent) {
-                console.log('24시간이 지났거나 처음 인증, 전체 consent 화면 표시');
-                tokenClient.requestAccessToken({prompt: 'consent'});
-            } else {
-                console.log('24시간 내 재인증, 간단한 인증 시도');
-                tokenClient.requestAccessToken({prompt: 'select_account'});
+            if (window.closeManualAuthModal) {
+                delete window.closeManualAuthModal;
             }
         } else {
-            // 토큰이 있지만 인증 상태가 아님 - 갱신 시도
-            console.log('토큰 갱신 시도');
-            tokenClient.requestAccessToken({prompt: ''});
+            console.log('⚠️ 수동 인증 모달이 이미 제거됨');
         }
     }
 
@@ -632,13 +1158,46 @@
     }
 
     /**
-     * 백업 파일 업로드
+     * 백업 파일 업로드 (개선된 버전)
      */
     async function uploadBackupFile(fileName, content) {
+        console.log(`📤 Google Drive 업로드 시작: ${fileName}`);
+        console.log(`📊 업로드 데이터 크기: ${(content.length / 1024).toFixed(2)}KB`);
+        
+        // "Korean Calendar Backups" 폴더 찾기 또는 생성
+        let folderId = null;
+        try {
+            const folderResponse = await gapi.client.drive.files.list({
+                q: "name='Korean Calendar Backups' and mimeType='application/vnd.google-apps.folder'",
+                fields: 'files(id, name)'
+            });
+            
+            if (folderResponse.result.files && folderResponse.result.files.length > 0) {
+                folderId = folderResponse.result.files[0].id;
+                console.log(`📁 기존 백업 폴더 발견: ${folderId}`);
+            } else {
+                // 폴더가 없으면 생성
+                const createFolderResponse = await gapi.client.drive.files.create({
+                    resource: {
+                        name: 'Korean Calendar Backups',
+                        mimeType: 'application/vnd.google-apps.folder'
+                    }
+                });
+                folderId = createFolderResponse.result.id;
+                console.log(`📁 새 백업 폴더 생성: ${folderId}`);
+            }
+        } catch (error) {
+            console.warn('폴더 처리 중 오류 (루트에 저장):', error);
+            // 폴더 처리 실패 시 루트에 저장
+        }
+
         const metadata = {
             name: fileName,
-            parents: ['appDataFolder'] // 앱 전용 폴더에 저장
+            description: `Korean Calendar App 백업 파일 (${new Date().toLocaleString('ko-KR')})`,
+            parents: folderId ? [folderId] : undefined // 폴더 ID가 있으면 사용, 없으면 루트
         };
+
+        console.log('📋 업로드 메타데이터:', metadata);
 
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
@@ -653,10 +1212,16 @@
         });
 
         if (!response.ok) {
-            throw new Error(`업로드 실패: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('❌ 업로드 실패 상세:', errorText);
+            throw new Error(`업로드 실패: ${response.status} ${response.statusText}`);
         }
 
-        return await response.json();
+        const result = await response.json();
+        console.log('✅ Google Drive 업로드 성공:', result);
+        console.log(`🔗 파일 링크: https://drive.google.com/file/d/${result.id}/view`);
+        
+        return result;
     }
 
     /**
@@ -670,20 +1235,30 @@
         }
 
         try {
-            if (!silent) showMessage('달력 메모 백업 중...', 'info');
+            if (!silent) {
+                showMessage('📤 Google Drive에 백업 중...', 'info');
+                console.log('🚀 백업 프로세스 시작');
+            }
             
             // 로컬스토리지에서 메모 데이터 가져오기
             const memos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+            const memoCount = Object.keys(memos).length;
+            
+            console.log(`📊 백업 데이터 준비: ${memoCount}개 메모`);
+            
             const backupData = {
                 version: '1.0',
                 timestamp: new Date().toISOString(),
                 memos: memos,
                 metadata: {
-                    totalMemos: Object.keys(memos).length,
+                    totalMemos: memoCount,
                     createdBy: 'Korean Calendar App',
                     description: '한국 달력 앱 메모 백업',
                     customFileName: customFileName || null,
-                    autoSync: true
+                    autoSync: !customFileName, // 커스텀 파일명이 없으면 자동 동기화
+                    syncType: customFileName ? 'manual' : 'auto',
+                    userAgent: navigator.userAgent,
+                    exportTime: new Date().toLocaleString('ko-KR')
                 }
             };
 
@@ -702,18 +1277,45 @@
                 fileName = `calendar-memos-backup-${new Date().toISOString().split('T')[0]}.json`;
             }
             
+            console.log(`📝 백업 파일명: ${fileName}`);
+            
             const result = await uploadBackupFile(fileName, backupContent);
             
+            // 성공 메시지 개선
+            const successMessage = customFileName 
+                ? `✅ 수동 백업 완료!\n📁 파일: ${fileName}\n📊 메모: ${memoCount}개\n🔗 Google Drive에서 확인 가능`
+                : `✅ 자동 동기화 완료!\n📁 파일: ${fileName}\n📊 메모: ${memoCount}개`;
+            
             if (!silent) {
-                showMessage(`✅ 달력 메모 백업 완료! (${Object.keys(memos).length}개 메모) - ${fileName}`, 'success');
+                showMessage(successMessage, 'success');
+                console.log('🎉 백업 프로세스 완료');
+            } else {
+                // silent 모드에서도 콘솔에는 로그
+                console.log(`✅ 자동 동기화 완료: ${fileName} (${memoCount}개 메모)`);
             }
             
-            return result;
+            // 동기화 상태 업데이트
+            if (typeof window.updateSyncStatus === 'function') {
+                window.updateSyncStatus('synced', '동기화됨', `${fileName} (${memoCount}개)`);
+            }
+            
+            return {
+                ...result,
+                fileName: fileName,
+                memoCount: memoCount,
+                fileLink: `https://drive.google.com/file/d/${result.id}/view`
+            };
             
         } catch (err) {
-            console.error('백업 실패:', err);
+            console.error('❌ 백업 실패 상세:', err);
             const message = `백업 실패: ${err.message}`;
             if (!silent) showMessage(message, 'error');
+            
+            // 실패 시에도 상태 업데이트
+            if (typeof window.updateSyncStatus === 'function') {
+                window.updateSyncStatus('error', '백업 실패', err.message);
+            }
+            
             throw err;
         }
     }
@@ -1971,6 +2573,22 @@
      * 초기화 및 이벤트 리스너
      */
     function initialize() {
+        console.log('🔧 Google Drive 통합 스크립트 초기화 시작');
+        console.log('🌐 현재 접속 정보:', {
+            protocol: window.location.protocol,
+            host: window.location.host,
+            url: window.location.href,
+            origin: window.location.origin,
+            isLocalhost: window.location.hostname === 'localhost',
+            isFile: window.location.protocol === 'file:'
+        });
+        
+        // Google OAuth 설정 정보 출력 (간단 로그인용)
+        console.log('📋 Google Cloud Console 설정 정보 (간단 로그인):');
+        console.log('   승인된 JavaScript 원본: ' + window.location.origin);
+        console.log('   ⚠️ 간단 로그인에는 리다이렉트 URI가 필요하지 않습니다');
+        console.log('   (Google Cloud Console > APIs & Services > Credentials에서 JavaScript 원본만 추가하세요)');
+        
         // 저장된 설정 불러오기
         const savedClientId = localStorage.getItem('googleDriveClientId');
         const savedApiKey = localStorage.getItem('googleDriveApiKey');
@@ -2002,26 +2620,49 @@
             driveBtn.onclick = showCloudSettingsModal;
         }
 
-        // Google API 로드 대기
-        if (typeof gapi !== 'undefined') {
-            initializeGapi();
-        } else {
-            // gapi 로드 대기
-            window.gapiLoadCallback = initializeGapi;
+        // Google API 스크립트 로드 완료 대기 (HTML에서 로드)
+        function waitForGoogleAPIs() {
+            if (window.gapiScriptLoaded && typeof gapi !== 'undefined') {
+                console.log('GAPI 초기화 시작');
+                initializeGapi();
+            } else {
+                console.log('GAPI 로드 대기 중...');
+                setTimeout(waitForGoogleAPIs, 100);
+            }
         }
 
-        // Google Identity Services 로드 대기
-        if (typeof google !== 'undefined' && google.accounts) {
-            initializeGis();
-        } else {
-            // GIS 로드 대기
-            window.gisLoadCallback = initializeGis;
+        function waitForGoogleGIS() {
+            if (window.gisScriptLoaded && typeof google !== 'undefined' && google.accounts) {
+                console.log('GIS 초기화 시작');
+                initializeGis();
+            } else {
+                console.log('GIS 로드 대기 중...');
+                setTimeout(waitForGoogleGIS, 100);
+            }
         }
 
-        // API 초기화 후 버튼 상태 업데이트
+        // 스크립트 로드 대기 시작
+        waitForGoogleAPIs();
+        waitForGoogleGIS();
+
+        // API 초기화 후 버튼 상태 업데이트 및 토큰 복원 최종 시도
         setTimeout(() => {
             maybeEnableButtons();
-        }, 500);
+            
+            // 페이지 완전 로드 후 토큰 복원 최종 시도
+            if (gapiInited && gisInited) {
+                console.log('🔄 페이지 로드 완료 - 토큰 복원 최종 시도');
+                checkAndRestoreToken();
+            }
+        }, 1000);
+        
+        // 추가 안전장치: 3초 후에도 인증되지 않았으면 한 번 더 시도
+        setTimeout(() => {
+            if (gapiInited && gisInited && !window.isAuthenticated) {
+                console.log('🔄 인증 상태 확인 - 토큰 복원 재시도');
+                checkAndRestoreToken();
+            }
+        }, 3000);
     }
 
     // 페이지 로드 완료 후 초기화
