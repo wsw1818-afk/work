@@ -24,13 +24,23 @@
                 🗒️ 스티커 메모
                 <button onclick="document.getElementById('cleanStickyMemo').remove()" style="background: rgba(255,255,255,0.3); border: none; color: #8b5a00; font-size: 18px; cursor: pointer; font-weight: bold; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.background='#dc3545'; this.style.color='white'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(255,255,255,0.3)'; this.style.color='#8b5a00'; this.style.transform='scale(1)';">×</button>
             </div>
-            <div style="padding: 15px; background: #fff3cd;">
-                <textarea id="cleanStickyText" placeholder="메모를 입력하세요..." style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+            <div style="padding: 15px; background: #fff3cd; position: relative;">
+                <textarea id="cleanStickyText" placeholder="메모를 입력하세요..." style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; resize: none;"></textarea>
                 <div style="margin-top: 10px; text-align: center;">
                     <button onclick="saveCleanMemo()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 8px; font-weight: bold;">💾 저장</button>
                     <button onclick="loadCleanMemo()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">📂 불러오기</button>
                 </div>
             </div>
+            
+            <!-- 리사이즈 핸들들 -->
+            <div class="resize-handle resize-handle-n" style="position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 20px; height: 6px; cursor: n-resize; background: transparent;"></div>
+            <div class="resize-handle resize-handle-s" style="position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); width: 20px; height: 6px; cursor: s-resize; background: transparent;"></div>
+            <div class="resize-handle resize-handle-w" style="position: absolute; left: -3px; top: 50%; transform: translateY(-50%); width: 6px; height: 20px; cursor: w-resize; background: transparent;"></div>
+            <div class="resize-handle resize-handle-e" style="position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 6px; height: 20px; cursor: e-resize; background: transparent;"></div>
+            <div class="resize-handle resize-handle-nw" style="position: absolute; top: -3px; left: -3px; width: 10px; height: 10px; cursor: nw-resize; background: transparent;"></div>
+            <div class="resize-handle resize-handle-ne" style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; cursor: ne-resize; background: transparent;"></div>
+            <div class="resize-handle resize-handle-sw" style="position: absolute; bottom: -3px; left: -3px; width: 10px; height: 10px; cursor: sw-resize; background: transparent;"></div>
+            <div class="resize-handle resize-handle-se" style="position: absolute; bottom: -3px; right: -3px; width: 10px; height: 10px; cursor: se-resize; background: transparent;"></div>
         `;
         
         // 스타일 적용
@@ -55,8 +65,9 @@
             document.getElementById('cleanStickyText').value = saved;
         }
         
-        // 드래그 기능 초기화
+        // 드래그 및 리사이즈 기능 초기화
         initStickyDrag();
+        initStickyResize();
         
         console.log('✅ 깨끗한 스티커 메모 생성 완료');
         return false;
@@ -162,6 +173,137 @@
         }
         
         console.log('✅ 스티커 메모 드래그 기능 초기화 완료');
+    }
+    
+    // 리사이즈 기능 초기화
+    function initStickyResize() {
+        const memo = document.getElementById('cleanStickyMemo');
+        if (!memo) return;
+        
+        const handles = memo.querySelectorAll('.resize-handle');
+        
+        handles.forEach(handle => {
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight, startLeft, startTop;
+            
+            handle.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = memo.getBoundingClientRect();
+                startWidth = rect.width;
+                startHeight = rect.height;
+                startLeft = rect.left;
+                startTop = rect.top;
+                
+                document.body.style.cursor = handle.style.cursor;
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+                let newLeft = startLeft;
+                let newTop = startTop;
+                
+                // 최소 크기 제한
+                const minWidth = 300;
+                const minHeight = 250;
+                
+                // 각 핸들별 리사이즈 로직
+                if (handle.classList.contains('resize-handle-e')) {
+                    newWidth = Math.max(minWidth, startWidth + deltaX);
+                } else if (handle.classList.contains('resize-handle-w')) {
+                    newWidth = Math.max(minWidth, startWidth - deltaX);
+                    if (newWidth > minWidth) newLeft = startLeft + deltaX;
+                } else if (handle.classList.contains('resize-handle-s')) {
+                    newHeight = Math.max(minHeight, startHeight + deltaY);
+                } else if (handle.classList.contains('resize-handle-n')) {
+                    newHeight = Math.max(minHeight, startHeight - deltaY);
+                    if (newHeight > minHeight) newTop = startTop + deltaY;
+                } else if (handle.classList.contains('resize-handle-se')) {
+                    newWidth = Math.max(minWidth, startWidth + deltaX);
+                    newHeight = Math.max(minHeight, startHeight + deltaY);
+                } else if (handle.classList.contains('resize-handle-sw')) {
+                    newWidth = Math.max(minWidth, startWidth - deltaX);
+                    newHeight = Math.max(minHeight, startHeight + deltaY);
+                    if (newWidth > minWidth) newLeft = startLeft + deltaX;
+                } else if (handle.classList.contains('resize-handle-ne')) {
+                    newWidth = Math.max(minWidth, startWidth + deltaX);
+                    newHeight = Math.max(minHeight, startHeight - deltaY);
+                    if (newHeight > minHeight) newTop = startTop + deltaY;
+                } else if (handle.classList.contains('resize-handle-nw')) {
+                    newWidth = Math.max(minWidth, startWidth - deltaX);
+                    newHeight = Math.max(minHeight, startHeight - deltaY);
+                    if (newWidth > minWidth) newLeft = startLeft + deltaX;
+                    if (newHeight > minHeight) newTop = startTop + deltaY;
+                }
+                
+                // 화면 경계 체크
+                const maxX = window.innerWidth - newWidth;
+                const maxY = window.innerHeight - newHeight;
+                
+                newLeft = Math.max(0, Math.min(newLeft, maxX));
+                newTop = Math.max(0, Math.min(newTop, maxY));
+                
+                // 스타일 적용
+                memo.style.width = newWidth + 'px';
+                memo.style.height = newHeight + 'px';
+                memo.style.left = newLeft + 'px';
+                memo.style.top = newTop + 'px';
+                
+                // 텍스트영역 크기 조정
+                const textarea = memo.querySelector('#cleanStickyText');
+                if (textarea) {
+                    textarea.style.height = (newHeight - 150) + 'px';
+                }
+            });
+            
+            document.addEventListener('mouseup', function(e) {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    
+                    // 크기와 위치 저장
+                    const rect = memo.getBoundingClientRect();
+                    localStorage.setItem('cleanStickyMemoSize', JSON.stringify({
+                        width: rect.width,
+                        height: rect.height,
+                        left: rect.left,
+                        top: rect.top
+                    }));
+                }
+            });
+        });
+        
+        // 저장된 크기 로드
+        const savedSize = localStorage.getItem('cleanStickyMemoSize');
+        if (savedSize) {
+            try {
+                const size = JSON.parse(savedSize);
+                memo.style.width = size.width + 'px';
+                memo.style.height = size.height + 'px';
+                memo.style.left = size.left + 'px';
+                memo.style.top = size.top + 'px';
+                
+                // 텍스트영역 크기 조정
+                const textarea = memo.querySelector('#cleanStickyText');
+                if (textarea) {
+                    textarea.style.height = (size.height - 150) + 'px';
+                }
+            } catch(e) {
+                console.log('크기 로드 실패:', e);
+            }
+        }
+        
+        console.log('✅ 스티커 메모 리사이즈 기능 초기화 완료');
     }
     
 })();
