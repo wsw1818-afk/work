@@ -19,8 +19,8 @@
 
     // Google Cloud Console에서 발급받은 실제 값들
     // 임시로 localStorage에서 불러오거나 사용자가 설정할 수 있도록 수정
-    let CLIENT_ID = localStorage.getItem('google_client_id') || 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
-    let API_KEY = localStorage.getItem('google_api_key') || 'YOUR_API_KEY_HERE';
+    let CLIENT_ID = localStorage.getItem('googleDriveClientId') || 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
+    let API_KEY = localStorage.getItem('googleDriveApiKey') || 'YOUR_API_KEY_HERE';
 
     /**
      * API 키와 클라이언트 ID 설정 함수
@@ -28,13 +28,13 @@
     function setGoogleApiCredentials(clientId, apiKey) {
         if (clientId && clientId !== 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com') {
             CLIENT_ID = clientId;
-            localStorage.setItem('google_client_id', clientId);
+            localStorage.setItem('googleDriveClientId', clientId);
             console.log('✅ 클라이언트 ID가 설정되었습니다.');
         }
         
         if (apiKey && apiKey !== 'YOUR_API_KEY_HERE') {
             API_KEY = apiKey;
-            localStorage.setItem('google_api_key', apiKey);
+            localStorage.setItem('googleDriveApiKey', apiKey);
             console.log('✅ API 키가 설정되었습니다.');
         }
         
@@ -565,7 +565,7 @@
     /**
      * 인증 버튼 클릭 핸들러
      */
-    function handleAuthClick() {
+    window.handleAuthClick = function() {
         console.log('🔧 handleAuthClick 함수 호출됨');
         console.log('📊 초기화 상태:', {
             gisInited: gisInited,
@@ -2324,8 +2324,8 @@
      * 클라우드 설정 저장
      */
     window.saveCloudSettings = function() {
-        const clientId = document.getElementById('clientId').value.trim();
-        const apiKey = document.getElementById('apiKey').value.trim();
+        const clientId = document.getElementById('googleClientId').value.trim();
+        const apiKey = document.getElementById('googleApiKey').value.trim();
 
         if (!clientId || !apiKey) {
             showMessage('클라이언트 ID와 API 키를 모두 입력해주세요.', 'error');
@@ -2337,10 +2337,27 @@
         localStorage.setItem('googleDriveApiKey', apiKey);
 
         // 전역 변수 업데이트
+        CLIENT_ID = clientId;
+        API_KEY = apiKey;
         window.CLIENT_ID = clientId;
         window.API_KEY = apiKey;
 
-        showMessage('설정이 저장되었습니다. 페이지를 새로고침하여 적용하세요.', 'success');
+        // API 재초기화
+        setGoogleApiCredentials(clientId, apiKey);
+        
+        // GAPI와 GIS 즉시 재초기화 시도
+        setTimeout(() => {
+            if (typeof gapi !== 'undefined' && gapi.load) {
+                console.log('🔄 GAPI 재초기화 시도...');
+                initializeGapi();
+            }
+            if (typeof google !== 'undefined' && google.accounts) {
+                console.log('🔄 GIS 재초기화 시도...');
+                initializeGis();
+            }
+        }, 100);
+        
+        showMessage('설정이 저장되었습니다! 잠시 후 구글 로그인을 시도해보세요.', 'success');
         
         // 모달 닫기
         closeModal();
