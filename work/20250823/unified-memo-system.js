@@ -677,11 +677,11 @@
         // 데이터 로드
         loadMemosFromStorage();
         
-        // 기존 함수 강제 덮어쓰기 (충돌 방지)
-        forceReplaceConflictingFunctions();
+        // 기존 함수 강제 덮어쓰기 (충돌 방지) - 임시 비활성화
+        // forceReplaceConflictingFunctions();
         
-        // 기존 함수 대체
-        replaceGlobalFunctions();
+        // 기존 함수 대체 - 임시 비활성화
+        // replaceGlobalFunctions();
         
         // UI 초기화
         refreshAllUI();

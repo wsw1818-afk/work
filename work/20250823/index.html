@@ -3794,7 +3794,11 @@
             }
 
             // 설정 모달 실시간 미리보기 이벤트
-            initSettingsModalEvents();
+            if (typeof initSettingsModalEvents === 'function') {
+                initSettingsModalEvents();
+            } else {
+                console.warn('initSettingsModalEvents 함수가 정의되지 않음');
+            }
 
             // 메모장 모달 이벤트
             const closeMemoBtn = document.getElementById('closeMemo');
@@ -4064,8 +4068,16 @@
                 
                 // 알람 시스템 초기화
                 setTimeout(() => {
-                    requestNotificationPermission();
-                    restoreAlarms();
+                    if (typeof requestNotificationPermission === 'function') {
+                        requestNotificationPermission();
+                    } else {
+                        console.warn('requestNotificationPermission 함수가 정의되지 않음');
+                    }
+                    if (typeof restoreAlarms === 'function') {
+                        restoreAlarms();
+                    } else {
+                        console.warn('restoreAlarms 함수가 정의되지 않음');
+                    }
                 }, 1000); // 페이지 로딩 후 1초 뒤에 권한 요청
                 
                 // 스티키 메모는 메모장 버튼 클릭 시에만 생성됨
