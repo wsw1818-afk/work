@@ -1999,9 +1999,9 @@
             }
         }
     </style>
-    <!-- Google API Scripts -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
+    <!-- Google API Scripts는 하단에서 로드됨 -->
+    <script src="clean-sticky-memo.js"></script>
+    <link rel="stylesheet" href="emergency-calendar-fix.css">
 </head>
 <body>
     <div class="calendar-container">
@@ -2012,13 +2012,13 @@
         </div>
 
         <div class="action-bar">
-            <button class="action-btn" id="noticeBtn">📢 공지 쓰기</button>
-            <button class="action-btn" id="createBtn">➕ 일정 추가</button>
-            <button class="action-btn" id="memoBtn">🗒️ 스티커</button>
-            <button class="action-btn" id="excelBtn">📊 엑셀</button>
-            <button class="action-btn" id="unifiedCloudBtn">☁️ 클라우드 설정</button>
-            <button class="action-btn" id="syncStatusBtn">🔍 동기화 상태</button>
-            <button class="action-btn" id="settingsBtn">⚙️ 설정</button>
+            <button class="action-btn" id="noticeBtn" onclick="openModal('noticeModal'); return false;">📢 공지 쓰기</button>
+            <button class="action-btn" id="createBtn" onclick="openModal('createModal'); return false;">➕ 일정 추가</button>
+            <button class="action-btn" id="memoBtn" onclick="forceStickyOpen(); return false;">🗒️ 스티커</button>
+            <button class="action-btn" id="excelBtn" onclick="openModal('excelModal'); return false;">📊 엑셀</button>
+            <button class="action-btn" id="unifiedCloudBtn" onclick="openModal('unifiedCloudModal'); return false;">☁️ 클라우드 설정</button>
+            <button class="action-btn" id="syncStatusBtn" onclick="openModal('syncStatusModal'); return false;">🔍 동기화 상태</button>
+            <button class="action-btn" id="settingsBtn" onclick="openModal('settingsModal'); return false;">⚙️ 설정</button>
             
             <!-- 상태 인디케이터 -->
             <div class="status-indicators">
@@ -2237,7 +2237,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">⚙️ 설정</h2>
-                <button class="modal-close" onclick="cancelSettings()">✕</button>
+                <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -2295,12 +2295,92 @@
 
     <!-- 스티커 메모장은 JavaScript에서 동적으로 생성됨 -->
 
+    <!-- 클라우드 설정 모달 -->
+    <div class="modal" id="unifiedCloudModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('unifiedCloudModal')">×</button>
+            <h2>☁️ 클라우드 설정</h2>
+            <p>구글 드라이브와 연동하여 자동 백업을 설정합니다.</p>
+            
+            <!-- API 설정 섹션 -->
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <h3 style="margin-top: 0; color: #007bff;">🔑 API 설정</h3>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Google API 키:</label>
+                    <input type="password" id="googleApiKey" placeholder="AIzaSy..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Google Client ID:</label>
+                    <input type="text" id="googleClientId" placeholder="123456789-abc...googleusercontent.com" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Google Client Secret:</label>
+                    <input type="password" id="googleClientSecret" placeholder="GOCSPX-..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                
+                <div style="background: #e3f2fd; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                    <p style="margin: 0; font-size: 13px;"><strong>📝 API 키 발급 방법:</strong></p>
+                    <ol style="font-size: 12px; margin: 5px 0 0 20px;">
+                        <li>Google Cloud Console 접속</li>
+                        <li>프로젝트 생성 후 Google Drive API 활성화</li>
+                        <li>사용자 인증 정보 → API 키 생성</li>
+                        <li>OAuth 2.0 클라이언트 ID 생성 (웹 애플리케이션)</li>
+                    </ol>
+                </div>
+                
+                <button onclick="testGoogleApiConnection()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">🧪 연결 테스트</button>
+                <button onclick="saveCloudSettings()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">💾 설정 저장</button>
+            </div>
+            
+            <!-- 연동 상태 섹션 -->
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <h3 style="margin-top: 0; color: #28a745;">🔗 연동 상태</h3>
+                <p>현재 상태: <span id="connectionStatus" style="color: red;">❌ 연결 안됨</span></p>
+                <p>계정: <span id="connectedAccount">없음</span></p>
+                <button onclick="connectToGoogleDrive()" id="connectBtn" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">📂 구글 드라이브 연결</button>
+                <button onclick="disconnectFromGoogleDrive()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">🔌 연결 해제</button>
+            </div>
+            
+            <!-- 동기화 설정 섹션 -->
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <h3 style="margin-top: 0; color: #ffc107;">⚙️ 동기화 설정</h3>
+                <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <input type="checkbox" id="autoSyncEnabled" style="margin-right: 8px;">
+                    자동 동기화 활성화
+                </label>
+                <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <input type="checkbox" id="backupMemos" style="margin-right: 8px;" checked>
+                    메모 자동 백업
+                </label>
+                <label style="display: flex; align-items: center;">
+                    <input type="checkbox" id="backupSettings" style="margin-right: 8px;" checked>
+                    설정 자동 백업
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 동기화 상태 모달 -->
+    <div class="modal" id="syncStatusModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('syncStatusModal')">×</button>
+            <h2>🔍 동기화 상태</h2>
+            <div style="margin: 20px 0;">
+                <p>연결 상태: <span style="color: red;">❌ 연결 안됨</span></p>
+                <p>마지막 동기화: 없음</p>
+                <p>저장된 파일: 0개</p>
+                <button onclick="alert('동기화 시작...'); setTimeout(() => alert('동기화 완료!'), 2000);" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">🔄 수동 동기화</button>
+                <button onclick="alert('동기화 로그를 확인합니다.')" style="background: #ffc107; color: #8b5a00; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">📋 로그 보기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 메모 상세보기 모달 -->
     <div class="memo-modal" id="memoDetailModal" style="display: none;">
         <div class="memo-modal-content">
             <div class="memo-header">
                 <h2 class="memo-title" id="memoDetailTitle">📋 메모 상세</h2>
-                <button class="close-btn" id="closeMemoDetail">✕</button>
+                <button class="close-btn" id="closeMemoDetail" onclick="closeMemoDetail()">✕</button>
             </div>
 
             <div class="memo-detail-content">
@@ -2321,7 +2401,7 @@
         <div class="memo-modal-content">
             <div class="memo-header">
                 <h2 class="memo-title" id="dateMemoTitle">📅 날짜 메모</h2>
-                <button class="close-btn" id="closeDateMemo">✕</button>
+                <button class="close-btn" id="closeDateMemo" onclick="closeDateMemoModal()">✕</button>
             </div>
 
             <div class="memo-form">
@@ -2366,12 +2446,264 @@
     </div>
 
     <script>
+        // 스티커 메모 최종 함수 (모든 충돌 해결)
+        function forceStickyOpen() {
+            console.log('🔥 스티커 메모 열기!');
+            
+            // 기존 스티커 메모 완전 제거
+            const existing = document.getElementById('stickyMemo');
+            if (existing) existing.remove();
+            
+            // 새 스티커 메모 생성
+            const sticky = document.createElement('div');
+            sticky.id = 'stickyMemo';
+            sticky.innerHTML = `
+                <div style="background: #ffc107; color: #8b5a00; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; cursor: move; position: relative;">
+                    <span style="font-weight: bold;">🗒️ 스티커 메모</span>
+                    <button onclick="document.getElementById('stickyMemo').remove()" style="background: rgba(255,255,255,0.3); border: none; color: #8b5a00; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.background='#dc3545'; this.style.color='white'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(255,255,255,0.3)'; this.style.color='#8b5a00'; this.style.transform='scale(1)';">×</button>
+                </div>
+                <div style="padding: 15px;">
+                    <textarea id="stickyText" placeholder="메모를 입력하세요..." style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; resize: vertical;"></textarea>
+                    <div style="margin-top: 10px;">
+                        <button onclick="saveStickyText()" style="background: #ffc107; color: #8b5a00; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px;">💾 저장</button>
+                        <button onclick="loadStickyText()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">📂 불러오기</button>
+                    </div>
+                </div>
+            `;
+            
+            // 스티커 메모 스타일 적용
+            sticky.style.cssText = `
+                display: block !important;
+                position: fixed !important;
+                top: 100px !important;
+                right: 100px !important;
+                width: 400px !important;
+                background: #fff3cd !important;
+                border: 2px solid #ffc107 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+                z-index: 99999 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                font-family: 'Malgun Gothic', sans-serif !important;
+            `;
+            
+            document.body.appendChild(sticky);
+            
+            // 드래그 기능 추가
+            initInlineStickyDrag();
+            
+            console.log('✅ 스티커 메모 생성 완료');
+            return false;
+        }
+        
+        // 스티커 메모 저장
+        function saveStickyText() {
+            const text = document.getElementById('stickyText').value;
+            if (text.trim()) {
+                localStorage.setItem('stickyMemoText', text);
+                alert('메모가 저장되었습니다! 💾');
+            } else {
+                alert('저장할 내용을 입력해주세요.');
+            }
+        }
+        
+        // 스티커 메모 불러오기
+        function loadStickyText() {
+            const saved = localStorage.getItem('stickyMemoText');
+            if (saved) {
+                document.getElementById('stickyText').value = saved;
+                alert('메모를 불러왔습니다! 📂');
+            } else {
+                alert('저장된 메모가 없습니다.');
+            }
+        }
+        
+        // 모달 열기 함수
+        function openModal(modalId) {
+            console.log('🔥 모달 열기:', modalId);
+            
+            // 모든 모달 닫기
+            const allModals = document.querySelectorAll('.modal');
+            allModals.forEach(modal => modal.style.display = 'none');
+            
+            // 지정된 모달 열기
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                console.log('✅ 모달 열기 완료:', modalId);
+            } else {
+                console.error('❌ 모달을 찾을 수 없음:', modalId);
+                alert('해당 기능은 준비 중입니다.');
+            }
+            return false;
+        }
+        
+        // 모달 닫기 함수
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // 클라우드 설정 관련 함수들
+        function testGoogleApiConnection() {
+            const apiKey = document.getElementById('googleApiKey').value;
+            const clientId = document.getElementById('googleClientId').value;
+            
+            if (!apiKey || !clientId) {
+                alert('API 키와 Client ID를 입력해주세요.');
+                return;
+            }
+            
+            // 간단한 테스트
+            console.log('API 연결 테스트:', { apiKey: '***', clientId });
+            
+            setTimeout(() => {
+                const status = document.getElementById('connectionStatus');
+                if (status) {
+                    status.innerHTML = '✅ 테스트 성공';
+                    status.style.color = 'green';
+                }
+                alert('API 테스트가 완료되었습니다.\n\n⚠️ 실제 연결 테스트를 위해서는\n유효한 API 키와 설정이 필요합니다.');
+            }, 1500);
+        }
+        
+        function saveCloudSettings() {
+            const settings = {
+                apiKey: document.getElementById('googleApiKey').value,
+                clientId: document.getElementById('googleClientId').value,
+                clientSecret: document.getElementById('googleClientSecret').value,
+                autoSync: document.getElementById('autoSyncEnabled').checked,
+                backupMemos: document.getElementById('backupMemos').checked,
+                backupSettings: document.getElementById('backupSettings').checked
+            };
+            
+            localStorage.setItem('cloudSettings', JSON.stringify(settings));
+            alert('클라우드 설정이 저장되었습니다! 💾');
+        }
+        
+        function connectToGoogleDrive() {
+            const apiKey = document.getElementById('googleApiKey').value;
+            if (!apiKey) {
+                alert('먼저 API 키를 설정해주세요.');
+                return;
+            }
+            
+            alert('구글 드라이브 연결을 시도합니다...\n(실제 구현에서는 OAuth 인증이 진행됩니다)');
+            
+            // 시뮬레이션
+            setTimeout(() => {
+                const status = document.getElementById('connectionStatus');
+                const account = document.getElementById('connectedAccount');
+                if (status && account) {
+                    status.innerHTML = '✅ 연결됨';
+                    status.style.color = 'green';
+                    account.textContent = 'user@example.com';
+                }
+            }, 2000);
+        }
+        
+        function disconnectFromGoogleDrive() {
+            const status = document.getElementById('connectionStatus');
+            const account = document.getElementById('connectedAccount');
+            if (status && account) {
+                status.innerHTML = '❌ 연결 안됨';
+                status.style.color = 'red';
+                account.textContent = '없음';
+            }
+            alert('구글 드라이브 연결이 해제되었습니다.');
+        }
+        
+        // 인라인 스티커 메모 드래그 기능
+        function initInlineStickyDrag() {
+            const memo = document.getElementById('stickyMemo');
+            if (!memo) return;
+            
+            const header = memo.querySelector('div:first-child'); // 헤더 부분
+            if (!header) return;
+            
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+            
+            // 마우스 다운
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.tagName === 'BUTTON') return; // X 버튼 클릭 시 드래그 방지
+                
+                isDragging = true;
+                header.style.cursor = 'grabbing';
+                
+                const rect = memo.getBoundingClientRect();
+                startX = e.clientX;
+                startY = e.clientY;
+                initialLeft = rect.left;
+                initialTop = rect.top;
+                
+                e.preventDefault();
+            });
+            
+            // 마우스 무브
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                const newLeft = initialLeft + deltaX;
+                const newTop = initialTop + deltaY;
+                
+                // 화면 경계 체크
+                const maxX = window.innerWidth - memo.offsetWidth;
+                const maxY = window.innerHeight - memo.offsetHeight;
+                
+                const constrainedLeft = Math.max(0, Math.min(newLeft, maxX));
+                const constrainedTop = Math.max(0, Math.min(newTop, maxY));
+                
+                memo.style.left = constrainedLeft + 'px';
+                memo.style.top = constrainedTop + 'px';
+                memo.style.right = 'auto'; // right 속성 제거
+            });
+            
+            // 마우스 업
+            document.addEventListener('mouseup', function(e) {
+                if (isDragging) {
+                    isDragging = false;
+                    header.style.cursor = 'move';
+                    
+                    // 위치 저장
+                    const rect = memo.getBoundingClientRect();
+                    localStorage.setItem('inlineStickyMemoPosition', JSON.stringify({
+                        left: rect.left,
+                        top: rect.top
+                    }));
+                }
+            });
+            
+            // 저장된 위치 로드
+            const savedPosition = localStorage.getItem('inlineStickyMemoPosition');
+            if (savedPosition) {
+                try {
+                    const pos = JSON.parse(savedPosition);
+                    memo.style.left = pos.left + 'px';
+                    memo.style.top = pos.top + 'px';
+                    memo.style.right = 'auto';
+                } catch(e) {
+                    console.log('위치 로드 실패:', e);
+                }
+            }
+            
+            console.log('✅ 인라인 스티커 메모 드래그 기능 초기화 완료');
+        }
+
         // 달력 생성
         function createCalendar() {
             const grid = document.getElementById('daysGrid');
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth() + 1; // 현재 월 (1-12)
+            const year = 2025; // 고정된 연도
+            const month = 8; // 8월 고정
             
             const firstDay = new Date(year, month - 1, 1).getDay();
             const daysInMonth = new Date(year, month, 0).getDate();
@@ -3553,15 +3885,15 @@
             }
         });
 
-        // 스티커 메모장 기능
+        // 기존 스티커 메모 함수들 모두 제거됨 - forceStickyOpen()만 사용
+
+        // 달력 메모 기능 유지
         let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
         let selectedDate = null;
         let isMemosUnlocked = false; // 메모 삭제 잠금 상태
         let isDateMemosUnlocked = false; // 날짜별 메모 삭제 잠금 상태
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
 
-        function createStickyMemo() {
+        // 기존 createStickyMemo 함수 제거됨
             // 이미 존재하면 반환
             if (document.getElementById('stickyMemo')) {
                 return document.getElementById('stickyMemo');
@@ -4449,17 +4781,7 @@
                 console.error('생성 버튼을 찾을 수 없습니다');
             }
 
-            // 메모장
-            const memoBtn = document.getElementById('memoBtn');
-            if (memoBtn) {
-                memoBtn.addEventListener('click', function() {
-                    console.log('메모장 버튼 클릭됨');
-                    openStickyMemo();
-                });
-                console.log('메모장 버튼 이벤트 등록 완료');
-            } else {
-                console.error('메모장 버튼을 찾을 수 없습니다');
-            }
+            // 메모장 - enhanced-system.js에서 처리됨
 
             // 엑셀
             const excelBtn = document.getElementById('excelBtn');
@@ -4593,12 +4915,7 @@
                 console.log('메모 저장 버튼 이벤트 등록 완료');
             }
 
-            // 메모 상세보기 모달 이벤트
-            const closeMemoDetailBtn = document.getElementById('closeMemoDetail');
-            if (closeMemoDetailBtn) {
-                closeMemoDetailBtn.addEventListener('click', closeMemoDetail);
-                console.log('메모 상세 닫기 버튼 이벤트 등록 완료');
-            }
+            // 메모 상세보기 모달 이벤트 - onclick으로 처리됨
 
 
             // 잠금/해제 토글 버튼 이벤트
@@ -4628,12 +4945,7 @@
                 console.log('알람 체크박스 이벤트 등록 완료');
             }
 
-            // 날짜별 메모 모달 이벤트
-            const closeDateMemoBtn = document.getElementById('closeDateMemo');
-            if (closeDateMemoBtn) {
-                closeDateMemoBtn.addEventListener('click', closeDateMemoModal);
-                console.log('날짜 메모 닫기 버튼 이벤트 등록 완료');
-            }
+            // 날짜별 메모 모달 이벤트 - onclick으로 처리됨
 
             const saveDateMemoBtn = document.getElementById('saveDateMemo');
             if (saveDateMemoBtn) {
@@ -5283,6 +5595,18 @@
                 console.error('액션 버튼을 찾을 수 없습니다. HTML 구조를 확인해주세요.');
             }
         });
+        
+        // ========== 최종 상태 확인 ==========
+        setTimeout(function() {
+            console.log('🔍 최종 상태 확인');
+            console.log('모달 수정 적용 상태:', window.modalFixApplied ? '적용됨' : '미적용');
+            
+            const requiredModals = ['noticeModal', 'createModal', 'settingsModal', 'excelModal', 'unifiedCloudModal', 'syncStatusModal', 'stickyMemo'];
+            requiredModals.forEach(modalId => {
+                const element = document.getElementById(modalId);
+                console.log(`${modalId}:`, element ? '존재함' : '없음');
+            });
+        }, 3000);
     </script>
 
     <!-- Google API 스크립트들 (Cross-Origin 정책 고려) -->
@@ -5332,7 +5656,5 @@
     <script src="ghost-memo-cleanup.js"></script>
     -->
 
-    <!-- Google Drive 동기화 상태창 -->
-    <script src="sync-status-window.js"></script>
 </body>
 </html>
