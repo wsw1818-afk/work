@@ -25,10 +25,35 @@
                 <button onclick="document.getElementById('cleanStickyMemo').remove()" style="background: rgba(255,255,255,0.3); border: none; color: #8b5a00; font-size: 18px; cursor: pointer; font-weight: bold; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.background='#dc3545'; this.style.color='white'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(255,255,255,0.3)'; this.style.color='#8b5a00'; this.style.transform='scale(1)';">×</button>
             </div>
             <div style="padding: 15px; background: #fff3cd; position: relative;">
-                <textarea id="cleanStickyText" placeholder="메모를 입력하세요..." style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; resize: none;"></textarea>
+                <!-- 텍스트 서식 도구 모음 -->
+                <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.5); border-radius: 5px; display: flex; flex-wrap: wrap; gap: 5px;">
+                    <select id="fontFamily" onchange="applyTextFormat('fontFamily', this.value)" style="padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                        <option value="inherit">기본 폰트</option>
+                        <option value="'Malgun Gothic'">맑은 고딕</option>
+                        <option value="'Noto Sans KR'">노토 산스</option>
+                        <option value="Arial">Arial</option>
+                        <option value="'Times New Roman'">Times</option>
+                        <option value="monospace">고정폭</option>
+                    </select>
+                    <select id="fontSize" onchange="applyTextFormat('fontSize', this.value)" style="padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                        <option value="12px">12px</option>
+                        <option value="14px" selected>14px</option>
+                        <option value="16px">16px</option>
+                        <option value="18px">18px</option>
+                        <option value="20px">20px</option>
+                        <option value="24px">24px</option>
+                    </select>
+                    <button onclick="applyTextFormat('bold')" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-weight: bold;">𝐁</button>
+                    <button onclick="applyTextFormat('italic')" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-style: italic;">𝐼</button>
+                    <button onclick="applyTextFormat('underline')" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; text-decoration: underline;">U</button>
+                    <input type="color" id="textColor" value="#000000" onchange="applyTextFormat('color', this.value)" style="width: 30px; height: 26px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer;">
+                    <input type="color" id="bgColor" value="#ffffff" onchange="applyTextFormat('backgroundColor', this.value)" style="width: 30px; height: 26px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer;">
+                </div>
+                <div contenteditable="true" id="cleanStickyText" style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; resize: none; overflow-y: auto; background: white;" placeholder="메모를 입력하세요..."></div>
                 <div style="margin-top: 10px; text-align: center;">
                     <button onclick="saveCleanMemo()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 8px; font-weight: bold;">💾 저장</button>
                     <button onclick="loadCleanMemo()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">📂 불러오기</button>
+                    <button onclick="clearTextFormat()" style="background: #ffc107; color: #8b5a00; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 8px; font-weight: bold;">🧹 서식 지우기</button>
                 </div>
             </div>
             
@@ -62,8 +87,22 @@
         // 저장된 내용 자동 로드
         const saved = localStorage.getItem('cleanStickyMemoText');
         if (saved) {
-            document.getElementById('cleanStickyText').value = saved;
+            document.getElementById('cleanStickyText').innerHTML = saved;
         }
+        
+        // contenteditable placeholder 처리
+        const textArea = document.getElementById('cleanStickyText');
+        textArea.addEventListener('focus', function() {
+            if (this.innerHTML.trim() === '' || this.innerHTML === '<br>') {
+                this.innerHTML = '';
+            }
+        });
+        
+        textArea.addEventListener('blur', function() {
+            if (this.innerHTML.trim() === '' || this.innerHTML === '<br>') {
+                this.innerHTML = '';
+            }
+        });
         
         // 드래그 및 리사이즈 기능 초기화
         initStickyDrag();
@@ -75,9 +114,10 @@
     
     // 메모 저장
     window.saveCleanMemo = function() {
-        const text = document.getElementById('cleanStickyText').value;
-        if (text.trim()) {
-            localStorage.setItem('cleanStickyMemoText', text);
+        const textArea = document.getElementById('cleanStickyText');
+        const content = textArea.innerHTML;
+        if (content.trim() && content !== '<br>') {
+            localStorage.setItem('cleanStickyMemoText', content);
             alert('메모가 저장되었습니다! 💾');
         } else {
             alert('저장할 내용을 입력해주세요.');
@@ -88,10 +128,71 @@
     window.loadCleanMemo = function() {
         const saved = localStorage.getItem('cleanStickyMemoText');
         if (saved) {
-            document.getElementById('cleanStickyText').value = saved;
+            document.getElementById('cleanStickyText').innerHTML = saved;
             alert('메모를 불러왔습니다! 📂');
         } else {
             alert('저장된 메모가 없습니다.');
+        }
+    };
+    
+    // 텍스트 서식 적용 함수
+    window.applyTextFormat = function(command, value) {
+        const textArea = document.getElementById('cleanStickyText');
+        textArea.focus();
+        
+        try {
+            if (command === 'fontFamily') {
+                document.execCommand('fontName', false, value);
+            } else if (command === 'fontSize') {
+                // fontSize는 1-7 값을 사용하므로 픽셀 값을 변환
+                const sizeMap = {
+                    '12px': '2',
+                    '14px': '3',
+                    '16px': '4',
+                    '18px': '5',
+                    '20px': '6',
+                    '24px': '7'
+                };
+                document.execCommand('fontSize', false, sizeMap[value] || '3');
+                
+                // execCommand 후에 실제 픽셀 크기로 변경
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const span = document.createElement('span');
+                    span.style.fontSize = value;
+                    
+                    try {
+                        range.surroundContents(span);
+                    } catch (e) {
+                        // 선택된 텍스트가 없으면 현재 위치에 스타일 적용
+                        span.innerHTML = '&#8203;'; // 투명 문자
+                        range.insertNode(span);
+                        range.setStartAfter(span);
+                        range.setEndAfter(span);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                }
+            } else if (command === 'color') {
+                document.execCommand('foreColor', false, value);
+            } else if (command === 'backgroundColor') {
+                document.execCommand('backColor', false, value);
+            } else {
+                document.execCommand(command, false, null);
+            }
+        } catch (error) {
+            console.log('서식 적용 중 오류:', error);
+        }
+    };
+    
+    // 텍스트 서식 지우기
+    window.clearTextFormat = function() {
+        const textArea = document.getElementById('cleanStickyText');
+        if (confirm('모든 서식을 제거하시겠습니까?')) {
+            const plainText = textArea.innerText || textArea.textContent;
+            textArea.innerHTML = plainText.replace(/\n/g, '<br>');
+            alert('서식이 제거되었습니다! 🧹');
         }
     };
     

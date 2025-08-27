@@ -10,6 +10,7 @@
             --font-scale: 1.0;
             --width-scale: 1.0;
             --height-scale: 1.0;
+            --date-scale: 1.0;
         }
         
         * {
@@ -307,7 +308,7 @@
         }
 
         .day-number {
-            font-size: calc(28px * var(--font-scale));
+            font-size: calc(28px * var(--font-scale) * var(--date-scale));
             font-weight: 700;
             color: #2d3748;
             margin-bottom: 5px;
@@ -1905,7 +1906,7 @@
             }
             
             .day-number {
-                font-size: calc(20px * var(--font-scale));
+                font-size: calc(20px * var(--font-scale) * var(--date-scale));
             }
             
             .month-year {
@@ -2280,6 +2281,17 @@
                             <span class="size-display" id="heightDisplay">100%</span>
                         </div>
                         <button type="button" class="size-control-btn" onclick="adjustCalendarSize('height', 0.1)">확대</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">일자 크기</label>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button type="button" class="size-control-btn" onclick="adjustDateSize(-0.1)">축소</button>
+                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                            <input type="range" class="size-slider" id="dateSizeSlider" min="0.7" max="2.0" step="0.1" value="1.0">
+                            <span class="size-display" id="dateSizeDisplay">100%</span>
+                        </div>
+                        <button type="button" class="size-control-btn" onclick="adjustDateSize(0.1)">확대</button>
                     </div>
                 </div>
                 <div class="form-group">

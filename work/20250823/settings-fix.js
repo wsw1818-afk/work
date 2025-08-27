@@ -45,6 +45,15 @@
                 console.log('글꼴 크기 저장:', fontSize);
             }
             
+            // 일자 크기 저장
+            const dateSizeSlider = document.getElementById('dateSizeSlider');
+            if (dateSizeSlider) {
+                const dateSize = dateSizeSlider.value;
+                document.documentElement.style.setProperty('--date-scale', dateSize);
+                localStorage.setItem('dateSize', dateSize);
+                console.log('일자 크기 저장:', dateSize);
+            }
+            
             // 달력 크기 저장
             const widthSlider = document.getElementById('widthSlider');
             const heightSlider = document.getElementById('heightSlider');
@@ -103,12 +112,14 @@
             // localStorage에서 저장된 원본 설정 로드
             const savedTheme = localStorage.getItem('theme') || 'light';
             const savedFontSize = localStorage.getItem('fontSize') || '1.0';
+            const savedDateSize = localStorage.getItem('dateSize') || '1.0';
             const savedWidthScale = localStorage.getItem('widthScale') || '1.0';
             const savedHeightScale = localStorage.getItem('heightScale') || '1.0';
             
             console.log('복원할 원본 설정:', {
                 theme: savedTheme,
                 fontSize: savedFontSize,
+                dateSize: savedDateSize,
                 widthScale: savedWidthScale,
                 heightScale: savedHeightScale
             });
@@ -116,6 +127,7 @@
             // CSS 변수 원본으로 복원
             document.documentElement.setAttribute('data-theme', savedTheme);
             document.documentElement.style.setProperty('--font-scale', savedFontSize, 'important');
+            document.documentElement.style.setProperty('--date-scale', savedDateSize, 'important');
             document.documentElement.style.setProperty('--width-scale', savedWidthScale, 'important');
             document.documentElement.style.setProperty('--height-scale', savedHeightScale, 'important');
             
@@ -126,6 +138,7 @@
             // 모달의 슬라이더들도 원본 값으로 복원
             const themeSelect = document.getElementById('themeSelect');
             const fontSizeSlider = document.getElementById('fontSizeSlider');
+            const dateSizeSlider = document.getElementById('dateSizeSlider');
             const widthSlider = document.getElementById('widthSlider');
             const heightSlider = document.getElementById('heightSlider');
             
@@ -133,6 +146,10 @@
             if (fontSizeSlider) {
                 fontSizeSlider.value = savedFontSize;
                 updateFontSizeDisplayForce(savedFontSize);
+            }
+            if (dateSizeSlider) {
+                dateSizeSlider.value = savedDateSize;
+                updateDateSizeDisplayForce(savedDateSize);
             }
             if (widthSlider) {
                 widthSlider.value = savedWidthScale;
@@ -226,6 +243,70 @@
             console.error('fontSizeSlider를 찾을 수 없음');
         }
     };
+    
+    // 일자 크기 조절 강제 함수 (실시간 미리보기 포함)
+    window.adjustDateSize = function(delta) {
+        console.log(`📅 일자 크기 조절 시도:`, delta);
+        
+        const slider = document.getElementById('dateSizeSlider');
+        if (slider) {
+            const currentValue = parseFloat(slider.value);
+            const newValue = Math.max(0.7, Math.min(2.0, currentValue + delta));
+            
+            console.log(`일자 크기 조절: ${currentValue} → ${newValue}`);
+            
+            // 슬라이더 값 설정
+            slider.value = newValue;
+            
+            // CSS 변수 즉시 적용 (미리보기)
+            document.documentElement.style.setProperty('--date-scale', newValue, 'important');
+            
+            // 디스플레이 업데이트
+            updateDateSizeDisplayForce(newValue);
+            
+            // 시각적 피드백 추가
+            addDateSizeFeedback(newValue);
+            
+            console.log(`✅ 일자 크기가 ${newValue}배로 즉시 변경됨 (미리보기)`);
+            
+        } else {
+            console.error('dateSizeSlider를 찾을 수 없음');
+        }
+    };
+    
+    // 일자 크기 시각적 피드백
+    function addDateSizeFeedback(value) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            center: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #9C27B0;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        `;
+        feedback.textContent = `📅 일자 크기: ${Math.round(value * 100)}%`;
+        
+        document.body.appendChild(feedback);
+        
+        // 2초 후 제거
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateX(-50%) translateY(-20px)';
+            setTimeout(() => {
+                if (feedback.parentNode) {
+                    feedback.parentNode.removeChild(feedback);
+                }
+            }, 300);
+        }, 1500);
+    }
     
     // 글꼴 크기 시각적 피드백
     function addFontSizeFeedback(value) {
@@ -344,6 +425,13 @@
         }
     }
     
+    function updateDateSizeDisplayForce(value) {
+        const display = document.getElementById('dateSizeDisplay');
+        if (display) {
+            display.textContent = Math.round(value * 100) + '%';
+        }
+    }
+    
     function updateSizeDisplayForce(type, value) {
         const display = document.getElementById(type + 'Display');
         if (display) {
@@ -399,6 +487,43 @@
             console.log('✅ fontSizeSlider 완전 재생성 및 강력한 이벤트 등록 완료');
         } else {
             console.error('❌ fontSizeSlider를 찾을 수 없음');
+        }
+        
+        // 일자 크기 슬라이더 이벤트
+        const dateSizeSlider = document.getElementById('dateSizeSlider');
+        if (dateSizeSlider) {
+            // 모든 기존 이벤트 완전 제거
+            const newDateSlider = dateSizeSlider.cloneNode(true);
+            dateSizeSlider.parentNode.replaceChild(newDateSlider, dateSizeSlider);
+            
+            // 새로운 강력한 이벤트 핸들러
+            const dateHandler = function() {
+                const value = parseFloat(this.value);
+                console.log('📅 일자 크기 슬라이더 실시간 변경:', value);
+                
+                // CSS 변수 설정 (여러 방법으로 시도)
+                document.documentElement.style.setProperty('--date-scale', value, 'important');
+                document.documentElement.style.cssText += `--date-scale: ${value} !important;`;
+                
+                // 디스플레이 업데이트
+                updateDateSizeDisplayForce(value);
+                
+                // 시각적 피드백
+                addDateSizeFeedback(value);
+                
+                // 확인
+                const applied = getComputedStyle(document.documentElement).getPropertyValue('--date-scale').trim();
+                console.log(`📅 일자 크기 즉시 적용: ${value} (CSS: ${applied})`);
+            };
+            
+            // 여러 이벤트 타입에 등록
+            ['input', 'change', 'mouseup', 'touchend'].forEach(eventType => {
+                newDateSlider.addEventListener(eventType, dateHandler);
+            });
+            
+            console.log('✅ dateSizeSlider 완전 재생성 및 강력한 이벤트 등록 완료');
+        } else {
+            console.error('❌ dateSizeSlider를 찾을 수 없음');
         }
         
         const widthSlider = document.getElementById('widthSlider');
@@ -528,6 +653,14 @@
                 updateFontSizeDisplayForce(savedFontSize);
             }
             
+            // 일자 크기 로드
+            const savedDateSize = localStorage.getItem('dateSize') || '1.0';
+            const dateSizeSlider = document.getElementById('dateSizeSlider');
+            if (dateSizeSlider) {
+                dateSizeSlider.value = savedDateSize;
+                updateDateSizeDisplayForce(savedDateSize);
+            }
+            
             // 달력 크기 로드
             const savedWidthScale = localStorage.getItem('widthScale') || '1.0';
             const savedHeightScale = localStorage.getItem('heightScale') || '1.0';
@@ -621,6 +754,11 @@
         window.cancelSettings = window.cancelSettingsForce;
         window.adjustFontSize = window.adjustFontSizeForce;
         window.adjustCalendarSize = window.adjustCalendarSizeForce;
+        
+        // 일자 크기 조절 함수도 전역에 등록
+        if (typeof window.adjustDateSize !== 'function') {
+            console.log('✅ adjustDateSize 함수가 전역에 등록됨');
+        }
         
         console.log('✅ 기존 함수들 덮어쓰기 완료');
     }
