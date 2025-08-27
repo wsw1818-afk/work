@@ -48,17 +48,37 @@
             // 달력 크기 저장
             const widthSlider = document.getElementById('widthSlider');
             const heightSlider = document.getElementById('heightSlider');
+            
             if (widthSlider) {
                 const widthScale = widthSlider.value;
                 document.documentElement.style.setProperty('--width-scale', widthScale);
                 localStorage.setItem('widthScale', widthScale);
                 console.log('가로 크기 저장:', widthScale);
+            } else {
+                console.warn('widthSlider를 찾을 수 없음');
             }
+            
             if (heightSlider) {
                 const heightScale = heightSlider.value;
+                console.log('🔧 세로 크기 저장 시도:', heightScale);
+                
+                // CSS 변수 설정 (여러 방법으로 시도)
                 document.documentElement.style.setProperty('--height-scale', heightScale);
+                document.documentElement.style.setProperty('--height-scale', heightScale, 'important');
+                
+                // localStorage에 저장
                 localStorage.setItem('heightScale', heightScale);
-                console.log('세로 크기 저장:', heightScale);
+                
+                // 확인
+                const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
+                console.log('세로 크기 저장 완료:', heightScale, '(적용된 값:', applied + ')');
+                
+                // 즉시 달력에 적용
+                const days = document.querySelectorAll('.day');
+                console.log(`${days.length}개 날짜 셀에 세로 크기 적용`);
+                
+            } else {
+                console.warn('heightSlider를 찾을 수 없음');
             }
             
             // 주 시작일 저장
@@ -133,17 +153,40 @@
     
     // 달력 크기 조절 강제 함수
     window.adjustCalendarSizeForce = function(type, delta) {
+        console.log(`🔧 달력 ${type} 크기 조절 시도:`, delta);
+        
         const slider = document.getElementById(type + 'Slider');
         if (slider) {
             const currentValue = parseFloat(slider.value);
             const newValue = Math.max(0.5, Math.min(2.0, currentValue + delta));
-            slider.value = newValue;
-            
-            // 실시간 적용
-            document.documentElement.style.setProperty(`--${type}-scale`, newValue);
-            updateSizeDisplayForce(type, newValue);
             
             console.log(`${type} 크기 조절: ${currentValue} → ${newValue}`);
+            
+            // 슬라이더 값 설정
+            slider.value = newValue;
+            
+            // CSS 변수 직접 설정
+            document.documentElement.style.setProperty(`--${type}-scale`, newValue);
+            
+            // 디스플레이 업데이트
+            updateSizeDisplayForce(type, newValue);
+            
+            // 특히 height의 경우 추가 확인
+            if (type === 'height') {
+                const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
+                console.log('세로 크기 적용 확인:', applied);
+                
+                // 달력 즉시 새로고침
+                setTimeout(() => {
+                    if (typeof createCalendar === 'function') {
+                        console.log('세로 크기 변경으로 인한 달력 새로고침');
+                        createCalendar();
+                    }
+                }, 50);
+            }
+            
+        } else {
+            console.error(`${type}Slider를 찾을 수 없음`);
         }
     };
     
@@ -194,10 +237,37 @@
         
         const heightSlider = document.getElementById('heightSlider');
         if (heightSlider) {
-            heightSlider.addEventListener('input', function() {
-                document.documentElement.style.setProperty('--height-scale', this.value);
-                updateSizeDisplayForce('height', this.value);
-            });
+            // 기존 이벤트 제거
+            heightSlider.removeEventListener('input', heightSlider._heightHandler);
+            
+            // 새 이벤트 핸들러
+            heightSlider._heightHandler = function() {
+                const value = this.value;
+                console.log('🔧 세로 크기 슬라이더 변경:', value);
+                
+                // CSS 변수 설정
+                document.documentElement.style.setProperty('--height-scale', value);
+                
+                // 디스플레이 업데이트
+                updateSizeDisplayForce('height', value);
+                
+                // 확인
+                const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
+                console.log('적용된 세로 크기:', applied);
+                
+                // 달력 새로고침 (필요시)
+                setTimeout(() => {
+                    if (typeof createCalendar === 'function') {
+                        console.log('달력 새로고침 실행');
+                        createCalendar();
+                    }
+                }, 100);
+            };
+            
+            heightSlider.addEventListener('input', heightSlider._heightHandler);
+            heightSlider.addEventListener('change', heightSlider._heightHandler); // change 이벤트도 추가
+            
+            console.log('✅ heightSlider 이벤트 강화 완료');
         }
         
         console.log('✅ 설정 모달 이벤트 초기화 완료');
@@ -281,6 +351,30 @@
             console.error('설정 로드 중 오류:', error);
         }
     }
+    
+    // 세로 크기 테스트 함수
+    window.testHeightScale = function(value) {
+        console.log('🧪 세로 크기 테스트:', value);
+        
+        // CSS 변수 직접 설정
+        document.documentElement.style.setProperty('--height-scale', value, 'important');
+        
+        // 확인
+        const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
+        console.log('적용된 값:', applied);
+        
+        // 모든 .day 요소에 강제 적용
+        const days = document.querySelectorAll('.day');
+        days.forEach((day, index) => {
+            const currentHeight = getComputedStyle(day).minHeight;
+            console.log(`Day ${index + 1} min-height:`, currentHeight);
+            
+            // 강제로 스타일 적용
+            day.style.minHeight = `${120 * parseFloat(value)}px`;
+        });
+        
+        alert(`세로 크기를 ${value}배로 테스트했습니다. 콘솔을 확인하세요.`);
+    };
     
     // 기존 함수들 덮어쓰기
     function overrideExistingFunctions() {

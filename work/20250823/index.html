@@ -263,7 +263,8 @@
         }
 
         .day {
-            min-height: calc(120px * var(--height-scale));
+            min-height: calc(120px * var(--height-scale)) !important;
+            height: auto; /* 내용에 따라 자동 확장 */
             width: calc(var(--base-day-width, 160px) * var(--width-scale)); /* 고정 너비, 글자크기와 독립 */
             padding: 15px;
             background: white;
@@ -1898,7 +1899,7 @@
             }
             
             .day {
-                min-height: calc(80px * var(--height-scale));
+                min-height: calc(80px * var(--height-scale)) !important;
                 padding: 10px;
                 /* 날짜 셀 높이는 글자크기와 독립적으로 유지 */
             }
