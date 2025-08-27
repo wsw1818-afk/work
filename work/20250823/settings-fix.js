@@ -103,28 +103,105 @@
         }
     };
     
-    // 강제 설정 취소 함수
+    // 강제 설정 취소 함수 (원본 설정으로 완전 복원)
     window.cancelSettingsForce = function() {
-        console.log('❌ 강제 설정 취소 실행');
+        console.log('❌ 강제 설정 취소 실행 - 원본 설정으로 복원');
         try {
-            // 원래 설정으로 되돌리기 (localStorage에서 로드)
+            // localStorage에서 저장된 원본 설정 로드
             const savedTheme = localStorage.getItem('theme') || 'light';
             const savedFontSize = localStorage.getItem('fontSize') || '1.0';
             const savedWidthScale = localStorage.getItem('widthScale') || '1.0';
             const savedHeightScale = localStorage.getItem('heightScale') || '1.0';
             
+            console.log('복원할 원본 설정:', {
+                theme: savedTheme,
+                fontSize: savedFontSize,
+                widthScale: savedWidthScale,
+                heightScale: savedHeightScale
+            });
+            
+            // CSS 변수 원본으로 복원
             document.documentElement.setAttribute('data-theme', savedTheme);
-            document.documentElement.style.setProperty('--font-scale', savedFontSize);
-            document.documentElement.style.setProperty('--width-scale', savedWidthScale);
-            document.documentElement.style.setProperty('--height-scale', savedHeightScale);
+            document.documentElement.style.setProperty('--font-scale', savedFontSize, 'important');
+            document.documentElement.style.setProperty('--width-scale', savedWidthScale, 'important');
+            document.documentElement.style.setProperty('--height-scale', savedHeightScale, 'important');
+            
+            // 세로 크기의 경우 .day 요소들도 직접 복원
+            const days = document.querySelectorAll('.day');
+            const isMobile = window.innerWidth <= 768;
+            const baseHeight = isMobile ? 80 : 120;
+            const originalHeight = baseHeight * parseFloat(savedHeightScale);
+            
+            days.forEach(day => {
+                day.style.minHeight = `${originalHeight}px`;
+            });
+            
+            console.log(`📏 ${days.length}개 날짜 셀을 원본 세로 크기로 복원: ${originalHeight}px`);
+            
+            // 모달의 슬라이더들도 원본 값으로 복원
+            const themeSelect = document.getElementById('themeSelect');
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            const widthSlider = document.getElementById('widthSlider');
+            const heightSlider = document.getElementById('heightSlider');
+            
+            if (themeSelect) themeSelect.value = savedTheme;
+            if (fontSizeSlider) {
+                fontSizeSlider.value = savedFontSize;
+                updateFontSizeDisplayForce(savedFontSize);
+            }
+            if (widthSlider) {
+                widthSlider.value = savedWidthScale;
+                updateSizeDisplayForce('width', savedWidthScale);
+            }
+            if (heightSlider) {
+                heightSlider.value = savedHeightScale;
+                updateSizeDisplayForce('height', savedHeightScale);
+            }
+            
+            // 취소 피드백 표시
+            addCancelFeedback();
             
             closeModalForce('settingsModal');
-            console.log('설정이 취소되었습니다');
+            console.log('✅ 설정이 원본으로 완전 복원되었습니다');
             
         } catch (error) {
             console.error('설정 취소 중 오류:', error);
         }
     };
+    
+    // 취소 피드백
+    function addCancelFeedback() {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            center: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FF9800;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        `;
+        feedback.textContent = '⚙️ 설정이 원래대로 복원되었습니다';
+        
+        document.body.appendChild(feedback);
+        
+        // 2초 후 제거
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateX(-50%) translateY(-20px)';
+            setTimeout(() => {
+                if (feedback.parentNode) {
+                    feedback.parentNode.removeChild(feedback);
+                }
+            }, 300);
+        }, 2000);
+    }
     
     // 강제 모달 닫기 함수
     function closeModalForce(modalId) {
@@ -135,23 +212,69 @@
         }
     }
     
-    // 글꼴 크기 조절 강제 함수
+    // 글꼴 크기 조절 강제 함수 (실시간 미리보기 포함)
     window.adjustFontSizeForce = function(delta) {
+        console.log(`🔤 글꼴 크기 조절 시도:`, delta);
+        
         const slider = document.getElementById('fontSizeSlider');
         if (slider) {
             const currentValue = parseFloat(slider.value);
             const newValue = Math.max(0.7, Math.min(1.5, currentValue + delta));
-            slider.value = newValue;
-            
-            // 실시간 적용
-            document.documentElement.style.setProperty('--font-scale', newValue);
-            updateFontSizeDisplayForce(newValue);
             
             console.log(`글꼴 크기 조절: ${currentValue} → ${newValue}`);
+            
+            // 슬라이더 값 설정
+            slider.value = newValue;
+            
+            // CSS 변수 즉시 적용 (미리보기)
+            document.documentElement.style.setProperty('--font-scale', newValue, 'important');
+            
+            // 디스플레이 업데이트
+            updateFontSizeDisplayForce(newValue);
+            
+            // 시각적 피드백 추가
+            addFontSizeFeedback(newValue);
+            
+            console.log(`✅ 글꼴 크기가 ${newValue}배로 즉시 변경됨 (미리보기)`);
+            
+        } else {
+            console.error('fontSizeSlider를 찾을 수 없음');
         }
     };
     
-    // 달력 크기 조절 강제 함수
+    // 글꼴 크기 시각적 피드백
+    function addFontSizeFeedback(value) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        `;
+        feedback.textContent = `글꼴 크기: ${Math.round(value * 100)}%`;
+        
+        document.body.appendChild(feedback);
+        
+        // 2초 후 제거
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateX(-100px)';
+            setTimeout(() => {
+                if (feedback.parentNode) {
+                    feedback.parentNode.removeChild(feedback);
+                }
+            }, 300);
+        }, 1500);
+    }
+    
+    // 달력 크기 조절 강제 함수 (실시간 미리보기 포함)
     window.adjustCalendarSizeForce = function(type, delta) {
         console.log(`🔧 달력 ${type} 크기 조절 시도:`, delta);
         
@@ -165,30 +288,86 @@
             // 슬라이더 값 설정
             slider.value = newValue;
             
-            // CSS 변수 직접 설정
-            document.documentElement.style.setProperty(`--${type}-scale`, newValue);
+            // CSS 변수 즉시 적용 (미리보기)
+            document.documentElement.style.setProperty(`--${type}-scale`, newValue, 'important');
             
             // 디스플레이 업데이트
             updateSizeDisplayForce(type, newValue);
             
-            // 특히 height의 경우 추가 확인
+            // 시각적 피드백 추가
+            addVisualFeedback(type, newValue);
+            
+            // 특히 height의 경우 추가 처리
             if (type === 'height') {
                 const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
                 console.log('세로 크기 적용 확인:', applied);
                 
-                // 달력 즉시 새로고침
-                setTimeout(() => {
-                    if (typeof createCalendar === 'function') {
-                        console.log('세로 크기 변경으로 인한 달력 새로고침');
-                        createCalendar();
-                    }
-                }, 50);
+                // 모든 .day 요소에 즉시 적용
+                applyHeightToAllDays(newValue);
             }
+            
+            // width의 경우도 즉시 적용
+            if (type === 'width') {
+                const applied = getComputedStyle(document.documentElement).getPropertyValue('--width-scale').trim();
+                console.log('가로 크기 적용 확인:', applied);
+            }
+            
+            console.log(`✅ ${type} 크기가 ${newValue}배로 즉시 변경됨 (미리보기)`);
             
         } else {
             console.error(`${type}Slider를 찾을 수 없음`);
         }
     };
+    
+    // 모든 날짜 셀에 세로 크기 즉시 적용
+    function applyHeightToAllDays(scale) {
+        const days = document.querySelectorAll('.day');
+        const isMobile = window.innerWidth <= 768;
+        const baseHeight = isMobile ? 80 : 120;
+        const newHeight = baseHeight * parseFloat(scale);
+        
+        days.forEach((day, index) => {
+            day.style.minHeight = `${newHeight}px`;
+            if (index < 3) { // 처음 3개만 로그
+                console.log(`Day ${index + 1} 세로 크기 적용: ${newHeight}px`);
+            }
+        });
+        
+        console.log(`📏 ${days.length}개 날짜 셀에 세로 크기 ${scale}배 (${newHeight}px) 즉시 적용`);
+    }
+    
+    // 시각적 피드백 함수
+    function addVisualFeedback(type, value) {
+        // 임시 알림 표시
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        `;
+        feedback.textContent = `${type === 'width' ? '가로' : '세로'} 크기: ${Math.round(value * 100)}%`;
+        
+        document.body.appendChild(feedback);
+        
+        // 2초 후 제거
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateX(100px)';
+            setTimeout(() => {
+                if (feedback.parentNode) {
+                    feedback.parentNode.removeChild(feedback);
+                }
+            }, 300);
+        }, 1500);
+    }
     
     // 표시 업데이트 강제 함수
     function updateFontSizeDisplayForce(value) {
