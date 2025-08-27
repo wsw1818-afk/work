@@ -62,20 +62,13 @@
                 const heightScale = heightSlider.value;
                 console.log('🔧 세로 크기 저장 시도:', heightScale);
                 
-                // CSS 변수 설정 (여러 방법으로 시도)
-                document.documentElement.style.setProperty('--height-scale', heightScale);
-                document.documentElement.style.setProperty('--height-scale', heightScale, 'important');
+                // 전용 함수로 즉시 적용
+                const appliedHeight = window.applyHeightScaleDirectly(heightScale);
                 
                 // localStorage에 저장
                 localStorage.setItem('heightScale', heightScale);
                 
-                // 확인
-                const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
-                console.log('세로 크기 저장 완료:', heightScale, '(적용된 값:', applied + ')');
-                
-                // 즉시 달력에 적용
-                const days = document.querySelectorAll('.day');
-                console.log(`${days.length}개 날짜 셀에 세로 크기 적용`);
+                console.log(`✅ 세로 크기 저장 완료: ${heightScale}배 = ${appliedHeight}px`);
                 
             } else {
                 console.warn('heightSlider를 찾을 수 없음');
@@ -126,17 +119,9 @@
             document.documentElement.style.setProperty('--width-scale', savedWidthScale, 'important');
             document.documentElement.style.setProperty('--height-scale', savedHeightScale, 'important');
             
-            // 세로 크기의 경우 .day 요소들도 직접 복원
-            const days = document.querySelectorAll('.day');
-            const isMobile = window.innerWidth <= 768;
-            const baseHeight = isMobile ? 80 : 120;
-            const originalHeight = baseHeight * parseFloat(savedHeightScale);
-            
-            days.forEach(day => {
-                day.style.minHeight = `${originalHeight}px`;
-            });
-            
-            console.log(`📏 ${days.length}개 날짜 셀을 원본 세로 크기로 복원: ${originalHeight}px`);
+            // 세로 크기의 경우 전용 함수로 복원
+            const appliedHeight = window.applyHeightScaleDirectly(savedHeightScale);
+            console.log(`📏 세로 크기 원본으로 복원: ${savedHeightScale}배 = ${appliedHeight}px`);
             
             // 모달의 슬라이더들도 원본 값으로 복원
             const themeSelect = document.getElementById('themeSelect');
@@ -297,13 +282,10 @@
             // 시각적 피드백 추가
             addVisualFeedback(type, newValue);
             
-            // 특히 height의 경우 추가 처리
+            // 특히 height의 경우 전용 함수 사용
             if (type === 'height') {
-                const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
-                console.log('세로 크기 적용 확인:', applied);
-                
-                // 모든 .day 요소에 즉시 적용
-                applyHeightToAllDays(newValue);
+                const appliedHeight = window.applyHeightScaleDirectly(newValue);
+                console.log(`🎯 축소/확대 버튼 → 전용함수 적용: ${newValue}배 = ${appliedHeight}px`);
             }
             
             // width의 경우도 즉시 적용
@@ -319,22 +301,7 @@
         }
     };
     
-    // 모든 날짜 셀에 세로 크기 즉시 적용
-    function applyHeightToAllDays(scale) {
-        const days = document.querySelectorAll('.day');
-        const isMobile = window.innerWidth <= 768;
-        const baseHeight = isMobile ? 80 : 120;
-        const newHeight = baseHeight * parseFloat(scale);
-        
-        days.forEach((day, index) => {
-            day.style.minHeight = `${newHeight}px`;
-            if (index < 3) { // 처음 3개만 로그
-                console.log(`Day ${index + 1} 세로 크기 적용: ${newHeight}px`);
-            }
-        });
-        
-        console.log(`📏 ${days.length}개 날짜 셀에 세로 크기 ${scale}배 (${newHeight}px) 즉시 적용`);
-    }
+    // 이 함수는 applyHeightScaleDirectly로 대체됨
     
     // 시각적 피드백 함수
     function addVisualFeedback(type, value) {
@@ -476,28 +443,13 @@
             const newHeightSlider = heightSlider.cloneNode(true);
             heightSlider.parentNode.replaceChild(newHeightSlider, heightSlider);
             
-            // 새로운 강력한 이벤트 핸들러
+            // 새로운 강력한 이벤트 핸들러 (전용 함수 사용)
             const heightHandler = function() {
                 const value = parseFloat(this.value);
                 console.log('🔧 세로 크기 슬라이더 실시간 변경:', value);
                 
-                // CSS 변수 설정 (여러 방법으로 시도)
-                document.documentElement.style.setProperty('--height-scale', value, 'important');
-                document.documentElement.style.cssText += `--height-scale: ${value} !important;`;
-                
-                // 즉시 모든 .day 요소에 직접 적용 (더 확실한 방법)
-                const days = document.querySelectorAll('.day');
-                const isMobile = window.innerWidth <= 768;
-                const baseHeight = isMobile ? 80 : 120;
-                const newHeight = baseHeight * value;
-                
-                days.forEach((day, index) => {
-                    day.style.minHeight = `${newHeight}px`;
-                    day.style.height = 'auto'; // 내용에 따라 확장 허용
-                    if (index < 2) { // 처음 2개만 로그
-                        console.log(`Day ${index + 1} 즉시 적용: ${newHeight}px`);
-                    }
-                });
+                // 전용 함수로 즉시 적용
+                const appliedHeight = window.applyHeightScaleDirectly(value);
                 
                 // 디스플레이 업데이트
                 updateSizeDisplayForce('height', value);
@@ -505,9 +457,7 @@
                 // 시각적 피드백
                 addVisualFeedback('height', value);
                 
-                // 확인
-                const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
-                console.log(`📏 세로 크기 즉시 적용: ${value} (CSS: ${applied}) - ${days.length}개 셀 ${newHeight}px`);
+                console.log(`🎯 heightSlider → 전용함수 적용 완료: ${value}배 = ${appliedHeight}px`);
             };
             
             // 여러 이벤트 타입에 등록
@@ -608,28 +558,61 @@
         }
     }
     
-    // 세로 크기 테스트 함수
-    window.testHeightScale = function(value) {
-        console.log('🧪 세로 크기 테스트:', value);
+    // 세로 크기 즉시 적용 전용 함수
+    window.applyHeightScaleDirectly = function(value) {
+        console.log('📏 세로 크기 직접 적용 시작:', value);
         
-        // CSS 변수 직접 설정
-        document.documentElement.style.setProperty('--height-scale', value, 'important');
+        // 1. CSS 변수 설정 (모든 방법으로 시도)
+        const root = document.documentElement;
+        root.style.setProperty('--height-scale', value, 'important');
+        root.style.cssText = root.style.cssText.replace(/--height-scale:[^;]+;?/g, '') + `--height-scale: ${value} !important;`;
         
-        // 확인
-        const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
-        console.log('적용된 값:', applied);
-        
-        // 모든 .day 요소에 강제 적용
+        // 2. 모든 .day 요소에 즉시 강제 적용
         const days = document.querySelectorAll('.day');
+        const isMobile = window.innerWidth <= 768;
+        const baseHeight = isMobile ? 80 : 120;
+        const newHeight = Math.round(baseHeight * parseFloat(value));
+        
+        console.log(`📐 계산된 새 높이: ${newHeight}px (기본: ${baseHeight}px x ${value})`);
+        
         days.forEach((day, index) => {
-            const currentHeight = getComputedStyle(day).minHeight;
-            console.log(`Day ${index + 1} min-height:`, currentHeight);
+            // 기존 스타일 완전 제거 후 새로 적용
+            day.style.removeProperty('min-height');
+            day.style.removeProperty('height');
             
-            // 강제로 스타일 적용
-            day.style.minHeight = `${120 * parseFloat(value)}px`;
+            // 새 스타일 강제 적용
+            day.style.minHeight = `${newHeight}px !important`;
+            day.style.height = 'auto';
+            
+            // 추가 확인을 위한 직접 setAttribute
+            day.setAttribute('style', day.getAttribute('style') + `; min-height: ${newHeight}px !important;`);
+            
+            if (index < 3) { // 처음 3개만 로그
+                const computedHeight = getComputedStyle(day).minHeight;
+                console.log(`Day ${index + 1}: 적용 ${newHeight}px, 계산됨 ${computedHeight}`);
+            }
         });
         
-        alert(`세로 크기를 ${value}배로 테스트했습니다. 콘솔을 확인하세요.`);
+        // 3. 달력 그리드 자체도 강제 리렌더링
+        const daysGrid = document.querySelector('.days-grid');
+        if (daysGrid) {
+            daysGrid.style.display = 'none';
+            daysGrid.offsetHeight; // 강제 reflow
+            daysGrid.style.display = 'grid';
+        }
+        
+        // 4. 확인
+        const appliedCSS = getComputedStyle(root).getPropertyValue('--height-scale').trim();
+        console.log(`✅ 세로 크기 적용 완료: ${value} (CSS: ${appliedCSS}) - ${days.length}개 셀 → ${newHeight}px`);
+        
+        return newHeight;
+    };
+    
+    // 세로 크기 테스트 함수 (강화)
+    window.testHeightScale = function(value) {
+        console.log('🧪 세로 크기 테스트:', value);
+        const appliedHeight = window.applyHeightScaleDirectly(value);
+        alert(`세로 크기를 ${value}배(${appliedHeight}px)로 테스트했습니다. 변화를 확인하세요!`);
     };
     
     // 기존 함수들 덮어쓰기
