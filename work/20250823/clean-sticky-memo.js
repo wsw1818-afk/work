@@ -46,14 +46,32 @@
                     <button onclick="applyTextFormat('bold')" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-weight: bold;">𝐁</button>
                     <button onclick="applyTextFormat('italic')" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-style: italic;">𝐼</button>
                     <button onclick="applyTextFormat('underline')" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; text-decoration: underline;">U</button>
-                    <input type="color" id="textColor" value="#000000" onchange="applyTextFormat('color', this.value)" style="width: 30px; height: 26px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer;">
-                    <input type="color" id="bgColor" value="#ffffff" onchange="applyTextFormat('backgroundColor', this.value)" style="width: 30px; height: 26px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer;">
+                    <!-- 글자색 메뉴 -->
+                    <div style="position: relative; display: inline-block;">
+                        <button onclick="toggleTextColorMenu()" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-weight: bold;" title="글자 색상">A▼</button>
+                        <div id="textColorMenu" style="display: none; position: absolute; top: 30px; left: 0; background: white; border: 1px solid #ccc; border-radius: 5px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; min-width: 120px;">
+                            <input type="color" id="textColor" value="#000000" style="width: 100%; height: 30px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; margin-bottom: 5px;">
+                            <div style="display: flex; gap: 5px;">
+                                <button onclick="applyTextColorFromMenu()" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; flex: 1;">적용</button>
+                                <button onclick="resetTextColorFromMenu()" style="background: #6c757d; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">초기화</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 배경색 메뉴 -->
+                    <div style="position: relative; display: inline-block;">
+                        <button onclick="toggleBgColorMenu()" style="background: #f8f9fa; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-weight: bold;" title="배경 색상">🎨▼</button>
+                        <div id="bgColorMenu" style="display: none; position: absolute; top: 30px; left: 0; background: white; border: 1px solid #ccc; border-radius: 5px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; min-width: 120px;">
+                            <input type="color" id="bgColor" value="#ffffff" style="width: 100%; height: 30px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; margin-bottom: 5px;">
+                            <div style="display: flex; gap: 5px;">
+                                <button onclick="applyBgColorFromMenu()" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; flex: 1;">적용</button>
+                                <button onclick="resetBgColorFromMenu()" style="background: #6c757d; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">초기화</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div contenteditable="true" id="cleanStickyText" style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; resize: none; overflow-y: auto; background: white;" placeholder="메모를 입력하세요..."></div>
                 <div style="margin-top: 10px; text-align: center;">
-                    <button onclick="saveCleanMemo()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 8px; font-weight: bold;">💾 저장</button>
-                    <button onclick="loadCleanMemo()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">📂 불러오기</button>
-                    <button onclick="clearTextFormat()" style="background: #ffc107; color: #8b5a00; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 8px; font-weight: bold;">🧹 서식 지우기</button>
+                    <button onclick="saveToCalendar()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">📅 달력에 저장</button>
                 </div>
             </div>
             
@@ -107,32 +125,177 @@
         // 드래그 및 리사이즈 기능 초기화
         initStickyDrag();
         initStickyResize();
+        initColorMenuEvents();
         
         console.log('✅ 깨끗한 스티커 메모 생성 완료');
         return false;
     };
     
-    // 메모 저장
-    window.saveCleanMemo = function() {
+    // 달력에 저장 함수
+    window.saveToCalendar = function() {
         const textArea = document.getElementById('cleanStickyText');
-        const content = textArea.innerHTML;
-        if (content.trim() && content !== '<br>') {
-            localStorage.setItem('cleanStickyMemoText', content);
-            alert('메모가 저장되었습니다! 💾');
-        } else {
+        const content = textArea.innerText || textArea.textContent || '';
+        
+        if (!content.trim()) {
             alert('저장할 내용을 입력해주세요.');
+            return;
+        }
+        
+        // 첫 번째 줄을 제목으로, 나머지를 내용으로 분리
+        const lines = content.split('\n').filter(line => line.trim() !== '');
+        if (lines.length === 0) {
+            alert('저장할 내용을 입력해주세요.');
+            return;
+        }
+        
+        const title = lines[0].trim();
+        const memoContent = lines.slice(1).join('\n').trim();
+        
+        if (!title) {
+            alert('첫 번째 줄에 메모 제목을 입력해주세요.');
+            return;
+        }
+        
+        // 오늘 날짜로 메모 저장
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+        
+        const memo = {
+            id: Date.now(),
+            title: title,
+            content: memoContent || '(내용 없음)',
+            date: todayString,
+            timestamp: new Date().toISOString()
+        };
+        
+        // 일반 메모 리스트에 저장
+        let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+        memos.unshift(memo);
+        localStorage.setItem('calendarMemos', JSON.stringify(memos));
+        
+        // 날짜별 메모에도 저장
+        let dateMemos = JSON.parse(localStorage.getItem('dateMemos') || '{}');
+        if (!dateMemos[todayString]) {
+            dateMemos[todayString] = [];
+        }
+        dateMemos[todayString].unshift(memo);
+        localStorage.setItem('dateMemos', JSON.stringify(dateMemos));
+        
+        // 스티커 메모도 저장 (나중에 다시 열 때 복원용)
+        localStorage.setItem('cleanStickyMemoText', textArea.innerHTML);
+        
+        alert(`📅 메모가 오늘(${todayString}) 달력에 저장되었습니다!\\n제목: ${title}`);
+        
+        // 달력 표시 업데이트 (있다면)
+        if (window.updateCalendarDisplay) {
+            window.updateCalendarDisplay();
         }
     };
     
-    // 메모 불러오기
-    window.loadCleanMemo = function() {
-        const saved = localStorage.getItem('cleanStickyMemoText');
-        if (saved) {
-            document.getElementById('cleanStickyText').innerHTML = saved;
-            alert('메모를 불러왔습니다! 📂');
-        } else {
-            alert('저장된 메모가 없습니다.');
+    // 글자색 메뉴 토글
+    window.toggleTextColorMenu = function() {
+        const menu = document.getElementById('textColorMenu');
+        const bgMenu = document.getElementById('bgColorMenu');
+        
+        // 배경색 메뉴 닫기
+        if (bgMenu) bgMenu.style.display = 'none';
+        
+        if (menu) {
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
         }
+    };
+    
+    // 배경색 메뉴 토글
+    window.toggleBgColorMenu = function() {
+        const menu = document.getElementById('bgColorMenu');
+        const textMenu = document.getElementById('textColorMenu');
+        
+        // 글자색 메뉴 닫기
+        if (textMenu) textMenu.style.display = 'none';
+        
+        if (menu) {
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+    };
+    
+    // 글자색 적용
+    window.applyTextColorFromMenu = function() {
+        const colorPicker = document.getElementById('textColor');
+        const textArea = document.getElementById('cleanStickyText');
+        
+        if (colorPicker && textArea) {
+            textArea.focus();
+            try {
+                document.execCommand('foreColor', false, colorPicker.value);
+            } catch (error) {
+                console.log('글자색 적용 중 오류:', error);
+            }
+        }
+        
+        // 메뉴 닫기
+        const menu = document.getElementById('textColorMenu');
+        if (menu) menu.style.display = 'none';
+    };
+    
+    // 배경색 적용
+    window.applyBgColorFromMenu = function() {
+        const colorPicker = document.getElementById('bgColor');
+        const textArea = document.getElementById('cleanStickyText');
+        
+        if (colorPicker && textArea) {
+            textArea.focus();
+            try {
+                document.execCommand('backColor', false, colorPicker.value);
+            } catch (error) {
+                console.log('배경색 적용 중 오류:', error);
+            }
+        }
+        
+        // 메뉴 닫기
+        const menu = document.getElementById('bgColorMenu');
+        if (menu) menu.style.display = 'none';
+    };
+    
+    // 글자색 초기화
+    window.resetTextColorFromMenu = function() {
+        const colorPicker = document.getElementById('textColor');
+        const textArea = document.getElementById('cleanStickyText');
+        
+        if (colorPicker) colorPicker.value = '#000000';
+        
+        if (textArea) {
+            textArea.focus();
+            try {
+                document.execCommand('foreColor', false, '#000000');
+            } catch (error) {
+                console.log('글자색 초기화 중 오류:', error);
+            }
+        }
+        
+        // 메뉴 닫기
+        const menu = document.getElementById('textColorMenu');
+        if (menu) menu.style.display = 'none';
+    };
+    
+    // 배경색 초기화
+    window.resetBgColorFromMenu = function() {
+        const colorPicker = document.getElementById('bgColor');
+        const textArea = document.getElementById('cleanStickyText');
+        
+        if (colorPicker) colorPicker.value = '#ffffff';
+        
+        if (textArea) {
+            textArea.focus();
+            try {
+                document.execCommand('backColor', false, '#ffffff');
+            } catch (error) {
+                console.log('배경색 초기화 중 오류:', error);
+            }
+        }
+        
+        // 메뉴 닫기
+        const menu = document.getElementById('bgColorMenu');
+        if (menu) menu.style.display = 'none';
     };
     
     // 텍스트 서식 적용 함수
@@ -186,15 +349,6 @@
         }
     };
     
-    // 텍스트 서식 지우기
-    window.clearTextFormat = function() {
-        const textArea = document.getElementById('cleanStickyText');
-        if (confirm('모든 서식을 제거하시겠습니까?')) {
-            const plainText = textArea.innerText || textArea.textContent;
-            textArea.innerHTML = plainText.replace(/\n/g, '<br>');
-            alert('서식이 제거되었습니다! 🧹');
-        }
-    };
     
     // 드래그 기능 초기화
     function initStickyDrag() {
@@ -405,6 +559,26 @@
         }
         
         console.log('✅ 스티커 메모 리사이즈 기능 초기화 완료');
+    }
+    
+    // 색상 메뉴 이벤트 초기화
+    function initColorMenuEvents() {
+        // 문서 클릭 시 메뉴 닫기
+        document.addEventListener('click', function(e) {
+            const textColorMenu = document.getElementById('textColorMenu');
+            const bgColorMenu = document.getElementById('bgColorMenu');
+            
+            // 클릭된 요소가 색상 메뉴나 버튼이 아닌 경우 메뉴 닫기
+            if (!e.target.closest('#textColorMenu') && !e.target.closest('[onclick*="toggleTextColorMenu"]')) {
+                if (textColorMenu) textColorMenu.style.display = 'none';
+            }
+            
+            if (!e.target.closest('#bgColorMenu') && !e.target.closest('[onclick*="toggleBgColorMenu"]')) {
+                if (bgColorMenu) bgColorMenu.style.display = 'none';
+            }
+        });
+        
+        console.log('✅ 색상 메뉴 이벤트 초기화 완료');
     }
     
 })();

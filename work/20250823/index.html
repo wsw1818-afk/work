@@ -2461,90 +2461,7 @@
     </div>
 
     <script>
-        // 스티커 메모 최종 함수 (모든 충돌 해결)
-        function forceStickyOpen() {
-            console.log('🔥 스티커 메모 열기!');
-            
-            // 기존 스티커 메모 완전 제거
-            const existing = document.getElementById('stickyMemo');
-            if (existing) existing.remove();
-            
-            // 새 스티커 메모 생성
-            const sticky = document.createElement('div');
-            sticky.id = 'stickyMemo';
-            sticky.innerHTML = `
-                <div style="background: #ffc107; color: #8b5a00; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; cursor: move; position: relative;">
-                    <span style="font-weight: bold;">🗒️ 스티커 메모</span>
-                    <button onclick="document.getElementById('stickyMemo').remove()" style="background: rgba(255,255,255,0.3); border: none; color: #8b5a00; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.background='#dc3545'; this.style.color='white'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(255,255,255,0.3)'; this.style.color='#8b5a00'; this.style.transform='scale(1)';">×</button>
-                </div>
-                <div style="padding: 15px; position: relative;">
-                    <textarea id="stickyText" placeholder="메모를 입력하세요..." style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; resize: none;"></textarea>
-                    <div style="margin-top: 10px;">
-                        <button onclick="saveStickyText()" style="background: #ffc107; color: #8b5a00; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px;">💾 저장</button>
-                        <button onclick="loadStickyText()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">📂 불러오기</button>
-                    </div>
-                </div>
-                
-                <!-- 리사이즈 핸들들 -->
-                <div class="resize-handle resize-handle-n" style="position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 20px; height: 6px; cursor: n-resize; background: transparent;"></div>
-                <div class="resize-handle resize-handle-s" style="position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); width: 20px; height: 6px; cursor: s-resize; background: transparent;"></div>
-                <div class="resize-handle resize-handle-w" style="position: absolute; left: -3px; top: 50%; transform: translateY(-50%); width: 6px; height: 20px; cursor: w-resize; background: transparent;"></div>
-                <div class="resize-handle resize-handle-e" style="position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 6px; height: 20px; cursor: e-resize; background: transparent;"></div>
-                <div class="resize-handle resize-handle-nw" style="position: absolute; top: -3px; left: -3px; width: 10px; height: 10px; cursor: nw-resize; background: transparent;"></div>
-                <div class="resize-handle resize-handle-ne" style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; cursor: ne-resize; background: transparent;"></div>
-                <div class="resize-handle resize-handle-sw" style="position: absolute; bottom: -3px; left: -3px; width: 10px; height: 10px; cursor: sw-resize; background: transparent;"></div>
-                <div class="resize-handle resize-handle-se" style="position: absolute; bottom: -3px; right: -3px; width: 10px; height: 10px; cursor: se-resize; background: transparent;"></div>
-            `;
-            
-            // 스티커 메모 스타일 적용
-            sticky.style.cssText = `
-                display: block !important;
-                position: fixed !important;
-                top: 100px !important;
-                right: 100px !important;
-                width: 400px !important;
-                background: #fff3cd !important;
-                border: 2px solid #ffc107 !important;
-                border-radius: 10px !important;
-                box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
-                z-index: 99999 !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                pointer-events: auto !important;
-                font-family: 'Malgun Gothic', sans-serif !important;
-            `;
-            
-            document.body.appendChild(sticky);
-            
-            // 드래그 및 리사이즈 기능 추가
-            initInlineStickyDrag();
-            initInlineStickyResize();
-            
-            console.log('✅ 스티커 메모 생성 완료');
-            return false;
-        }
-        
-        // 스티커 메모 저장
-        function saveStickyText() {
-            const text = document.getElementById('stickyText').value;
-            if (text.trim()) {
-                localStorage.setItem('stickyMemoText', text);
-                alert('메모가 저장되었습니다! 💾');
-            } else {
-                alert('저장할 내용을 입력해주세요.');
-            }
-        }
-        
-        // 스티커 메모 불러오기
-        function loadStickyText() {
-            const saved = localStorage.getItem('stickyMemoText');
-            if (saved) {
-                document.getElementById('stickyText').value = saved;
-                alert('메모를 불러왔습니다! 📂');
-            } else {
-                alert('저장된 메모가 없습니다.');
-            }
-        }
+        // HTML 내부 기본 스티커 메모 함수 제거 - clean-sticky-memo.js의 향상된 버전 사용
         
         // 모달 열기 함수
         function openModal(modalId) {
@@ -4670,20 +4587,26 @@
         function toggleMemoLock() {
             isMemosUnlocked = !isMemosUnlocked;
             const toggle = document.getElementById('memoLockToggle');
-            const icon = toggle.querySelector('.lock-icon');
-            const text = toggle.querySelector('.lock-text');
             
-            if (isMemosUnlocked) {
-                toggle.classList.add('unlocked');
-                icon.textContent = '🔓';
-                text.textContent = '해제됨';
+            if (toggle) {
+                const icon = toggle.querySelector('.lock-icon');
+                const text = toggle.querySelector('.lock-text');
+                
+                if (isMemosUnlocked) {
+                    toggle.classList.add('unlocked');
+                    icon.textContent = '🔓';
+                    text.textContent = '해제됨';
+                } else {
+                    toggle.classList.remove('unlocked');
+                    icon.textContent = '🔒';
+                    text.textContent = '잠금';
+                }
+                
+                loadMemos(); // 메모 리스트 새로고침
             } else {
-                toggle.classList.remove('unlocked');
-                icon.textContent = '🔒';
-                text.textContent = '잠금';
+                console.log('일반 메모 잠금 토글: 버튼이 없어 잠금 상태만 변경');
+                // 일반 메모 리스트가 제거되어도 잠금 상태는 유지
             }
-            
-            loadMemos(); // 메모 리스트 새로고침
         }
 
         function toggleDateMemoLock() {
@@ -4827,20 +4750,19 @@
         function saveDateMemo() {
             if (!selectedDate) return;
 
-            const unifiedInput = document.getElementById('dateMemoUnifiedInput').value.trim();
+            const titleInput = document.getElementById('dateMemoTitleInput');
+            const contentInput = document.getElementById('dateMemoContentInput');
+            
+            const title = titleInput ? titleInput.value.trim() : '';
+            const content = contentInput ? contentInput.value.trim() : '';
 
-            if (!unifiedInput) {
-                alert('메모 내용을 입력해주세요!');
+            if (!title) {
+                alert('메모 제목을 입력해주세요!');
                 return;
             }
 
-            // 첫 번째 줄을 제목으로, 나머지를 내용으로 분리
-            const lines = unifiedInput.split('\n');
-            const title = lines[0].trim();
-            const content = lines.slice(1).join('\n').trim();
-
-            if (!title) {
-                alert('첫 번째 줄에 메모 제목을 입력해주세요!');
+            if (!content) {
+                alert('메모 내용을 입력해주세요!');
                 return;
             }
 
@@ -5080,6 +5002,8 @@
             if (memoLockToggle) {
                 memoLockToggle.addEventListener('click', toggleMemoLock);
                 console.log('메모 잠금 토글 버튼 이벤트 등록 완료');
+            } else {
+                console.log('메모 잠금 토글 버튼을 찾을 수 없음 - 일반 메모 리스트가 제거됨');
             }
 
             const dateMemoLockToggle = document.getElementById('dateMemoLockToggle');
@@ -5706,9 +5630,16 @@
             setupFileAttachment();
             
             try {
-                // 설정 로드
-                loadSettings();
-                console.log('설정 로드 완료');
+                // 설정 로드 (방어적 호출)
+                if (typeof loadSettings === 'function') {
+                    loadSettings();
+                    console.log('설정 로드 완료');
+                } else {
+                    console.warn('loadSettings 함수가 정의되지 않음 - 기본 설정 적용');
+                    // 기본 설정 적용
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                }
                 
                 // 달력 생성
                 createCalendar();
