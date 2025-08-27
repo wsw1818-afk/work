@@ -400,53 +400,124 @@
         // 슬라이더 이벤트들
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         if (fontSizeSlider) {
-            fontSizeSlider.addEventListener('input', function() {
-                document.documentElement.style.setProperty('--font-scale', this.value);
-                updateFontSizeDisplayForce(this.value);
+            // 모든 기존 이벤트 완전 제거
+            const newFontSlider = fontSizeSlider.cloneNode(true);
+            fontSizeSlider.parentNode.replaceChild(newFontSlider, fontSizeSlider);
+            
+            // 새로운 강력한 이벤트 핸들러
+            const fontHandler = function() {
+                const value = parseFloat(this.value);
+                console.log('🔤 글꼴 크기 슬라이더 실시간 변경:', value);
+                
+                // CSS 변수 설정 (여러 방법으로 시도)
+                document.documentElement.style.setProperty('--font-scale', value, 'important');
+                document.documentElement.style.cssText += `--font-scale: ${value} !important;`;
+                
+                // 디스플레이 업데이트
+                updateFontSizeDisplayForce(value);
+                
+                // 시각적 피드백
+                addFontSizeFeedback(value);
+                
+                // 확인
+                const applied = getComputedStyle(document.documentElement).getPropertyValue('--font-scale').trim();
+                console.log(`🔤 글꼴 크기 즉시 적용: ${value} (CSS: ${applied})`);
+            };
+            
+            // 여러 이벤트 타입에 등록
+            ['input', 'change', 'mouseup', 'touchend'].forEach(eventType => {
+                newFontSlider.addEventListener(eventType, fontHandler);
             });
+            
+            console.log('✅ fontSizeSlider 완전 재생성 및 강력한 이벤트 등록 완료');
+        } else {
+            console.error('❌ fontSizeSlider를 찾을 수 없음');
         }
         
         const widthSlider = document.getElementById('widthSlider');
         if (widthSlider) {
-            widthSlider.addEventListener('input', function() {
-                document.documentElement.style.setProperty('--width-scale', this.value);
-                updateSizeDisplayForce('width', this.value);
+            // 모든 기존 이벤트 완전 제거
+            const newWidthSlider = widthSlider.cloneNode(true);
+            widthSlider.parentNode.replaceChild(newWidthSlider, widthSlider);
+            
+            // 새로운 강력한 이벤트 핸들러
+            const widthHandler = function() {
+                const value = parseFloat(this.value);
+                console.log('🔧 가로 크기 슬라이더 실시간 변경:', value);
+                
+                // CSS 변수 설정 (여러 방법으로 시도)
+                document.documentElement.style.setProperty('--width-scale', value, 'important');
+                document.documentElement.style.cssText += `--width-scale: ${value} !important;`;
+                
+                // 디스플레이 업데이트
+                updateSizeDisplayForce('width', value);
+                
+                // 시각적 피드백
+                addVisualFeedback('width', value);
+                
+                // 확인
+                const applied = getComputedStyle(document.documentElement).getPropertyValue('--width-scale').trim();
+                console.log(`📏 가로 크기 즉시 적용: ${value} (CSS: ${applied})`);
+            };
+            
+            // 여러 이벤트 타입에 등록
+            ['input', 'change', 'mouseup', 'touchend'].forEach(eventType => {
+                newWidthSlider.addEventListener(eventType, widthHandler);
             });
+            
+            console.log('✅ widthSlider 완전 재생성 및 강력한 이벤트 등록 완료');
+        } else {
+            console.error('❌ widthSlider를 찾을 수 없음');
         }
         
         const heightSlider = document.getElementById('heightSlider');
         if (heightSlider) {
-            // 기존 이벤트 제거
-            heightSlider.removeEventListener('input', heightSlider._heightHandler);
+            // 모든 기존 이벤트 완전 제거
+            const newHeightSlider = heightSlider.cloneNode(true);
+            heightSlider.parentNode.replaceChild(newHeightSlider, heightSlider);
             
-            // 새 이벤트 핸들러
-            heightSlider._heightHandler = function() {
-                const value = this.value;
-                console.log('🔧 세로 크기 슬라이더 변경:', value);
+            // 새로운 강력한 이벤트 핸들러
+            const heightHandler = function() {
+                const value = parseFloat(this.value);
+                console.log('🔧 세로 크기 슬라이더 실시간 변경:', value);
                 
-                // CSS 변수 설정
-                document.documentElement.style.setProperty('--height-scale', value);
+                // CSS 변수 설정 (여러 방법으로 시도)
+                document.documentElement.style.setProperty('--height-scale', value, 'important');
+                document.documentElement.style.cssText += `--height-scale: ${value} !important;`;
+                
+                // 즉시 모든 .day 요소에 직접 적용 (더 확실한 방법)
+                const days = document.querySelectorAll('.day');
+                const isMobile = window.innerWidth <= 768;
+                const baseHeight = isMobile ? 80 : 120;
+                const newHeight = baseHeight * value;
+                
+                days.forEach((day, index) => {
+                    day.style.minHeight = `${newHeight}px`;
+                    day.style.height = 'auto'; // 내용에 따라 확장 허용
+                    if (index < 2) { // 처음 2개만 로그
+                        console.log(`Day ${index + 1} 즉시 적용: ${newHeight}px`);
+                    }
+                });
                 
                 // 디스플레이 업데이트
                 updateSizeDisplayForce('height', value);
                 
+                // 시각적 피드백
+                addVisualFeedback('height', value);
+                
                 // 확인
                 const applied = getComputedStyle(document.documentElement).getPropertyValue('--height-scale').trim();
-                console.log('적용된 세로 크기:', applied);
-                
-                // 달력 새로고침 (필요시)
-                setTimeout(() => {
-                    if (typeof createCalendar === 'function') {
-                        console.log('달력 새로고침 실행');
-                        createCalendar();
-                    }
-                }, 100);
+                console.log(`📏 세로 크기 즉시 적용: ${value} (CSS: ${applied}) - ${days.length}개 셀 ${newHeight}px`);
             };
             
-            heightSlider.addEventListener('input', heightSlider._heightHandler);
-            heightSlider.addEventListener('change', heightSlider._heightHandler); // change 이벤트도 추가
+            // 여러 이벤트 타입에 등록
+            ['input', 'change', 'mouseup', 'touchend'].forEach(eventType => {
+                newHeightSlider.addEventListener(eventType, heightHandler);
+            });
             
-            console.log('✅ heightSlider 이벤트 강화 완료');
+            console.log('✅ heightSlider 완전 재생성 및 강력한 이벤트 등록 완료');
+        } else {
+            console.error('❌ heightSlider를 찾을 수 없음');
         }
         
         console.log('✅ 설정 모달 이벤트 초기화 완료');
@@ -472,6 +543,12 @@
                     
                     // 현재 설정 값을 모달에 로드
                     loadCurrentSettingsForce();
+                    
+                    // 슬라이더 이벤트 재등록 (모달이 열릴 때마다)
+                    setTimeout(() => {
+                        initializeSettingsEventsForce();
+                        console.log('🔄 설정 모달 열림 후 이벤트 재등록 완료');
+                    }, 100);
                     
                     console.log('✅ 설정 모달 열림');
                 } else {
