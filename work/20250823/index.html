@@ -1264,6 +1264,18 @@
             margin: auto;
             transform: translateZ(0);
         }
+        
+        /* 드래그 중일 때는 absolute positioning 사용 */
+        .memo-modal-content.dragging {
+            position: absolute !important;
+            margin: 0 !important;
+        }
+        
+        /* 모달이 드래그되어 absolute positioning된 상태 */
+        .memo-modal.has-positioned-content {
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
 
         /* 다크 모드 메모 */
         [data-theme="dark"] .memo-modal-content {
@@ -4035,11 +4047,18 @@
                 dragOffset.x = e.clientX - rect.left;
                 dragOffset.y = e.clientY - rect.top;
                 
+                // 모달을 드래그 모드로 전환
                 modalContent.classList.add('dragging');
                 modalContent.style.position = 'absolute';
                 modalContent.style.left = rect.left + 'px';
                 modalContent.style.top = rect.top + 'px';
                 modalContent.style.margin = '0';
+                
+                // 모달 컨테이너도 드래그 모드로 전환
+                const modal = modalContent.closest('.memo-modal');
+                if (modal) {
+                    modal.classList.add('has-positioned-content');
+                }
                 
                 e.preventDefault();
             }
@@ -4064,6 +4083,13 @@
             function stopModalDrag() {
                 if (isDragging && currentModal) {
                     currentModal.classList.remove('dragging');
+                    
+                    // 모달이 드래그되었으므로 absolute 위치 상태 유지
+                    const modal = currentModal.closest('.memo-modal');
+                    if (modal) {
+                        modal.classList.add('has-positioned-content');
+                    }
+                    
                     isDragging = false;
                     currentModal = null;
                 }
@@ -4254,11 +4280,12 @@
             const constrainedX = Math.max(20, Math.min(centerX, maxX));
             const constrainedY = Math.max(20, Math.min(centerY, maxY));
             
-            // 모달 스타일 설정
-            modalContent.style.position = 'absolute';
-            modalContent.style.left = constrainedX + 'px';
-            modalContent.style.top = constrainedY + 'px';
-            modalContent.style.margin = '0';
+            // 모달을 중앙에 정상적으로 표시 (absolute positioning 제거)
+            modalContent.style.position = '';
+            modalContent.style.left = '';
+            modalContent.style.top = '';
+            modalContent.style.margin = '';
+            modalContent.classList.remove('dragging');
             
             // z-index를 높게 설정하여 다른 모달보다 앞에 표시
             memoDetailModal.style.zIndex = '10000';
@@ -4277,6 +4304,7 @@
             modalContent.style.top = '';
             modalContent.style.margin = '';
             modalContent.classList.remove('dragging');
+            memoDetailModal.classList.remove('has-positioned-content');
             memoDetailModal.style.zIndex = '';
             
             memoDetailModal.style.display = 'none';
@@ -4448,11 +4476,12 @@
             const constrainedX = Math.max(20, Math.min(centerX, maxX));
             const constrainedY = Math.max(20, Math.min(centerY, maxY));
             
-            // 모달 스타일 초기화 및 위치 설정
-            modalContent.style.position = 'absolute';
-            modalContent.style.left = constrainedX + 'px';
-            modalContent.style.top = constrainedY + 'px';
-            modalContent.style.margin = '0';
+            // 모달을 중앙에 정상적으로 표시 (absolute positioning 제거)
+            modalContent.style.position = '';
+            modalContent.style.left = '';
+            modalContent.style.top = '';
+            modalContent.style.margin = '';
+            modalContent.classList.remove('dragging');
             
             dateMemoModal.style.display = 'block';
             
@@ -4475,6 +4504,7 @@
             modalContent.style.top = '';
             modalContent.style.margin = '';
             modalContent.classList.remove('dragging');
+            dateMemoModal.classList.remove('has-positioned-content');
             
             dateMemoModal.style.display = 'none';
             clearDateMemoForm();
