@@ -695,9 +695,16 @@
                     return;
                 }
                 
-                // 모달이 방금 닫힌 상태면 무시 (재열림 방지)
+                // 모달이 방금 닫힌 상태면 무시 (재열림 방지) - 1.5초 후 자동 해제
                 if (typeof window.modalJustClosed !== 'undefined' && window.modalJustClosed) {
                     console.log('🔒 unified: 모달이 방금 닫힌 상태 - 재열림 차단:', year, month, date);
+                    // 1.5초 후 자동으로 플래그 해제 (이미 index.html에서 처리하지만 백업용)
+                    setTimeout(() => {
+                        if (window.modalJustClosed) {
+                            window.modalJustClosed = false;
+                            console.log('✅ unified: 모달 재열림 보호 강제 해제');
+                        }
+                    }, 1600);
                     return;
                 }
                 
@@ -909,8 +916,9 @@
         window._preventAutoOpenDateModal = true;
         setTimeout(() => {
             window._preventAutoOpenDateModal = false;
+            window.modalJustClosed = false; // 모달 재열림 차단도 함께 해제
             console.log('✅ 날짜 메모창 자동 열림 방지 해제');
-        }, 3000); // 3초 후 플래그 해제
+        }, 2000); // 2초 후 플래그 해제
         
         // 데이터 로드
         loadMemosFromStorage();
