@@ -3512,36 +3512,26 @@
             const bgColorPicker = document.getElementById('bgColorPicker');
             
             if (richEditor.style.display === 'none') {
-                alert('색상 초기화 기능을 사용하려면 리치 에디터로 전환하세요.');
+                // 리치 에디터가 비활성 상태면 아무것도 하지 않음
                 return;
             }
+            
+            richEditor.focus();
             
             // 선택된 텍스트가 있는지 확인
             const selection = window.getSelection();
             if (selection.rangeCount > 0 && !selection.isCollapsed) {
                 // 선택된 텍스트의 색상만 초기화
-                richEditor.focus();
-                
-                // 글자색을 기본값(검정)으로 초기화
                 document.execCommand('foreColor', false, '#000000');
-                
-                // 배경색을 투명으로 초기화
+                document.execCommand('backColor', false, 'transparent');
+            } else {
+                // 전체 에디터의 색상을 초기화 (확인창 없이 바로 실행)
+                document.execCommand('selectAll', false, null);
+                document.execCommand('foreColor', false, '#000000');
                 document.execCommand('backColor', false, 'transparent');
                 
-                alert('선택된 텍스트의 색상이 초기화되었습니다.');
-            } else {
-                // 전체 에디터의 색상을 초기화
-                if (confirm('전체 텍스트의 색상을 초기화하시겠습니까?')) {
-                    // 전체 선택 후 색상 초기화
-                    document.execCommand('selectAll', false, null);
-                    document.execCommand('foreColor', false, '#000000');
-                    document.execCommand('backColor', false, 'transparent');
-                    
-                    // 선택 해제
-                    selection.removeAllRanges();
-                    
-                    alert('전체 텍스트의 색상이 초기화되었습니다.');
-                }
+                // 선택 해제
+                selection.removeAllRanges();
             }
             
             // 컬러 피커도 기본값으로 리셋
