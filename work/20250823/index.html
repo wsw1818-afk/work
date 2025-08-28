@@ -1252,6 +1252,11 @@
             padding: 20px;
             box-sizing: border-box;
         }
+        
+        /* 메모 상세 모달은 더 높은 z-index */
+        #memoDetailModal {
+            z-index: 999999 !important;
+        }
 
         .memo-modal-content {
             background: white;
@@ -4331,8 +4336,15 @@
             modalContent.style.margin = '';
             modalContent.classList.remove('dragging');
             
-            // z-index를 높게 설정하여 다른 모달보다 앞에 표시
-            memoDetailModal.style.zIndex = '10000';
+            // z-index를 가장 높게 설정하여 다른 모든 모달보다 앞에 표시
+            memoDetailModal.style.zIndex = '999999';
+            
+            // 날짜 메모 모달이 열려있다면 임시로 z-index를 낮춤 (뒤로 보냄)
+            const dateMemoModal = document.getElementById('dateMemoModal');
+            if (dateMemoModal && dateMemoModal.style.display === 'block') {
+                dateMemoModal.style.zIndex = '99998';
+                console.log('📋 날짜 메모 모달을 뒤로 보냄 (메모 상세보기 우선)');
+            }
             
             // 상세 모달 표시 - 전체 화면 오버레이 강제 적용
             memoDetailModal.style.display = 'block';
@@ -4364,6 +4376,13 @@
             memoDetailModal.style.visibility = 'hidden';
             memoDetailModal.classList.remove('has-positioned-content');
             memoDetailModal.style.zIndex = '';
+            
+            // 날짜 메모 모달의 z-index를 원래대로 복원
+            const dateMemoModal = document.getElementById('dateMemoModal');
+            if (dateMemoModal && dateMemoModal.style.display === 'block') {
+                dateMemoModal.style.zIndex = '99999';
+                console.log('📋 날짜 메모 모달 z-index 복원');
+            }
             
             // 모든 인라인 스타일 제거
             memoDetailModal.style.position = '';
