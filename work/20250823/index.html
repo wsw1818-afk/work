@@ -63,12 +63,14 @@
             height: auto; /* 높이는 내용에 따라 자동 조정하되 글자크기와 독립 */
             margin: 20px;
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            /* backdrop-filter: blur(20px); 모달 오버레이 문제로 임시 비활성화 */
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             /* transform scale 제거 - 글자크기 변경 시 달력 크기 영향 방지 */
             transform-origin: center top;
+            position: relative;
+            z-index: 1;
         }
 
         .calendar-header {
@@ -1246,7 +1248,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 99999;
             padding: 20px;
             box-sizing: border-box;
         }
@@ -1615,7 +1617,7 @@
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 50000;
             left: 0;
             top: 0;
             width: 100%;
