@@ -627,11 +627,18 @@
                     return;
                 }
                 
+                // 이미 같은 날짜로 모달이 열려있으면 실행하지 않음
+                const selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                const dateModal = document.getElementById('dateMemoModal');
+                if (dateModal && dateModal.style.display === 'block' && MemoSystem.selectedDate === selectedDate) {
+                    console.log('📅 이미 같은 날짜 모달이 열려있음:', selectedDate);
+                    return;
+                }
+                
                 // 원래 HTML 함수 실행
                 originalOpenDateMemoModal(year, month, date);
                 
                 // unified 시스템 추가 처리
-                const selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
                 MemoSystem.selectedDate = selectedDate;
                 MemoSystem.locks.dateMemos = true;
                 refreshDateMemoList();

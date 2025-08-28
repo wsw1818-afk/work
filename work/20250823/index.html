@@ -2388,6 +2388,22 @@
             schedules.unshift(schedule);
             localStorage.setItem('calendarSchedules', JSON.stringify(schedules));
             
+            // 일정을 메모로도 저장 (날짜별 메모 리스트에 표시되도록)
+            const memo = {
+                id: schedule.id,
+                title: `📅 ${schedule.title}`,
+                content: schedule.description || '일정',
+                date: schedule.date,
+                attachments: schedule.attachments || [],
+                isSchedule: true, // 일정임을 표시
+                timestamp: schedule.timestamp
+            };
+            
+            // 기존 메모에 추가
+            let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            memos.unshift(memo);
+            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+            
             // 알람이 설정된 경우 스케줄링
             if (enableAlarm) {
                 scheduleAlarm(schedule);
@@ -2395,6 +2411,14 @@
             
             clearScheduleForm();
             closeModal('createModal');
+            
+            // 달력과 메모 시스템 업데이트
+            updateCalendarDisplay();
+            if (window.memoSystemRefresh) {
+                window.memoSystemRefresh();
+            }
+            
+            console.log('✅ 일정이 메모로도 저장됨:', memo);
             // alert('일정이 추가되었습니다! ➕'); // 메시지 제거
         }
         
