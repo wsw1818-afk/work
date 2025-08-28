@@ -3774,8 +3774,8 @@
         
         function getStorageLimit() {
             // 대부분의 브라우저에서 localStorage는 약 5-10MB 제한
-            // 안전을 위해 5MB로 설정
-            return 5 * 1024 * 1024; // 5MB
+            // 30MB 파일 지원을 위해 8MB로 설정 (Base64 인코딩 고려)
+            return 8 * 1024 * 1024; // 8MB
         }
         
         function checkStorageSpace(additionalBytes = 0) {
@@ -3868,7 +3868,7 @@
                 
                 // localStorage 용량 체크
                 if (!checkStorageSpace(estimatedSize)) {
-                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n저장 공간을 확보하려면:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용해보세요 (권장: 5MB 이하)`);
+                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n저장 공간을 확보하려면:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용해보세요 (권장: 20MB 이하)\n• 또는 파일을 압축해보세요`);
                     // 첨부파일 아이템 제거
                     attachmentItem.remove();
                     return;
@@ -4102,9 +4102,9 @@
                     console.log('일정 첨부파일 선택됨:', e.target.files.length, '개');
                     const files = Array.from(e.target.files);
                     files.forEach(file => {
-                        // 더 엄격한 파일 크기 제한 (5MB)
-                        if (file.size > 5 * 1024 * 1024) {
-                            alert(`파일 "${file.name}"은 너무 큽니다.\n\n권장 크기: 5MB 이하\n현재 크기: ${formatFileSize(file.size)}\n\n작은 파일을 사용하거나 파일을 압축해보세요.`);
+                        // 파일 크기 제한 (30MB)
+                        if (file.size > 30 * 1024 * 1024) {
+                            alert(`파일 "${file.name}"은 너무 큽니다.\n\n최대 크기: 30MB\n현재 크기: ${formatFileSize(file.size)}\n\n30MB 이하의 파일을 사용해주세요.`);
                             return;
                         }
                         addAttachmentItem(file, 'scheduleAttachmentList', scheduleAttachments);
@@ -4122,9 +4122,9 @@
                     console.log('날짜별 메모 첨부파일 선택됨:', e.target.files.length, '개');
                     const files = Array.from(e.target.files);
                     files.forEach(file => {
-                        // 더 엄격한 파일 크기 제한 (5MB)
-                        if (file.size > 5 * 1024 * 1024) {
-                            alert(`파일 "${file.name}"은 너무 큽니다.\n\n권장 크기: 5MB 이하\n현재 크기: ${formatFileSize(file.size)}\n\n작은 파일을 사용하거나 파일을 압축해보세요.`);
+                        // 파일 크기 제한 (30MB)
+                        if (file.size > 30 * 1024 * 1024) {
+                            alert(`파일 "${file.name}"은 너무 큽니다.\n\n최대 크기: 30MB\n현재 크기: ${formatFileSize(file.size)}\n\n30MB 이하의 파일을 사용해주세요.`);
                             return;
                         }
                         addAttachmentItem(file, 'dateMemoAttachmentList', dateMemoAttachments);
