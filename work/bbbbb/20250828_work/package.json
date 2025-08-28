@@ -1,0 +1,13 @@
+{
+  "name": "calendar-app",
+  "version": "1.0.0",
+  "description": "Korean Calendar App with Google Drive Integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
