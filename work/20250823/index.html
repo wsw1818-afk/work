@@ -844,6 +844,152 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
+        /* 첨부파일 관련 스타일 */
+        .attachment-section {
+            margin-top: 8px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-attachment {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-attachment:hover {
+            background: linear-gradient(135deg, #45a049, #3d8b40);
+            transform: translateY(-1px);
+        }
+
+        .attachment-list {
+            margin-top: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .attachment-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .attachment-name {
+            color: #333;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .attachment-size {
+            color: #666;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .attachment-remove {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .attachment-remove:hover {
+            background: #ff3838;
+        }
+
+        .memo-attachment-section {
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .memo-attachment-section .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+            color: #555;
+        }
+
+        /* 다크 테마 지원 */
+        [data-theme="dark"] .btn-attachment {
+            background: linear-gradient(135deg, #52c41a, #389e0d);
+        }
+
+        [data-theme="dark"] .btn-attachment:hover {
+            background: linear-gradient(135deg, #389e0d, #237804);
+        }
+
+        [data-theme="dark"] .attachment-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .attachment-name {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .attachment-size {
+            color: #a0aec0;
+        }
+
+        [data-theme="dark"] .memo-attachment-section {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .memo-attachment-section .form-label {
+            color: #e2e8f0;
+        }
+
+        /* 메모 아이템의 첨부파일 표시 */
+        .memo-attachment-indicator {
+            font-size: 10px;
+            color: #4CAF50;
+            font-weight: 600;
+            margin-top: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        [data-theme="dark"] .memo-attachment-indicator {
+            color: #52c41a;
+        }
+
         [data-theme="dark"] .sticky-memo-save-btn {
             background: linear-gradient(135deg, #90cdf4 0%, #4299e1 100%);
             color: #1a202c;
@@ -1829,6 +1975,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">📎 첨부파일</label>
+                    <div class="attachment-section">
+                        <input type="file" id="scheduleAttachment" multiple accept="*/*" class="file-input">
+                        <button type="button" class="btn-attachment" onclick="document.getElementById('scheduleAttachment').click()">
+                            📎 파일 선택
+                        </button>
+                        <div id="scheduleAttachmentList" class="attachment-list"></div>
+                    </div>
+                </div>
                 <button class="btn-primary" onclick="saveSchedule()">일정 추가</button>
                 <button class="btn-secondary" onclick="closeModal('createModal')">취소</button>
             </div>
@@ -1996,6 +2152,10 @@
             <div class="memo-detail-content">
                 <div class="memo-detail-date" id="memoDetailDate"></div>
                 <div class="memo-detail-body" id="memoDetailBody"></div>
+                <div class="memo-detail-attachments" id="memoDetailAttachments" style="display: none;">
+                    <h4>📎 첨부파일</h4>
+                    <div class="attachment-list"></div>
+                </div>
                 <div class="memo-detail-actions">
                     <button class="btn-primary" id="editMemoBtn">✏️ 편집</button>
                     <button class="btn-secondary" id="deleteMemoBtn">🗑️ 삭제</button>
@@ -2015,6 +2175,16 @@
             <div class="memo-form">
                 <input type="text" class="memo-input" id="dateMemoTitleInput" placeholder="메모 제목을 입력하세요...">
                 <textarea class="memo-textarea" id="dateMemoContentInput" placeholder="메모 내용을 입력하세요..."></textarea>
+                <div class="memo-attachment-section">
+                    <label class="form-label">📎 첨부파일</label>
+                    <div class="attachment-section">
+                        <input type="file" id="dateMemoAttachment" multiple accept="*/*" class="file-input">
+                        <button type="button" class="btn-attachment" onclick="document.getElementById('dateMemoAttachment').click()">
+                            📎 파일 선택
+                        </button>
+                        <div id="dateMemoAttachmentList" class="attachment-list"></div>
+                    </div>
+                </div>
                 <button class="memo-save-btn" id="saveDateMemo">💾 저장</button>
             </div>
 
@@ -2197,6 +2367,7 @@
                     repeatInterval: document.getElementById('alarmRepeat').value !== 'none' 
                         ? parseInt(document.getElementById('alarmRepeat').value) : 0
                 } : { enabled: false },
+                attachments: [...scheduleAttachments], // 첨부파일 추가
                 timestamp: new Date().toISOString()
             };
             
@@ -2222,6 +2393,9 @@
             document.getElementById('alarmSettings').style.display = 'none';
             document.getElementById('alarmMessage').value = '';
             document.getElementById('alarmRepeat').value = 'none';
+            
+            // 첨부파일 초기화
+            clearAttachments('scheduleAttachmentList', scheduleAttachments);
         }
 
         // 알람 관리 시스템
@@ -3509,6 +3683,116 @@
             }
         }
 
+        // 첨부파일 관련 함수들
+        let scheduleAttachments = [];
+        let dateMemoAttachments = [];
+        
+        // 전역 접근 가능하도록 설정
+        window.scheduleAttachments = scheduleAttachments;
+        window.dateMemoAttachments = dateMemoAttachments;
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(fileName) {
+            const extension = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': '📄', 'doc': '📄', 'docx': '📄',
+                'xls': '📊', 'xlsx': '📊',
+                'ppt': '📊', 'pptx': '📊',
+                'txt': '📝',
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'bmp': '🖼️',
+                'mp4': '🎬', 'avi': '🎬', 'mov': '🎬',
+                'mp3': '🎵', 'wav': '🎵',
+                'zip': '🗜️', 'rar': '🗜️', '7z': '🗜️',
+            };
+            return icons[extension] || '📎';
+        }
+
+        function addAttachmentItem(file, listId, attachmentArray) {
+            const attachmentList = document.getElementById(listId);
+            const attachmentItem = document.createElement('div');
+            attachmentItem.className = 'attachment-item';
+            attachmentItem.innerHTML = `
+                <div class="attachment-info">
+                    <span class="attachment-icon">${getFileIcon(file.name)}</span>
+                    <span class="attachment-name" title="${file.name}">${file.name}</span>
+                    <span class="attachment-size">${formatFileSize(file.size)}</span>
+                </div>
+                <button class="attachment-remove" onclick="removeAttachment('${file.name}', '${listId}', this)">
+                    ✕
+                </button>
+            `;
+            attachmentList.appendChild(attachmentItem);
+            
+            // 파일을 Base64로 인코딩하여 저장
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                attachmentArray.push({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    data: e.target.result
+                });
+                console.log('첨부파일 추가됨:', file.name);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeAttachment(fileName, listId, buttonElement) {
+            const attachmentItem = buttonElement.parentElement;
+            attachmentItem.remove();
+            
+            // 해당 배열에서도 제거
+            if (listId === 'scheduleAttachmentList') {
+                scheduleAttachments = scheduleAttachments.filter(att => att.name !== fileName);
+            } else if (listId === 'dateMemoAttachmentList') {
+                dateMemoAttachments = dateMemoAttachments.filter(att => att.name !== fileName);
+            }
+            
+            console.log('첨부파일 제거됨:', fileName);
+        }
+
+        function clearAttachments(listId, attachmentArray) {
+            const attachmentList = document.getElementById(listId);
+            attachmentList.innerHTML = '';
+            attachmentArray.length = 0;
+        }
+
+        function downloadAttachment(fileName, data, type) {
+            try {
+                // Base64 데이터를 Blob으로 변환
+                const byteCharacters = atob(data.split(',')[1]);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: type });
+                
+                // 다운로드 링크 생성 및 클릭
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                console.log('파일 다운로드:', fileName);
+            } catch (error) {
+                console.error('파일 다운로드 오류:', error);
+                alert('파일 다운로드 중 오류가 발생했습니다.');
+            }
+        }
+
         // 색상 초기화 함수
         function resetColors() {
             const richEditor = document.getElementById('stickyMemoRichEditor');
@@ -3655,6 +3939,40 @@
                     });
                     resizeObserver.observe(stickyMemo);
                 }
+            }
+
+            // 첨부파일 이벤트 리스너 설정
+            const scheduleAttachmentInput = document.getElementById('scheduleAttachment');
+            const dateMemoAttachmentInput = document.getElementById('dateMemoAttachment');
+            
+            if (scheduleAttachmentInput) {
+                scheduleAttachmentInput.addEventListener('change', function(e) {
+                    const files = Array.from(e.target.files);
+                    files.forEach(file => {
+                        if (file.size > 50 * 1024 * 1024) { // 50MB 제한
+                            alert(`파일 "${file.name}"은 너무 큽니다. (최대 50MB)`);
+                            return;
+                        }
+                        addAttachmentItem(file, 'scheduleAttachmentList', scheduleAttachments);
+                    });
+                    // 입력 초기화 (같은 파일을 다시 선택할 수 있도록)
+                    e.target.value = '';
+                });
+            }
+            
+            if (dateMemoAttachmentInput) {
+                dateMemoAttachmentInput.addEventListener('change', function(e) {
+                    const files = Array.from(e.target.files);
+                    files.forEach(file => {
+                        if (file.size > 50 * 1024 * 1024) { // 50MB 제한
+                            alert(`파일 "${file.name}"은 너무 큽니다. (최대 50MB)`);
+                            return;
+                        }
+                        addAttachmentItem(file, 'dateMemoAttachmentList', dateMemoAttachments);
+                    });
+                    // 입력 초기화 (같은 파일을 다시 선택할 수 있도록)
+                    e.target.value = '';
+                });
             }
 
             // 스티키 메모 잠금 토글 제거됨 (메모 리스트가 없으므로 불필요)
@@ -3864,6 +4182,31 @@
                 bodyElement.innerHTML = memo.content;
             } else {
                 bodyElement.textContent = memo.content;
+            }
+            
+            // 첨부파일 표시
+            const attachmentContainer = document.getElementById('memoDetailAttachments');
+            if (attachmentContainer) {
+                if (memo.attachments && memo.attachments.length > 0) {
+                    attachmentContainer.style.display = 'block';
+                    const attachmentList = attachmentContainer.querySelector('.attachment-list');
+                    if (attachmentList) {
+                        attachmentList.innerHTML = memo.attachments.map(attachment => `
+                            <div class="attachment-item">
+                                <div class="attachment-info">
+                                    <span class="attachment-icon">${getFileIcon(attachment.name)}</span>
+                                    <span class="attachment-name" title="${attachment.name}">${attachment.name}</span>
+                                    <span class="attachment-size">${formatFileSize(attachment.size)}</span>
+                                </div>
+                                <button class="btn-attachment" onclick="downloadAttachment('${attachment.name}', '${attachment.data}', '${attachment.type}')">
+                                    💾 다운로드
+                                </button>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    attachmentContainer.style.display = 'none';
+                }
             }
             
             // 상세 모달 위치 설정

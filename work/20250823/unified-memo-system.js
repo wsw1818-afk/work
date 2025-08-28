@@ -232,11 +232,17 @@
             const truncatedContent = displayContent.substring(0, 100);
             const contentWithEllipsis = displayContent.length > 100 ? truncatedContent + '...' : truncatedContent;
             
+            // 첨부파일 표시
+            const attachmentIndicator = memo.attachments && memo.attachments.length > 0 
+                ? `<div class="memo-attachment-indicator">📎 ${memo.attachments.length}</div>` 
+                : '';
+            
             return `
                 <div class="memo-item ${isUnlocked ? 'unlocked' : ''}" onclick="openMemoDetail(${memo.id})">
                     <div class="memo-item-title">${memo.title || '제목 없음'}</div>
                     <div class="memo-item-content">${contentWithEllipsis}</div>
                     <div class="memo-item-date">${memo.date || '날짜 없음'}</div>
+                    ${attachmentIndicator}
                     <div class="memo-item-preview">클릭하여 보기</div>
                     ${isUnlocked ? `<button class="memo-item-delete visible" onclick="event.stopPropagation(); deleteMemoFromList(${memo.id})">✕</button>` : ''}
                 </div>
@@ -585,13 +591,32 @@
                 return;
             }
             
-            const memo = addMemo(title, content, MemoSystem.selectedDate);
+            // 첨부파일 포함하여 메모 생성
+            const memo = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                date: MemoSystem.selectedDate,
+                attachments: window.dateMemoAttachments ? [...window.dateMemoAttachments] : [], // 첨부파일 추가
+                timestamp: new Date().toISOString()
+            };
+            
+            MemoSystem.data.unshift(memo);
+            saveMemosToStorage();
             
             // 입력창 초기화
             const titleInput = document.getElementById('dateMemoTitleInput');
             const contentInput = document.getElementById('dateMemoContentInput');
             if (titleInput) titleInput.value = '';
             if (contentInput) contentInput.value = '';
+            
+            // 첨부파일 초기화
+            if (window.clearAttachments && window.dateMemoAttachments) {
+                window.clearAttachments('dateMemoAttachmentList', window.dateMemoAttachments);
+            }
+            
+            // UI 새로고침
+            refreshAllUI();
             
             console.log('💾 날짜별 메모 저장:', memo.title, '(날짜:', MemoSystem.selectedDate, ')');
         };
