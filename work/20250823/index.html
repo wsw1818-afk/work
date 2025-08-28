@@ -433,8 +433,8 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             resize: both;
             overflow: auto;
-            min-width: 250px;
-            min-height: 200px;
+            min-width: 300px;
+            min-height: 350px;
             max-width: 80vw;
             max-height: 80vh;
             border: 1px solid rgba(255, 193, 7, 0.3);
@@ -518,6 +518,10 @@
 
         .sticky-memo-form {
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0; /* flex 아이템이 축소될 수 있도록 */
         }
 
         .sticky-memo-input {
@@ -560,14 +564,15 @@
 
         .sticky-memo-unified-textarea {
             width: 100%;
-            height: 180px;
+            flex: 1;
+            min-height: 120px;
             padding: 15px;
             border: none;
             background: rgba(255, 255, 255, 0.7);
             border-radius: 8px;
             font-size: calc(14px * var(--font-scale));
             font-family: 'Malgun Gothic', sans-serif;
-            resize: vertical;
+            resize: none; /* 개별 resize 비활성화, 전체 창 resize만 사용 */
             margin-bottom: 10px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
             line-height: 1.5;
@@ -590,6 +595,8 @@
             font-weight: 600;
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+            flex-shrink: 0; /* 크기가 축소되지 않도록 */
+            align-self: center; /* 중앙 정렬 */
         }
 
         .sticky-memo-save-btn:hover {
@@ -670,6 +677,7 @@
             border-radius: 8px;
             margin-bottom: 10px;
             border: 1px solid rgba(0, 0, 0, 0.1);
+            flex-shrink: 0; /* 크기가 축소되지 않도록 */
         }
 
         .toolbar-group {
@@ -717,11 +725,16 @@
 
         .sticky-memo-editor-container {
             position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
 
         .sticky-memo-rich-editor {
             width: 100%;
-            min-height: 180px;
+            flex: 1;
+            min-height: 120px;
             padding: 15px;
             border: none;
             background: rgba(255, 255, 255, 0.7);
@@ -732,7 +745,7 @@
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
             line-height: 1.5;
             overflow-y: auto;
-            resize: vertical;
+            resize: none; /* 개별 resize 비활성화, 전체 창 resize만 사용 */
         }
 
         .sticky-memo-rich-editor:focus {
@@ -750,6 +763,7 @@
         .editor-toggle {
             text-align: center;
             margin-bottom: 10px;
+            flex-shrink: 0; /* 크기가 축소되지 않도록 */
         }
 
         .toggle-btn {
@@ -3575,6 +3589,21 @@
                 
                 // 선택 변경 시 도구 모음 버튼 상태 업데이트
                 richEditor.addEventListener('selectionchange', updateToolbarButtons);
+            }
+
+            // 창 크기 조절 감지 및 입력란 크기 자동 조정
+            const stickyMemo = document.querySelector('.sticky-memo');
+            if (stickyMemo) {
+                // ResizeObserver를 사용하여 창 크기 변화 감지
+                if (window.ResizeObserver) {
+                    const resizeObserver = new ResizeObserver(entries => {
+                        for (let entry of entries) {
+                            // 창 크기가 변경되면 입력란들의 크기도 자동으로 조정됨 (flex 레이아웃 덕분)
+                            console.log('스티커 메모 창 크기 조절됨:', entry.contentRect);
+                        }
+                    });
+                    resizeObserver.observe(stickyMemo);
+                }
             }
 
             // 스티키 메모 잠금 토글 제거됨 (메모 리스트가 없으므로 불필요)
