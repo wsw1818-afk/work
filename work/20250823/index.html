@@ -558,6 +558,27 @@
             box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
         }
 
+        .sticky-memo-unified-textarea {
+            width: 100%;
+            height: 180px;
+            padding: 15px;
+            border: none;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            font-size: calc(14px * var(--font-scale));
+            font-family: 'Malgun Gothic', sans-serif;
+            resize: vertical;
+            margin-bottom: 10px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            line-height: 1.5;
+        }
+
+        .sticky-memo-unified-textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
+        }
+
         .sticky-memo-save-btn {
             background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
             color: #8b5a00;
@@ -626,6 +647,176 @@
         [data-theme="dark"] .sticky-memo-textarea:focus {
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 0 0 2px rgba(144, 205, 244, 0.5);
+        }
+
+        [data-theme="dark"] .sticky-memo-unified-textarea {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .sticky-memo-unified-textarea:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(144, 205, 244, 0.5);
+        }
+
+        /* 텍스트 편집기 도구모음 */
+        .text-editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toolbar-btn {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+
+        .toolbar-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .color-picker {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #fontFamilySelect, #fontSizeSelect {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .sticky-memo-editor-container {
+            position: relative;
+        }
+
+        .sticky-memo-rich-editor {
+            width: 100%;
+            min-height: 180px;
+            padding: 15px;
+            border: none;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            font-size: calc(14px * var(--font-scale));
+            font-family: 'Malgun Gothic', sans-serif;
+            margin-bottom: 10px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            line-height: 1.5;
+            overflow-y: auto;
+            resize: vertical;
+        }
+
+        .sticky-memo-rich-editor:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
+        }
+
+        .sticky-memo-rich-editor:empty:before {
+            content: attr(data-placeholder);
+            color: #999;
+            white-space: pre-line;
+        }
+
+        .editor-toggle {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .toggle-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .toggle-btn:hover {
+            background: #e9ecef;
+        }
+
+        /* 다크 테마 지원 */
+        [data-theme="dark"] .text-editor-toolbar {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .toolbar-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .toolbar-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .toolbar-btn.active {
+            background: #4299e1;
+            border-color: #4299e1;
+        }
+
+        [data-theme="dark"] .color-picker {
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] #fontFamilySelect, 
+        [data-theme="dark"] #fontSizeSelect {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .sticky-memo-rich-editor {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .sticky-memo-rich-editor:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(144, 205, 244, 0.5);
+        }
+
+        [data-theme="dark"] .toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border-color: rgba(144, 205, 244, 0.3);
+        }
+
+        [data-theme="dark"] .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         [data-theme="dark"] .sticky-memo-save-btn {
@@ -1487,7 +1678,7 @@
         <div class="action-bar">
             <button class="action-btn" id="noticeBtn">📢 공지 쓰기</button>
             <button class="action-btn" id="createBtn">➕ 일정 추가</button>
-            <button class="action-btn" id="memoBtn">📝 메모장</button>
+            <button class="action-btn" id="memoBtn">📝 스티커</button>
             <button class="action-btn" id="excelBtn">📊 엑셀</button>
             <button class="action-btn" id="unifiedCloudBtn">☁️ 클라우드 설정</button>
             <button class="action-btn" id="syncStatusBtn">🔍 동기화 상태</button>
@@ -3017,8 +3208,47 @@
 
                 <div class="sticky-memo-content">
                     <div class="sticky-memo-form">
-                        <input type="text" class="sticky-memo-input" id="stickyMemoTitleInput" placeholder="메모 제목을 입력하세요...">
-                        <textarea class="sticky-memo-textarea" id="stickyMemoContentInput" placeholder="메모 내용을 입력하세요..."></textarea>
+                        <div class="text-editor-toolbar">
+                            <div class="toolbar-group">
+                                <button class="toolbar-btn" onclick="formatText('bold')" title="굵기">
+                                    <strong>B</strong>
+                                </button>
+                                <button class="toolbar-btn" onclick="formatText('italic')" title="기울임">
+                                    <em>I</em>
+                                </button>
+                                <button class="toolbar-btn" onclick="formatText('underline')" title="밑줄">
+                                    <u>U</u>
+                                </button>
+                            </div>
+                            <div class="toolbar-group">
+                                <input type="color" id="textColorPicker" class="color-picker" value="#000000" onchange="formatText('foreColor', this.value)" title="글자색">
+                                <input type="color" id="bgColorPicker" class="color-picker" value="#ffffff" onchange="formatText('backColor', this.value)" title="배경색">
+                            </div>
+                            <div class="toolbar-group">
+                                <select id="fontFamilySelect" onchange="formatText('fontName', this.value)" title="폰트">
+                                    <option value="Malgun Gothic">맑은 고딕</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Noto Sans KR">Noto Sans KR</option>
+                                </select>
+                                <select id="fontSizeSelect" onchange="formatText('fontSize', this.value)" title="글자 크기">
+                                    <option value="12">12px</option>
+                                    <option value="14" selected>14px</option>
+                                    <option value="16">16px</option>
+                                    <option value="18">18px</option>
+                                    <option value="20">20px</option>
+                                    <option value="24">24px</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="sticky-memo-editor-container">
+                            <div id="stickyMemoRichEditor" class="sticky-memo-rich-editor" contenteditable="true" data-placeholder="첫 번째 줄: 제목&#10;두 번째 줄부터: 내용을 입력하세요..."></div>
+                            <textarea class="sticky-memo-unified-textarea" id="stickyMemoUnifiedInput" placeholder="첫 번째 줄: 제목&#10;두 번째 줄부터: 내용을 입력하세요..." style="display: none;"></textarea>
+                        </div>
+                        <div class="editor-toggle">
+                            <button class="toggle-btn" onclick="toggleEditor()" id="editorToggleBtn">📝 일반 텍스트로 전환</button>
+                        </div>
                         <button class="sticky-memo-save-btn" id="saveStickyMemo">💾 저장</button>
                     </div>
 
@@ -3110,23 +3340,55 @@
         }
 
         function clearStickyMemoForm() {
-            document.getElementById('stickyMemoTitleInput').value = '';
-            document.getElementById('stickyMemoContentInput').value = '';
+            document.getElementById('stickyMemoUnifiedInput').value = '';
         }
 
         function saveStickyMemo() {
-            const title = document.getElementById('stickyMemoTitleInput').value.trim();
-            const content = document.getElementById('stickyMemoContentInput').value.trim();
-
-            if (!title) {
-                alert('메모 제목을 입력해주세요!');
-                return;
+            const richEditor = document.getElementById('stickyMemoRichEditor');
+            const textEditor = document.getElementById('stickyMemoUnifiedInput');
+            
+            let content;
+            let isRichText = false;
+            
+            // 현재 활성 에디터에 따라 내용 가져오기
+            if (richEditor.style.display !== 'none') {
+                // 리치 에디터가 활성
+                const richContent = richEditor.innerHTML.trim();
+                if (!richContent || richContent === '<br>' || richContent === '<div><br></div>') {
+                    alert('메모 내용을 입력해주세요!');
+                    return;
+                }
+                content = richContent;
+                isRichText = true;
+            } else {
+                // 텍스트 에디터가 활성
+                const unifiedText = textEditor.value.trim();
+                if (!unifiedText) {
+                    alert('메모 내용을 입력해주세요!');
+                    return;
+                }
+                content = unifiedText;
+                isRichText = false;
+            }
+            
+            // 제목과 내용 분리 (리치 텍스트의 경우 텍스트만 추출하여 제목 생성)
+            let title, mainContent;
+            if (isRichText) {
+                const textContent = richEditor.textContent || richEditor.innerText || '';
+                const lines = textContent.split('\n');
+                title = lines[0].trim() || '제목 없음';
+                mainContent = content; // HTML 형태로 저장
+            } else {
+                const lines = content.split('\n');
+                title = lines[0].trim() || '제목 없음';
+                mainContent = lines.slice(1).join('\n').trim();
             }
 
             const memo = {
                 id: Date.now(),
                 title: title,
-                content: content,
+                content: mainContent,
+                isRichText: isRichText,
                 date: new Date().toLocaleDateString('ko-KR'),
                 timestamp: new Date().toISOString()
             };
@@ -3136,6 +3398,89 @@
             
             clearStickyMemoForm();
             loadStickyMemos();
+        }
+
+        // 텍스트 편집 기능 함수들
+        function formatText(command, value = null) {
+            const richEditor = document.getElementById('stickyMemoRichEditor');
+            
+            if (richEditor.style.display === 'none') {
+                alert('텍스트 편집 기능을 사용하려면 리치 에디터로 전환하세요.');
+                return;
+            }
+            
+            richEditor.focus();
+            
+            try {
+                if (value) {
+                    document.execCommand(command, false, value);
+                } else {
+                    document.execCommand(command, false, null);
+                }
+                
+                // 버튼 활성화 상태 업데이트
+                updateToolbarButtons();
+            } catch (e) {
+                console.error('텍스트 포맷 실행 오류:', e);
+            }
+        }
+
+        function updateToolbarButtons() {
+            // 굵기, 기울임, 밑줄 버튼의 활성 상태 업데이트
+            const boldBtn = document.querySelector('button[onclick*="bold"]');
+            const italicBtn = document.querySelector('button[onclick*="italic"]');
+            const underlineBtn = document.querySelector('button[onclick*="underline"]');
+            
+            if (boldBtn) {
+                boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+            }
+            if (italicBtn) {
+                italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+            }
+            if (underlineBtn) {
+                underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
+            }
+        }
+
+        function toggleEditor() {
+            const richEditor = document.getElementById('stickyMemoRichEditor');
+            const textEditor = document.getElementById('stickyMemoUnifiedInput');
+            const toggleBtn = document.getElementById('editorToggleBtn');
+            const toolbar = document.querySelector('.text-editor-toolbar');
+            
+            if (richEditor.style.display === 'none') {
+                // 텍스트 에디터에서 리치 에디터로 전환
+                const textContent = textEditor.value;
+                
+                // 텍스트를 HTML로 변환 (줄바꿈을 <br>로)
+                const htmlContent = textContent.replace(/\n/g, '<br>');
+                richEditor.innerHTML = htmlContent;
+                
+                richEditor.style.display = 'block';
+                textEditor.style.display = 'none';
+                toolbar.style.display = 'flex';
+                toggleBtn.textContent = '📝 일반 텍스트로 전환';
+            } else {
+                // 리치 에디터에서 텍스트 에디터로 전환
+                const htmlContent = richEditor.innerHTML;
+                
+                // HTML을 텍스트로 변환
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                const textContent = tempDiv.textContent || tempDiv.innerText || '';
+                textEditor.value = textContent;
+                
+                richEditor.style.display = 'none';
+                textEditor.style.display = 'block';
+                toolbar.style.display = 'none';
+                toggleBtn.textContent = '🎨 리치 에디터로 전환';
+            }
+        }
+
+        // clearStickyMemoForm 함수 업데이트
+        function clearStickyMemoForm() {
+            document.getElementById('stickyMemoUnifiedInput').value = '';
+            document.getElementById('stickyMemoRichEditor').innerHTML = '';
         }
 
         // 스티키 메모 전용 함수 (메모장) - 메모 리스트 제거됨
@@ -3219,6 +3564,17 @@
             const saveBtn = document.getElementById('saveStickyMemo');
             if (saveBtn) {
                 saveBtn.addEventListener('click', saveStickyMemo);
+            }
+
+            // 리치 에디터 이벤트 리스너
+            const richEditor = document.getElementById('stickyMemoRichEditor');
+            if (richEditor) {
+                // 마우스 업/키업 시 도구 모음 버튼 상태 업데이트
+                richEditor.addEventListener('mouseup', updateToolbarButtons);
+                richEditor.addEventListener('keyup', updateToolbarButtons);
+                
+                // 선택 변경 시 도구 모음 버튼 상태 업데이트
+                richEditor.addEventListener('selectionchange', updateToolbarButtons);
             }
 
             // 스티키 메모 잠금 토글 제거됨 (메모 리스트가 없으므로 불필요)
