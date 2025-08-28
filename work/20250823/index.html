@@ -4242,9 +4242,28 @@
         let currentMemoId = null;
 
         function openMemoDetail(id) {
-            const memo = memos.find(m => m.id === id);
-            if (!memo) return;
+            // 이미 같은 메모 상세가 열려있으면 실행하지 않음 (중복 방지)
+            const memoDetailModal = document.getElementById('memoDetailModal');
+            if (memoDetailModal && memoDetailModal.style.display === 'block' && currentMemoId === id) {
+                console.log('🔄 이미 같은 메모 상세가 열려있음:', id);
+                return;
+            }
+            
+            // unified-memo-system 데이터 우선 사용, 없으면 기존 memos 사용
+            let memo = null;
+            if (window.MemoSystem && window.MemoSystem.data) {
+                memo = window.MemoSystem.data.find(m => m.id == id);
+            }
+            if (!memo) {
+                memo = memos.find(m => m.id == id);
+            }
+            
+            if (!memo) {
+                console.error('❌ 메모를 찾을 수 없음:', id);
+                return;
+            }
 
+            console.log('📋 메모 상세 열기:', memo.title, '(ID:', id, ')');
             currentMemoId = id;
             
             // 상세 모달에 내용 채우기

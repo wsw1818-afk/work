@@ -460,6 +460,8 @@
         
         // 메모 상세보기는 HTML 함수 사용 (덮어쓰지 않음)
         // HTML의 openMemoDetail 함수를 그대로 사용
+        // 전역 접근을 위해 MemoSystem 데이터를 노출
+        window.MemoSystem = MemoSystem;
         
         // 메모 상세보기 관련 함수들은 HTML에서 처리 (덮어쓰지 않음)
         // HTML의 closeMemoDetail, editMemo, deleteMemoFromDetail 함수들을 그대로 사용
