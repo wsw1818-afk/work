@@ -470,25 +470,89 @@
             console.log('💾 일반 메모 저장:', memo.title);
         };
         
-        // 스티커 메모 저장
+        // 스티커 메모 저장 (통합 에디터 지원)
         window.saveStickyMemo = function() {
-            const title = document.getElementById('stickyMemoTitleInput')?.value?.trim();
-            const content = document.getElementById('stickyMemoContentInput')?.value?.trim();
+            const richEditor = document.getElementById('stickyMemoRichEditor');
+            const textEditor = document.getElementById('stickyMemoUnifiedInput');
             
-            if (!title) {
-                alert('메모 제목을 입력해주세요!');
+            let content;
+            let isRichText = false;
+            
+            // 현재 활성 에디터에 따라 내용 가져오기
+            if (richEditor && richEditor.style.display !== 'none') {
+                // 리치 에디터가 활성
+                const richContent = richEditor.innerHTML.trim();
+                if (!richContent || richContent === '<br>' || richContent === '<div><br></div>') {
+                    alert('메모 내용을 입력해주세요!');
+                    return;
+                }
+                content = richContent;
+                isRichText = true;
+            } else if (textEditor) {
+                // 텍스트 에디터가 활성
+                const unifiedText = textEditor.value.trim();
+                if (!unifiedText) {
+                    alert('메모 내용을 입력해주세요!');
+                    return;
+                }
+                content = unifiedText;
+                isRichText = false;
+            } else {
+                // 기존 방식 호환성 지원 (구형 입력 필드)
+                const title = document.getElementById('stickyMemoTitleInput')?.value?.trim();
+                const oldContent = document.getElementById('stickyMemoContentInput')?.value?.trim();
+                
+                if (!title) {
+                    alert('메모 제목을 입력해주세요!');
+                    return;
+                }
+                
+                const memo = addMemo(title, oldContent);
+                
+                // 입력창 초기화
+                const titleInput = document.getElementById('stickyMemoTitleInput');
+                const contentInput = document.getElementById('stickyMemoContentInput');
+                if (titleInput) titleInput.value = '';
+                if (contentInput) contentInput.value = '';
+                
+                console.log('💾 스티커 메모 저장 (기존 방식):', memo.title);
                 return;
             }
             
-            const memo = addMemo(title, content);
+            // 제목과 내용 분리 (새로운 통합 방식)
+            let title, mainContent;
+            if (isRichText) {
+                const textContent = richEditor.textContent || richEditor.innerText || '';
+                const lines = textContent.split('\n');
+                title = lines[0].trim() || '제목 없음';
+                mainContent = content; // HTML 형태로 저장
+            } else {
+                const lines = content.split('\n');
+                title = lines[0].trim() || '제목 없음';
+                mainContent = lines.slice(1).join('\n').trim();
+            }
+            
+            const memo = {
+                id: Date.now(),
+                title: title,
+                content: mainContent,
+                isRichText: isRichText,
+                date: new Date().toLocaleDateString('ko-KR'),
+                timestamp: new Date().toISOString()
+            };
+            
+            // 메모 저장
+            MemoSystem.data.unshift(memo);
+            saveMemosToStorage();
             
             // 입력창 초기화
-            const titleInput = document.getElementById('stickyMemoTitleInput');
-            const contentInput = document.getElementById('stickyMemoContentInput');
-            if (titleInput) titleInput.value = '';
-            if (contentInput) contentInput.value = '';
+            if (richEditor) richEditor.innerHTML = '';
+            if (textEditor) textEditor.value = '';
             
-            console.log('💾 스티커 메모 저장:', memo.title);
+            // UI 새로고침
+            refreshAllUI();
+            
+            console.log('💾 스티커 메모 저장 (통합 방식):', memo.title);
         };
         
         // 날짜별 메모 저장

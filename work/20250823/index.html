@@ -3368,7 +3368,11 @@
         }
 
         function clearStickyMemoForm() {
-            document.getElementById('stickyMemoUnifiedInput').value = '';
+            const richEditor = document.getElementById('stickyMemoRichEditor');
+            const textEditor = document.getElementById('stickyMemoUnifiedInput');
+            
+            if (richEditor) richEditor.innerHTML = '';
+            if (textEditor) textEditor.value = '';
         }
 
         function saveStickyMemo() {
@@ -3542,11 +3546,7 @@
             updateToolbarButtons();
         }
 
-        // clearStickyMemoForm 함수 업데이트
-        function clearStickyMemoForm() {
-            document.getElementById('stickyMemoUnifiedInput').value = '';
-            document.getElementById('stickyMemoRichEditor').innerHTML = '';
-        }
+        // clearStickyMemoForm 함수는 위에서 이미 정의됨
 
         // 스티키 메모 전용 함수 (메모장) - 메모 리스트 제거됨
         function loadStickyMemos() {
