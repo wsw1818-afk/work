@@ -1711,7 +1711,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">글꼴 크기</label>
+                    <label class="form-label">전체 글자 크기</label>
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <button type="button" class="size-control-btn" onclick="adjustFontSize(-0.1)">축소</button>
                         <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
@@ -1719,6 +1719,17 @@
                             <span class="size-display" id="fontSizeDisplay">100%</span>
                         </div>
                         <button type="button" class="size-control-btn" onclick="adjustFontSize(0.1)">확대</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">일자 숫자 크기</label>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button type="button" class="size-control-btn" onclick="adjustDateSize(-0.1)">축소</button>
+                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                            <input type="range" class="size-slider" id="dateSizeSlider" min="0.7" max="1.8" step="0.1" value="1.0">
+                            <span class="size-display" id="dateSizeDisplay">100%</span>
+                        </div>
+                        <button type="button" class="size-control-btn" onclick="adjustDateSize(0.1)">확대</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2242,6 +2253,15 @@
                 localStorage.setItem('heightScale', heightScale);
                 applyCalendarSize(widthScale, heightScale);
                 
+                // 일자 크기 설정 저장
+                const dateSizeSlider = document.getElementById('dateSizeSlider');
+                if (dateSizeSlider) {
+                    const dateSize = dateSizeSlider.value;
+                    localStorage.setItem('dateSize', dateSize);
+                    applyDateSize(parseFloat(dateSize));
+                    console.log('일자 크기 저장:', dateSize);
+                }
+                
                 // 주 시작일 설정 저장
                 const weekStartSelect = document.querySelector('#settingsModal select.form-select');
                 if (weekStartSelect) {
@@ -2388,6 +2408,64 @@
             }
         }
 
+        // 일자 크기 조절 함수들
+        function adjustDateSize(delta) {
+            const slider = document.getElementById('dateSizeSlider');
+            const currentValue = parseFloat(slider.value);
+            const newValue = Math.max(0.7, Math.min(1.8, currentValue + delta));
+            
+            console.log(`일자 크기 조절: ${currentValue} → ${newValue}`);
+            
+            slider.value = newValue;
+            updateDateSizeDisplay(newValue);
+            applyDateSize(newValue);
+        }
+
+        function updateDateSizeDisplay(value) {
+            const display = document.getElementById('dateSizeDisplay');
+            display.textContent = Math.round(value * 100) + '%';
+        }
+
+        function applyDateSize(scale) {
+            const root = document.documentElement;
+            root.style.setProperty('--date-size-scale', scale);
+            
+            console.log(`일자 크기 적용: ${scale}`);
+            
+            // 일자 숫자에 직접 적용
+            const style = document.createElement('style');
+            style.id = 'date-size-style';
+            
+            // 기존 스타일 제거
+            const existing = document.getElementById('date-size-style');
+            if (existing) existing.remove();
+            
+            style.textContent = `
+                .day-number {
+                    font-size: calc(18px * ${scale}) !important;
+                    font-weight: bold !important;
+                }
+                
+                .holiday .day-number {
+                    font-size: calc(16px * ${scale}) !important;
+                }
+            `;
+            
+            document.head.appendChild(style);
+        }
+
+        function initializeDateSizeControls() {
+            const dateSizeSlider = document.getElementById('dateSizeSlider');
+            
+            if (dateSizeSlider) {
+                dateSizeSlider.addEventListener('input', function() {
+                    updateDateSizeDisplay(this.value);
+                    applyDateSize(parseFloat(this.value));
+                    console.log('Date size slider changed:', this.value);
+                });
+            }
+        }
+
         // 설정 로드 함수
         function loadSettings() {
             try {
@@ -2448,6 +2526,19 @@
                 }
                 applyCalendarSize(savedWidthScale, savedHeightScale);
                 
+                // 일자 크기 설정 로드
+                const savedDateSize = localStorage.getItem('dateSize') || '1.0';
+                const dateSizeSlider = document.getElementById('dateSizeSlider');
+                
+                if (dateSizeSlider) {
+                    dateSizeSlider.value = savedDateSize;
+                    updateDateSizeDisplay(savedDateSize);
+                    console.log('일자 크기 로드:', savedDateSize);
+                } else {
+                    console.error('일자 크기 slider 요소를 찾을 수 없습니다');
+                }
+                applyDateSize(parseFloat(savedDateSize));
+                
                 // 주 시작일 설정 로드
                 const savedWeekStart = localStorage.getItem('weekStart') || '일요일';
                 const weekStartSelect = document.querySelector('#settingsModal select.form-select');
@@ -2461,6 +2552,7 @@
                 // 크기 조절 컨트롤 초기화
                 initializeSizeControls();
                 initializeFontSizeControls();
+                initializeDateSizeControls();
                 
             } catch (error) {
                 console.error('설정 로드 중 오류:', error);
