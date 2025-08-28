@@ -208,6 +208,12 @@
         const element = document.getElementById('dateMemoList');
         if (!element) return;
         
+        // 모달이 열려있지 않으면 리스트를 업데이트하지 않음 (자동 열림 방지)
+        const dateModal = document.getElementById('dateMemoModal');
+        if (!dateModal || dateModal.style.display !== 'block') {
+            return;
+        }
+        
         if (!MemoSystem.selectedDate) return;
         
         const dateMemos = MemoSystem.data.filter(m => m.date === MemoSystem.selectedDate);
@@ -258,20 +264,8 @@
             const onclickAttr = item.getAttribute('onclick');
             console.log(`  메모 ${index + 1}: onclick="${onclickAttr}"`);
             
-            // 백업 이벤트 리스너 추가 (onclick이 작동하지 않을 경우 대비)
-            if (!item.dataset.backupListener) {
-                item.addEventListener('click', function(e) {
-                    // 삭제 버튼 클릭이 아닌 경우에만 상세보기 열기
-                    if (!e.target.classList.contains('memo-item-delete')) {
-                        const memoId = this.getAttribute('onclick')?.match(/openMemoDetail\((\d+)\)/)?.[1];
-                        if (memoId && window.openMemoDetail) {
-                            console.log(`🔄 백업 이벤트 리스너로 메모 상세보기 호출: ${memoId}`);
-                            window.openMemoDetail(parseInt(memoId));
-                        }
-                    }
-                });
-                item.dataset.backupListener = 'true';
-            }
+            // 백업 이벤트 리스너는 onclick 속성이 있으므로 생략
+            // (onclick과 addEventListener가 중복되어 두 번 실행되는 문제 방지)
         });
     }
 
@@ -626,7 +620,13 @@
         
         if (typeof originalOpenDateMemoModal === 'function') {
             // HTML 함수가 있으면 그대로 사용하고 후처리만 추가
-            window.openDateMemoModal = function(year, month, date) {
+            window.openDateMemoModal = function(year, month, date, preventAutoOpen = false) {
+                // 자동 열림 방지 플래그가 설정된 경우 실행하지 않음
+                if (preventAutoOpen) {
+                    console.log('📅 자동 모달 열림 방지됨:', year, month, date);
+                    return;
+                }
+                
                 // 원래 HTML 함수 실행
                 originalOpenDateMemoModal(year, month, date);
                 
