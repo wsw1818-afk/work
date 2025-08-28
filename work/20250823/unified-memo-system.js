@@ -649,6 +649,12 @@
                     return;
                 }
                 
+                // 초기화 중 자동 열림 방지
+                if (window._preventAutoOpenDateModal) {
+                    console.log('🚫 초기화 중 날짜 메모창 자동 열림 차단');
+                    return;
+                }
+                
                 // 원래 HTML 함수 실행
                 originalOpenDateMemoModal(year, month, date);
                 
@@ -838,6 +844,13 @@
             }
         });
         console.log('🔒 초기화 시 모든 메모 모달 닫기 완료');
+        
+        // 자동 열림 방지 플래그 설정 (초기화 중 날짜 메모창 자동 열림 차단)
+        window._preventAutoOpenDateModal = true;
+        setTimeout(() => {
+            window._preventAutoOpenDateModal = false;
+            console.log('✅ 날짜 메모창 자동 열림 방지 해제');
+        }, 3000); // 3초 후 플래그 해제
         
         // 데이터 로드
         loadMemosFromStorage();

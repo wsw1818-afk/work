@@ -1873,6 +1873,7 @@
             <button class="action-btn" id="unifiedCloudBtn">☁️ 클라우드 설정</button>
             <button class="action-btn" id="syncStatusBtn">🔍 동기화 상태</button>
             <button class="action-btn" id="settingsBtn">⚙️ 설정</button>
+            <button class="action-btn" id="storageBtn">🗄️ 저장소</button>
             
             <!-- 상태 인디케이터 -->
             <div class="status-indicators">
@@ -5264,6 +5265,28 @@
                 console.log('설정 버튼 이벤트 등록 완료');
             } else {
                 console.error('설정 버튼을 찾을 수 없습니다');
+            }
+            
+            // 저장소 버튼
+            const storageBtn = document.getElementById('storageBtn');
+            if (storageBtn) {
+                storageBtn.addEventListener('click', function() {
+                    const currentSize = getStorageSize();
+                    const totalCapacity = testStorageCapacity();
+                    const availableSpace = totalCapacity - currentSize;
+                    const usagePercent = Math.round((currentSize / totalCapacity) * 100);
+                    
+                    const choice = confirm(`📊 저장소 상태\n\n사용중: ${formatFileSize(currentSize)} (${usagePercent}%)\n전체 용량: ${formatFileSize(totalCapacity)}\n남은 공간: ${formatFileSize(availableSpace)}\n\n정리하시겠습니까?\n\n확인: 자동 정리 (500KB 이상 파일)\n취소: 상세 정보 보기`);
+                    
+                    if (choice) {
+                        cleanupStorage();
+                    } else {
+                        showStorageStatus();
+                    }
+                });
+                console.log('저장소 버튼 이벤트 등록 완료');
+            } else {
+                console.warn('저장소 버튼을 찾을 수 없습니다');
             }
 
             // 설정 모달 실시간 미리보기 이벤트
