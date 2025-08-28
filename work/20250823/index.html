@@ -3845,11 +3845,32 @@
             try {
                 localStorage.removeItem(testKey);
                 
-                // 이진 탐색으로 효율적으로 용량 찾기
+                // 더 큰 범위로 이진 탐색 (최대 20MB까지 테스트)
                 let low = 0;
-                let high = 10 * 1024 * 1024; // 10MB
+                let high = 20 * 1024 * 1024; // 20MB
                 let maxSize = currentSize;
                 
+                // 빠른 스텝 사이즈로 시작
+                let stepSize = 1024 * 1024; // 1MB 단위
+                let testSize = 0;
+                
+                // 첫 번째 단계: 큰 단위로 한계점 찾기
+                while (testSize < high) {
+                    const testData = 'x'.repeat(testSize);
+                    try {
+                        localStorage.setItem(testKey, testData);
+                        localStorage.removeItem(testKey);
+                        maxSize = currentSize + testSize;
+                        testSize += stepSize;
+                    } catch (e) {
+                        // 한계 발견, 이제 정밀 탐색
+                        high = testSize - stepSize;
+                        low = Math.max(0, testSize - stepSize * 2);
+                        break;
+                    }
+                }
+                
+                // 두 번째 단계: 이진 탐색으로 정확한 한계 찾기
                 while (low <= high) {
                     const mid = Math.floor((low + high) / 2);
                     const testData = 'x'.repeat(mid);
@@ -3864,11 +3885,19 @@
                     }
                 }
                 
+                console.log('실제 브라우저 저장 용량 측정:', {
+                    currentUsage: formatFileSize(currentSize),
+                    totalCapacity: formatFileSize(maxSize),
+                    availableSpace: formatFileSize(maxSize - currentSize)
+                });
+                
                 _cachedCapacity = maxSize;
                 _cacheTime = now;
                 return maxSize;
             } catch (e) {
-                const fallback = currentSize + 1024 * 1024; // 1MB 여유분
+                // 기본값을 더 크게 설정 (현재 + 5MB)
+                const fallback = currentSize + 5 * 1024 * 1024; // 5MB 여유분
+                console.warn('용량 측정 실패, 기본값 사용:', formatFileSize(fallback));
                 _cachedCapacity = fallback;
                 _cacheTime = now;
                 return fallback;
@@ -3888,10 +3917,11 @@
                     current: formatFileSize(currentSize),
                     available: formatFileSize(availableSpace),
                     needed: formatFileSize(dataSize),
-                    canStore: dataSize <= availableSpace * 0.9 // 90% 안전 마진
+                    usagePercent: Math.round((dataSize / availableSpace) * 100) + '%',
+                    canStore: dataSize <= availableSpace * 0.95 // 95% 허용
                 });
                 
-                if (dataSize > availableSpace * 0.8) { // 80% 안전 마진으로 조정
+                if (dataSize > availableSpace * 0.95) { // 95% 허용으로 관대하게 조정
                     throw new Error('저장 공간이 부족합니다.');
                 }
                 
@@ -3964,19 +3994,28 @@
                 const totalCapacity = testStorageCapacity();
                 const availableSpace = totalCapacity - currentSize;
                 
-                if (estimatedSize > availableSpace * 0.7) { // 70% 안전 마진 (더 큰 파일 허용)
+                // 더 관대한 용량 체크: 실제 여유공간의 95%까지 허용
+                if (estimatedSize > availableSpace * 0.95) { 
                     console.log('용량 부족:', {
                         file: file.name,
                         fileSize: formatFileSize(estimatedSize),
                         currentUsage: formatFileSize(currentSize),
                         totalCapacity: formatFileSize(totalCapacity),
-                        available: formatFileSize(availableSpace)
+                        available: formatFileSize(availableSpace),
+                        margin: '95%'
                     });
                     
-                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n파일 크기: ${formatFileSize(file.size)}\n인코딩 후 크기: ${formatFileSize(estimatedSize)}\n사용 가능한 공간: ${formatFileSize(availableSpace)}\n\n해결 방법:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용하거나 압축해보세요\n• 100MB까지 지원하지만 브라우저 저장소 제한이 있습니다\n• F12 콘솔에서 showStorageStatus()로 상세 정보 확인`);
+                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n파일 크기: ${formatFileSize(file.size)}\n인코딩 후 크기: ${formatFileSize(estimatedSize)}\n사용 가능한 공간: ${formatFileSize(availableSpace)}\n\n해결 방법:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용하거나 압축해보세요\n• F12 콘솔에서 showStorageStatus()로 상세 정보 확인`);
                     // 첨부파일 아이템 제거
                     attachmentItem.remove();
                     return;
+                } else {
+                    console.log('첨부파일 용량 체크 통과:', {
+                        file: file.name,
+                        fileSize: formatFileSize(estimatedSize),
+                        available: formatFileSize(availableSpace),
+                        usagePercent: Math.round((estimatedSize / availableSpace) * 100) + '%'
+                    });
                 }
                 
                 attachmentArray.push({
