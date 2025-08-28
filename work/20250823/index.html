@@ -3755,6 +3755,7 @@
         window.testStorageCapacity = testStorageCapacity;
         window.showStorageStatus = showStorageStatus;
         window.cleanupStorage = cleanupStorage;
+        window.emergencyCleanup = emergencyCleanup;
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -3868,40 +3869,110 @@
             alert(detailMessage);
         }
         
-        // 저장소 정리 도구
-        function cleanupStorage() {
+        // 저장소 정리 도구 (개선된 버전)
+        function cleanupStorage(sizeThreshold = 500 * 1024) { // 기본 500KB 이상 제거
             const memosData = localStorage.getItem('calendarMemos') || '[]';
             let memos = JSON.parse(memosData);
             let cleanedCount = 0;
             let freedSpace = 0;
             
-            // 큰 첨부파일 제거 (1MB 이상)
-            memos = memos.map(memo => {
+            // 첨부파일 크기별로 정렬하여 가장 큰 것부터 제거
+            let allAttachments = [];
+            memos.forEach((memo, memoIndex) => {
                 if (memo.attachments && memo.attachments.length > 0) {
-                    const originalAttachments = [...memo.attachments];
-                    memo.attachments = memo.attachments.filter(att => {
-                        if (att.data && att.data.length > 1024 * 1024) { // 1MB 이상
-                            cleanedCount++;
-                            freedSpace += att.data.length;
-                            console.log(`🗑️ 큰 첨부파일 제거: ${att.name} (${formatFileSize(att.data.length)})`);
-                            return false;
+                    memo.attachments.forEach((att, attIndex) => {
+                        if (att.data) {
+                            allAttachments.push({
+                                memoIndex,
+                                attIndex,
+                                name: att.name,
+                                size: att.data.length,
+                                memoTitle: memo.title || '제목 없음'
+                            });
                         }
-                        return true;
                     });
                 }
-                return memo;
             });
             
-            if (cleanedCount > 0) {
+            // 크기 순으로 정렬
+            allAttachments.sort((a, b) => b.size - a.size);
+            
+            // 임계값 이상의 파일들 제거
+            const toRemove = allAttachments.filter(att => att.size > sizeThreshold);
+            
+            if (toRemove.length > 0) {
+                // 제거 확인
+                const totalSize = toRemove.reduce((sum, att) => sum + att.size, 0);
+                const confirmMsg = `🧹 저장소 정리\n\n${formatFileSize(sizeThreshold)} 이상의 첨부파일 ${toRemove.length}개를 제거합니다.\n예상 확보 공간: ${formatFileSize(totalSize)}\n\n계속하시겠습니까?`;
+                
+                if (!confirm(confirmMsg)) {
+                    return;
+                }
+                
+                // 역순으로 제거 (인덱스 문제 방지)
+                toRemove.sort((a, b) => b.memoIndex - a.memoIndex || b.attIndex - a.attIndex);
+                
+                toRemove.forEach(item => {
+                    if (memos[item.memoIndex] && memos[item.memoIndex].attachments) {
+                        memos[item.memoIndex].attachments.splice(item.attIndex, 1);
+                        cleanedCount++;
+                        freedSpace += item.size;
+                        console.log(`🗑️ 제거: ${item.name} (${formatFileSize(item.size)}) from "${item.memoTitle}"`);
+                    }
+                });
+                
+                // 빈 첨부파일 배열 정리
+                memos = memos.map(memo => {
+                    if (memo.attachments && memo.attachments.length === 0) {
+                        delete memo.attachments;
+                    }
+                    return memo;
+                });
+                
                 const saveResult = safelyStoreData('calendarMemos', memos);
                 if (saveResult.success) {
-                    alert(`🧹 저장소 정리 완료!\n\n제거된 첨부파일: ${cleanedCount}개\n확보된 공간: ${formatFileSize(freedSpace)}\n\n1MB 이상의 큰 첨부파일들을 제거했습니다.`);
+                    alert(`✅ 저장소 정리 완료!\n\n제거된 첨부파일: ${cleanedCount}개\n확보된 공간: ${formatFileSize(freedSpace)}\n\n이제 새 파일을 첨부할 수 있습니다.`);
                     if (window.refreshAllUI) window.refreshAllUI();
+                    if (window.memoSystemRefresh) window.memoSystemRefresh();
                 } else {
                     alert('저장소 정리 중 오류가 발생했습니다.');
                 }
             } else {
-                alert('정리할 큰 첨부파일이 없습니다.');
+                alert(`${formatFileSize(sizeThreshold)} 이상의 첨부파일이 없습니다.\n\n더 작은 크기로 정리하려면:\nF12 콘솔에서 cleanupStorage(100*1024) 실행\n(100KB 이상 제거)`);
+            }
+        }
+        
+        // 긴급 정리 함수 (모든 첨부파일 제거)
+        function emergencyCleanup() {
+            if (!confirm('⚠️ 경고!\n\n모든 첨부파일을 제거합니다.\n메모 텍스트는 유지됩니다.\n\n정말 계속하시겠습니까?')) {
+                return;
+            }
+            
+            const memosData = localStorage.getItem('calendarMemos') || '[]';
+            let memos = JSON.parse(memosData);
+            let totalRemoved = 0;
+            let totalFreed = 0;
+            
+            memos = memos.map(memo => {
+                if (memo.attachments && memo.attachments.length > 0) {
+                    memo.attachments.forEach(att => {
+                        if (att.data) {
+                            totalFreed += att.data.length;
+                            totalRemoved++;
+                        }
+                    });
+                    delete memo.attachments;
+                }
+                return memo;
+            });
+            
+            const saveResult = safelyStoreData('calendarMemos', memos);
+            if (saveResult.success) {
+                alert(`🔄 긴급 정리 완료!\n\n제거된 첨부파일: ${totalRemoved}개\n확보된 공간: ${formatFileSize(totalFreed)}\n\n모든 첨부파일이 제거되었습니다.`);
+                if (window.refreshAllUI) window.refreshAllUI();
+                if (window.memoSystemRefresh) window.memoSystemRefresh();
+            } else {
+                alert('긴급 정리 중 오류가 발생했습니다.');
             }
         }
         
