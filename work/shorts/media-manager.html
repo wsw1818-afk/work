@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Shorts 미디어 매니저</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 YouTube Shorts 미디어 매니저</h1>
+            <div class="stats">
+                <span id="totalImages">이미지: 0</span>
+                <span id="totalVideos">영상: 0</span>
+                <span id="totalSize">전체 용량: 0 MB</span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="images">📷 이미지</button>
+            <button class="tab-btn" data-tab="videos">🎥 영상</button>
+            <button class="tab-btn" data-tab="categories">📁 카테고리</button>
+            <button class="tab-btn" data-tab="upscale">🔄 업스케일 관리</button>
+            <button class="tab-btn" data-tab="settings">⚙️ 설정</button>
+        </nav>
+
+        <div class="upload-area" id="uploadArea" style="display: none;">
+            <div class="category-workspace-header">
+                <button class="back-to-categories" id="backToCategories">← 카테고리 목록으로</button>
+                <div class="current-category-info">
+                    <span id="currentCategoryIcon"></span>
+                    <span id="currentCategoryName"></span>
+                </div>
+            </div>
+            <input type="file" id="fileInput" multiple accept="image/*,video/*" hidden>
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                <span>➕ 파일 업로드</span>
+            </button>
+            <div class="drag-drop-area" id="dragDropArea">
+                <p>📁 파일을 드래그 & 드롭하세요</p>
+            </div>
+        </div>
+
+        <div class="filter-controls" id="filterControls" style="display: none;">
+            <input type="text" id="searchBox" placeholder="🔍 검색...">
+            <select id="sortBy">
+                <option value="date-desc">최신순</option>
+                <option value="date-asc">오래된순</option>
+                <option value="name-asc">이름순 (A-Z)</option>
+                <option value="name-desc">이름순 (Z-A)</option>
+                <option value="size-desc">크기순 (큰것부터)</option>
+                <option value="size-asc">크기순 (작은것부터)</option>
+            </select>
+            <select id="filterType">
+                <option value="all">모든 파일</option>
+                <option value="original">원본만</option>
+                <option value="upscaled">업스케일만</option>
+            </select>
+        </div>
+
+        <div class="tab-content active" id="images-tab">
+            <div class="media-grid" id="imagesGrid"></div>
+        </div>
+
+        <div class="tab-content" id="videos-tab">
+            <div class="media-grid" id="videosGrid"></div>
+        </div>
+
+        <div class="tab-content" id="categories-tab">
+            <div class="categories-manager" id="categoriesManager">
+                <div class="category-header">
+                    <h2>📁 카테고리별 콘텐츠 관리</h2>
+                    <button id="addCategoryBtn" class="add-category-btn">+ 새 카테고리 추가</button>
+                </div>
+                <div class="categories-grid" id="categoriesGrid">
+                    <!-- 카테고리 카드들이 여기 표시됨 -->
+                </div>
+            </div>
+            <div class="category-workspace" id="categoryWorkspace" style="display: none;">
+                <div class="workspace-header">
+                    <button class="back-btn" id="backBtn">← 뒤로</button>
+                    <h2 id="workspaceCategoryName"></h2>
+                    <div class="workspace-stats">
+                        <span id="workspaceImageCount">📷 0</span>
+                        <span id="workspaceVideoCount">🎥 0</span>
+                        <span id="workspaceSize">💾 0 MB</span>
+                    </div>
+                </div>
+                <div class="workspace-controls">
+                    <input type="text" id="workspaceSearch" placeholder="🔍 이 카테고리에서 검색...">
+                    <select id="workspaceSort">
+                        <option value="date-desc">최신순</option>
+                        <option value="date-asc">오래된순</option>
+                        <option value="name-asc">이름순</option>
+                        <option value="size-desc">크기순</option>
+                    </select>
+                </div>
+                <div class="workspace-upload">
+                    <input type="file" id="workspaceFileInput" multiple accept="image/*,video/*" hidden>
+                    <button class="workspace-upload-btn" onclick="document.getElementById('workspaceFileInput').click()">
+                        <span>➕ 이 카테고리에 파일 추가</span>
+                    </button>
+                    <div class="workspace-drag-area" id="workspaceDragArea">
+                        <p>📁 파일을 드래그 & 드롭하세요</p>
+                    </div>
+                </div>
+                <div class="workspace-media-grid" id="workspaceMediaGrid">
+                    <!-- 카테고리별 미디어 표시 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="upscale-tab">
+            <div class="upscale-manager">
+                <div class="upscale-section">
+                    <h3>📥 원본 파일</h3>
+                    <div class="media-grid" id="originalGrid"></div>
+                </div>
+                <div class="upscale-arrow">→</div>
+                <div class="upscale-section">
+                    <h3>📤 업스케일 파일</h3>
+                    <div class="media-grid" id="upscaledGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="settings-tab">
+            <div class="settings-panel">
+                <h3>설정</h3>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="autoSave">
+                        자동 저장
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="showThumbnails" checked>
+                        썸네일 표시
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <button id="clearStorage">🗑️ 모든 데이터 삭제</button>
+                </div>
+                <div class="setting-item">
+                    <button id="exportData">💾 데이터 내보내기</button>
+                </div>
+                <div class="setting-item">
+                    <button id="importData">📂 데이터 가져오기</button>
+                    <input type="file" id="importFile" accept=".json" hidden>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="media-viewer" id="mediaViewer" style="display: none;" tabindex="-1">
+        <span class="close-viewer" title="닫기 (ESC)">&times;</span>
+        <div class="viewer-help">
+            <p>ESC 키 또는 바깥 영역 클릭으로 닫을 수 있습니다</p>
+        </div>
+        <div class="viewer-content">
+            <img id="viewerImage" style="display: none;">
+            <video id="viewerVideo" controls style="display: none;"></video>
+        </div>
+        <div class="viewer-info">
+            <h3 id="viewerTitle"></h3>
+            <p id="viewerDetails"></p>
+            <div class="viewer-actions">
+                <button id="markAsUpscaled">🔄 업스케일로 표시</button>
+                <button id="changeCategoryBtn">📁 카테고리 변경</button>
+                <button id="deleteMedia">🗑️ 삭제</button>
+                <button id="downloadMedia">⬇️ 다운로드</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- 카테고리 추가 모달 -->
+    <div class="modal" id="categoryModal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h3>새 카테고리 추가</h3>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label>카테고리 이름:</label>
+                    <input type="text" id="categoryName" required placeholder="예: 여행, 요리, 게임 등">
+                </div>
+                <div class="form-group">
+                    <label>설명 (선택):</label>
+                    <textarea id="categoryDescription" placeholder="카테고리 설명을 입력하세요"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>색상:</label>
+                    <input type="color" id="categoryColor" value="#3498db">
+                </div>
+                <div class="form-group">
+                    <label>아이콘:</label>
+                    <select id="categoryIcon">
+                        <option value="📁">📁 기본</option>
+                        <option value="🎬">🎬 영화</option>
+                        <option value="🎮">🎮 게임</option>
+                        <option value="🍳">🍳 요리</option>
+                        <option value="✈️">✈️ 여행</option>
+                        <option value="📚">📚 교육</option>
+                        <option value="🏋️">🏋️ 운동</option>
+                        <option value="🎵">🎵 음악</option>
+                        <option value="🎨">🎨 예술</option>
+                        <option value="💻">💻 기술</option>
+                        <option value="🌱">🌱 라이프</option>
+                        <option value="🐾">🐾 동물</option>
+                        <option value="👗">👗 패션</option>
+                        <option value="💄">💄 뷰티</option>
+                        <option value="🏠">🏠 인테리어</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit">추가</button>
+                    <button type="button" id="cancelCategory">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+/* 상세보기의 수정 버튼 스타일 */
+.memo-detail-actions {
+    align-items: center;
+}
+
+.memo-edit-btn {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid #667eea;
+    color: #667eea;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+}
+
+.memo-edit-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: scale(1.05);
+}

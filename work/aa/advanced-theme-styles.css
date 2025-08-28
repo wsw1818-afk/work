@@ -1,0 +1,392 @@
+/* 고급 테마 설정 스타일 */
+.theme-tabs {
+    display: flex;
+    border-bottom: 2px solid #eee;
+    margin-bottom: 20px;
+}
+
+.theme-tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.theme-tab-btn.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.theme-tab-btn:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+/* 고급 설정 섹션 */
+.advanced-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.advanced-section h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* 색상 피커 섹션 */
+.color-picker-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.picker-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.picker-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.picker-group select {
+    padding: 8px 12px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    background: white;
+}
+
+.picker-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.color-picker-container {
+    margin: 15px 0;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e1e5e9;
+}
+
+.color-picker-container label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+#solidColor, #gradientColor1, #gradientColor2 {
+    width: 60px;
+    height: 40px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+#solidColorHex, #gradientColor1Hex, #gradientColor2Hex {
+    font-family: monospace;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #666;
+}
+
+.gradient-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.gradient-color-group, .gradient-direction-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gradient-color-group label, .gradient-direction-group label {
+    min-width: 80px;
+    font-weight: 600;
+    color: #333;
+}
+
+.gradient-preview {
+    height: 60px;
+    border-radius: 8px;
+    border: 2px solid #e1e5e9;
+    margin-top: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.picker-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* 빠른 조합 */
+.quick-combinations {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.combo-btn {
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.combo-btn:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-1px);
+}
+
+/* 사용자 조합 */
+.save-combination {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#combinationName {
+    flex: 1;
+    padding: 10px 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+#combinationName:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.saved-combinations {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.saved-combo-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #e1e5e9;
+    transition: all 0.2s ease;
+}
+
+.saved-combo-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.combo-preview {
+    width: 30px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin-right: 10px;
+}
+
+.combo-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.combo-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.combo-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.combo-action-btn {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.combo-load-btn {
+    background: #667eea;
+    color: white;
+}
+
+.combo-load-btn:hover {
+    background: #5a67d8;
+}
+
+.combo-delete-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.combo-delete-btn:hover {
+    background: #c82333;
+}
+
+/* 프리셋 섹션 */
+.presets-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #28a745;
+}
+
+.presets-section h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+}
+
+.preset-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.preset-item:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-2px);
+}
+
+.preset-preview {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid #e1e5e9;
+    margin-bottom: 8px;
+    transition: border-color 0.3s ease;
+}
+
+.preset-item:hover .preset-preview {
+    border-color: #667eea;
+}
+
+.preset-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+/* 프리셋 미리보기 색상 */
+.preset-ocean { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.preset-sunset { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+.preset-forest { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+.preset-lavender { background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); }
+.preset-cherry { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+.preset-mint { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+.preset-autumn { background: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%); }
+.preset-night { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); }
+.preset-spring { background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%); }
+.preset-winter { background: linear-gradient(135deg, #e3ffe7 0%, #d9e7ff 100%); }
+
+/* 랜덤 섹션 */
+.random-section {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.action-btn.primary {
+    background: #667eea;
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: #5a67d8;
+    transform: translateY(-1px);
+}
+
+.action-btn.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.action-btn.secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .color-picker-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-combinations {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .preset-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .random-section {
+        flex-direction: column;
+    }
+}

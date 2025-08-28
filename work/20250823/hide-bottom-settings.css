@@ -1,0 +1,200 @@
+/**
+ * 하단 설정들 숨기기
+ * 모든 설정이 메뉴로 이동했으므로 하단 UI 정리
+ */
+
+/* 클라우드 설정 모달의 복잡한 섹션들 숨기기 */
+#cloudSettingsModal .settings-section.quick-start,
+#cloudSettingsModal .settings-section.api-input,
+#cloudSettingsModal .settings-section.optional-settings,
+#cloudSettingsModal .settings-section:has(.form-group),
+#cloudSettingsModal .sync-controls-main,
+#cloudSettingsModal .settings-actions,
+#cloudSettingsModal .success-section,
+#cloudSettingsModal .help-section {
+    display: none !important;
+}
+
+/* 클라우드 설정 모달을 간단하게 만들기 */
+#cloudSettingsModal .cloud-settings-content {
+    padding: 20px;
+    text-align: center;
+}
+
+#cloudSettingsModal .cloud-settings-content::before {
+    content: "🌥️ Google Drive 설정이 메뉴로 이동했습니다!\A\A상단의 '☰ 메뉴' 버튼을 클릭하고\A'Google Drive' 탭에서 설정하세요.";
+    white-space: pre-line;
+    display: block;
+    font-size: 16px;
+    color: #667eea;
+    background: #f5f7ff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #667eea;
+    margin: 20px 0;
+}
+
+/* 간단한 안내 버튼만 표시 */
+#cloudSettingsModal .cloud-settings-content::after {
+    content: "";
+    display: block;
+    margin-top: 20px;
+}
+
+/* 클라우드 설정 모달 크기 축소 */
+#cloudSettingsModal .modal-content {
+    max-width: 500px;
+    max-height: 400px;
+}
+
+/* 테마 모달의 복잡한 부분들 간소화 */
+#themeModal .advanced-section,
+#themeModal .theme-content:not(#basicThemeContent) {
+    display: none !important;
+}
+
+/* 테마 모달 안내 */
+#themeModal .theme-content::before {
+    content: "🎨 테마 설정이 메뉴로 이동했습니다!\A\A상단의 '☰ 메뉴' → '테마' 탭에서\A더 많은 테마 옵션을 사용하세요.";
+    white-space: pre-line;
+    display: block;
+    font-size: 14px;
+    color: #9c27b0;
+    background: #f3e5f5;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #9c27b0;
+}
+
+/* 레이아웃 모달 간소화 */
+#layoutModal .layout-section:not(:first-child) {
+    display: none !important;
+}
+
+/* 레이아웃 모달 안내 */
+#layoutModal .layout-content::before {
+    content: "📐 레이아웃 설정이 메뉴로 이동했습니다!\A\A상단의 '☰ 메뉴' → '레이아웃' 탭에서\A더 상세한 레이아웃 조절이 가능합니다.";
+    white-space: pre-line;
+    display: block;
+    font-size: 14px;
+    color: #2196f3;
+    background: #e3f2fd;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #2196f3;
+}
+
+/* 엑셀 내보내기 모달 간소화 */
+#excelExportModal .export-options:has(.option-group:nth-child(n+3)) {
+    display: none !important;
+}
+
+/* 엑셀 모달 안내 */
+#excelExportModal .export-content::before {
+    content: "📊 내보내기 옵션이 메뉴로 이동했습니다!\A\A상단의 '☰ 메뉴' → '내보내기' 탭에서\A더 많은 내보내기 옵션을 사용하세요.";
+    white-space: pre-line;
+    display: block;
+    font-size: 14px;
+    color: #ff9800;
+    background: #fff3e0;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #ff9800;
+}
+
+/* 일정 모달의 복잡한 옵션들 간소화 */
+#scheduleModal .form-row:has(#scheduleAllDay),
+#scheduleModal .form-row:has(#scheduleNotification),
+#scheduleModal #notificationOptions,
+#scheduleModal .form-row:has(#scheduleAttachment),
+#scheduleModal .form-row:has(#schedulePriority) {
+    display: none !important;
+}
+
+/* 일정 모달 안내 */
+#scheduleModal .schedule-form::before {
+    content: "📅 고급 일정 옵션이 메뉴로 이동했습니다!\A\A상단의 '☰ 메뉴' → '일정' 탭에서\A알림, 카테고리 등을 설정하세요.";
+    white-space: pre-line;
+    display: block;
+    font-size: 14px;
+    color: #4caf50;
+    background: #e8f5e9;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #4caf50;
+}
+
+/* 백업 관련 복잡한 모달들 간소화 */
+.backup-modal-complex,
+.server-modal-complex {
+    display: none !important;
+}
+
+/* 하단에 떠다니는 설정 패널들 숨기기 */
+.floating-settings-panel,
+.bottom-settings-bar,
+.detailed-config-panel {
+    display: none !important;
+}
+
+/* 메뉴 안내 배너 (필요시) */
+.menu-migration-notice {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    z-index: 1000;
+    max-width: 300px;
+    animation: slideInRight 0.5s ease;
+}
+
+.menu-migration-notice .close-notice {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    float: right;
+    margin-left: 10px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 반응형: 모바일에서는 모든 복잡한 설정 숨기기 */
+@media (max-width: 768px) {
+    .modal .advanced-options,
+    .modal .detailed-settings,
+    .modal .expert-mode {
+        display: none !important;
+    }
+    
+    .modal .modal-content::before {
+        font-size: 12px !important;
+        padding: 12px !important;
+    }
+}
+
+/* 모달 안내 메시지 공통 스타일 */
+.modal .modal-content::before {
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.4;
+}

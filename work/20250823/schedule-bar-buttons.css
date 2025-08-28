@@ -1,0 +1,229 @@
+/* 스케줄 바 내 액션 버튼 스타일 */
+.schedule-add-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.add-schedule-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.add-schedule-btn:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b42a0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* 뷰 컨트롤 스타일 제거됨 */
+
+/* 액션 컨트롤 버튼들 */
+.action-controls {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.action-btn {
+    background: white;
+    color: #333;
+    border: 1px solid #e0e0e0;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+/* 개별 버튼 호버 색상 */
+#backupBtn:hover {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#excelExportBtn:hover {
+    background: linear-gradient(135deg, #217346 0%, #2e7d32 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#themeBtn:hover {
+    background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#layoutBtn:hover {
+    background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#cloudSyncBtn:hover {
+    background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#importBtn:hover {
+    background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#printBtn:hover {
+    background: linear-gradient(135deg, #795548 0%, #5d4037 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#settingsBtn:hover {
+    background: linear-gradient(135deg, #607d8b 0%, #455a64 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.filter-controls {
+    display: flex;
+    align-items: center;
+}
+
+.filter-controls select {
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    background: white;
+    transition: all 0.2s;
+}
+
+.filter-controls select:hover {
+    border-color: #667eea;
+}
+
+.filter-controls select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+    .schedule-add-bar {
+        flex-wrap: wrap;
+    }
+    
+    .action-controls {
+        margin-left: 0;
+        width: 100%;
+        margin-top: 10px;
+        justify-content: center;
+    }
+    
+    .action-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .schedule-add-bar {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .add-schedule-btn {
+        width: 100%;
+    }
+    
+    .view-controls {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .action-controls {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+    
+    .filter-controls {
+        width: 100%;
+    }
+    
+    .filter-controls select {
+        width: 100%;
+    }
+}
+
+/* 액션 버튼 아이콘 애니메이션 */
+.action-btn:hover {
+    animation: pulse 0.3s ease;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 툴팁 스타일 */
+.action-btn[title] {
+    position: relative;
+}
+
+.action-btn[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    margin-bottom: 5px;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+    pointer-events: none;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
