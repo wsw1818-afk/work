@@ -2357,7 +2357,7 @@
         let schedules = JSON.parse(localStorage.getItem('calendarSchedules') || '[]');
 
         // 일정 저장
-        function saveSchedule() {
+        async function saveSchedule() {
             const title = document.getElementById('scheduleTitle').value.trim();
             const date = document.getElementById('scheduleDate').value;
             const time = document.getElementById('scheduleTime').value;
@@ -2379,8 +2379,9 @@
                 return;
             }
             
+            const scheduleId = Date.now();
             const schedule = {
-                id: Date.now(),
+                id: scheduleId,
                 title: title,
                 date: date,
                 time: time,
@@ -2396,6 +2397,33 @@
                 attachments: [...scheduleAttachments], // 첨부파일 추가
                 timestamp: new Date().toISOString()
             };
+            
+            // IndexedDB에 저장된 파일들의 scheduleId 업데이트
+            if (scheduleAttachments.length > 0) {
+                for (const attachment of scheduleAttachments) {
+                    if (attachment.useIndexedDB && attachment.indexedDbId) {
+                        try {
+                            // IndexedDB에서 파일 가져오기
+                            const dbAttachment = await getAttachmentFromDB(attachment.indexedDbId);
+                            if (dbAttachment) {
+                                // 기존 임시 ID를 삭제하고
+                                await deleteAttachmentFromDB(attachment.indexedDbId);
+                                // 실제 일정 ID로 다시 저장
+                                const updatedAttachment = await saveAttachmentToDB({
+                                    name: dbAttachment.fileName,
+                                    size: dbAttachment.fileSize,
+                                    type: dbAttachment.fileType,
+                                    data: dbAttachment.data
+                                }, `schedule_${scheduleId}`);
+                                // 일정의 첨부파일 정보 업데이트
+                                attachment.indexedDbId = updatedAttachment.id;
+                            }
+                        } catch (error) {
+                            console.error('첨부파일 ID 업데이트 실패:', error);
+                        }
+                    }
+                }
+            }
             
             schedules.unshift(schedule);
             localStorage.setItem('calendarSchedules', JSON.stringify(schedules));
@@ -3743,6 +3771,169 @@
             }
         }
 
+        // IndexedDB 기반 첨부파일 시스템
+        let attachmentDB = null;
+        
+        // IndexedDB 초기화
+        async function initAttachmentDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('CalendarAttachments', 2);
+                
+                request.onerror = () => {
+                    console.error('IndexedDB 열기 실패:', request.error);
+                    reject(request.error);
+                };
+                
+                request.onsuccess = () => {
+                    attachmentDB = request.result;
+                    console.log('✅ IndexedDB 초기화 완료');
+                    resolve(attachmentDB);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    // 첨부파일 저장소
+                    if (!db.objectStoreNames.contains('attachments')) {
+                        const store = db.createObjectStore('attachments', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('memoId', 'memoId', { unique: false });
+                        store.createIndex('fileName', 'fileName', { unique: false });
+                        console.log('📦 첨부파일 저장소 생성');
+                    }
+                };
+            });
+        }
+        
+        // 첨부파일 IndexedDB에 저장
+        async function saveAttachmentToDB(attachment, memoId) {
+            try {
+                if (!attachmentDB) {
+                    await initAttachmentDB();
+                }
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = attachmentDB.transaction(['attachments'], 'readwrite');
+                    const store = transaction.objectStore('attachments');
+                    
+                    const attachmentData = {
+                        memoId: memoId,
+                        fileName: attachment.name,
+                        fileSize: attachment.size,
+                        fileType: attachment.type,
+                        data: attachment.data,
+                        uploadDate: new Date().toISOString()
+                    };
+                    
+                    const request = store.add(attachmentData);
+                    
+                    request.onsuccess = () => {
+                        console.log('✅ IndexedDB에 첨부파일 저장:', attachment.name, formatFileSize(attachment.size));
+                        resolve({ id: request.result, ...attachmentData });
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('❌ IndexedDB 저장 실패:', request.error);
+                        reject(request.error);
+                    };
+                });
+            } catch (error) {
+                console.error('IndexedDB 저장 중 오류:', error);
+                throw error;
+            }
+        }
+        
+        // IndexedDB에서 첨부파일 가져오기
+        async function getAttachmentFromDB(attachmentId) {
+            try {
+                if (!attachmentDB) {
+                    await initAttachmentDB();
+                }
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = attachmentDB.transaction(['attachments'], 'readonly');
+                    const store = transaction.objectStore('attachments');
+                    const request = store.get(attachmentId);
+                    
+                    request.onsuccess = () => {
+                        const attachment = request.result;
+                        if (attachment) {
+                            console.log('✅ IndexedDB에서 첨부파일 로드:', attachment.fileName);
+                            resolve(attachment);
+                        } else {
+                            console.warn('⚠️ 첨부파일을 찾을 수 없음:', attachmentId);
+                            resolve(null);
+                        }
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('❌ IndexedDB 조회 실패:', request.error);
+                        reject(request.error);
+                    };
+                });
+            } catch (error) {
+                console.error('IndexedDB 조회 중 오류:', error);
+                throw error;
+            }
+        }
+        
+        // 메모 ID로 모든 첨부파일 가져오기
+        async function getAttachmentsByMemoId(memoId) {
+            try {
+                if (!attachmentDB) {
+                    await initAttachmentDB();
+                }
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = attachmentDB.transaction(['attachments'], 'readonly');
+                    const store = transaction.objectStore('attachments');
+                    const index = store.index('memoId');
+                    const request = index.getAll(memoId);
+                    
+                    request.onsuccess = () => {
+                        const attachments = request.result;
+                        console.log(`✅ 메모 ${memoId}의 첨부파일 ${attachments.length}개 로드`);
+                        resolve(attachments);
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('❌ IndexedDB 조회 실패:', request.error);
+                        reject(request.error);
+                    };
+                });
+            } catch (error) {
+                console.error('IndexedDB 조회 중 오류:', error);
+                throw error;
+            }
+        }
+        
+        // 첨부파일 삭제
+        async function deleteAttachmentFromDB(attachmentId) {
+            try {
+                if (!attachmentDB) {
+                    await initAttachmentDB();
+                }
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = attachmentDB.transaction(['attachments'], 'readwrite');
+                    const store = transaction.objectStore('attachments');
+                    const request = store.delete(attachmentId);
+                    
+                    request.onsuccess = () => {
+                        console.log('✅ IndexedDB에서 첨부파일 삭제:', attachmentId);
+                        resolve();
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('❌ IndexedDB 삭제 실패:', request.error);
+                        reject(request.error);
+                    };
+                });
+            } catch (error) {
+                console.error('IndexedDB 삭제 중 오류:', error);
+                throw error;
+            }
+        }
+        
         // 첨부파일 관련 함수들
         let scheduleAttachments = [];
         let dateMemoAttachments = [];
@@ -3750,6 +3941,9 @@
         // 전역 접근 가능하도록 설정
         window.scheduleAttachments = scheduleAttachments;
         window.dateMemoAttachments = dateMemoAttachments;
+        window.attachmentDB = attachmentDB;
+        window.initAttachmentDB = initAttachmentDB;
+        window.saveAttachmentToDB = saveAttachmentToDB;
         window.formatFileSize = formatFileSize;
         window.getFileIcon = getFileIcon;
         window.addAttachmentItem = addAttachmentItem;
@@ -4198,7 +4392,7 @@
             return icons[extension] || '📎';
         }
 
-        function addAttachmentItem(file, listId, attachmentArray) {
+        async function addAttachmentItem(file, listId, attachmentArray) {
             const attachmentList = document.getElementById(listId);
             const attachmentItem = document.createElement('div');
             attachmentItem.className = 'attachment-item';
@@ -4207,6 +4401,7 @@
                     <span class="attachment-icon">${getFileIcon(file.name)}</span>
                     <span class="attachment-name" title="${file.name}">${file.name}</span>
                     <span class="attachment-size">${formatFileSize(file.size)}</span>
+                    <span class="attachment-status">⏳</span>
                 </div>
                 <button class="attachment-remove" onclick="removeAttachment('${file.name}', '${listId}', this)">
                     ✕
@@ -4214,9 +4409,14 @@
             `;
             attachmentList.appendChild(attachmentItem);
             
-            // 파일을 Base64로 인코딩하여 저장
+            // IndexedDB 초기화 (필요시)
+            if (!attachmentDB) {
+                await initAttachmentDB();
+            }
+            
+            // 파일을 Base64로 인코딩
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 // 파일 데이터 크기 확인 (Base64는 원본보다 약 33% 더 큼)
                 const base64Data = e.target.result;
                 const estimatedSize = base64Data.length;
@@ -4226,8 +4426,10 @@
                 const totalCapacity = testStorageCapacity();
                 const availableSpace = totalCapacity - currentSize;
                 
-                // 더 관대한 용량 체크: 실제 여유공간의 95%까지 허용
-                if (estimatedSize > availableSpace * 0.95) { 
+                // 100KB 이상은 무조건 IndexedDB 사용
+                const useIndexedDB = file.size > 100 * 1024;
+                
+                if (useIndexedDB || estimatedSize > availableSpace * 0.95) { 
                     console.log('용량 부족:', {
                         file: file.name,
                         fileSize: formatFileSize(estimatedSize),
@@ -4237,37 +4439,45 @@
                         margin: '95%'
                     });
                     
-                    // 용량 부족 시 즉시 자동 정리 시도
-                    console.log('🧹 자동 정리 시작 - 필요 공간:', formatFileSize(estimatedSize));
+                    // IndexedDB에 저장
+                    console.log('📦 IndexedDB 사용:', file.name, formatFileSize(file.size));
                     
-                    // 먼저 300KB 이상 파일 정리
-                    autoCleanupForSpace(estimatedSize);
-                    
-                    // 정리 후 재측정
-                    const newSize = getStorageSize();
-                    const newCapacity = testStorageCapacity();
-                    const newAvailable = newCapacity - newSize;
-                    
-                    if (estimatedSize <= newAvailable * 0.95) {
-                        // 공간 확보 성공 - 파일 추가 계속 진행
-                        console.log('✅ 공간 확보 성공! 파일 첨부 진행');
+                    try {
+                        const tempMemoId = 'temp_' + Date.now();
                         
-                        // 첨부파일 추가 (정리 성공 후 진행)
-                        attachmentArray.push({
+                        // IndexedDB에 저장
+                        const savedAttachment = await saveAttachmentToDB({
                             name: file.name,
                             size: file.size,
                             type: file.type,
                             data: base64Data
+                        }, tempMemoId);
+                        
+                        // 메타데이터만 배열에 저장
+                        attachmentArray.push({
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            indexedDbId: savedAttachment.id,
+                            useIndexedDB: true
                         });
-                        console.log('첨부파일 추가됨:', file.name, '예상 크기:', formatFileSize(estimatedSize));
-                        return; // 정상 진행
-                    } else {
-                        // 그래도 공간 부족
-                        alert(`파일이 너무 큽니다.\n\n파일: ${file.name}\n크기: ${formatFileSize(estimatedSize)}\n사용 가능: ${formatFileSize(newAvailable)}\n\n더 많은 공간이 필요합니다.\nF12 콘솔에서 emergencyCleanup() 실행하여 모든 첨부파일을 제거할 수 있습니다.`);
+                        
+                        // 상태 표시 업데이트
+                        const statusIcon = attachmentItem.querySelector('.attachment-status');
+                        if (statusIcon) {
+                            statusIcon.textContent = '💾';
+                            statusIcon.title = 'IndexedDB에 저장됨';
+                        }
+                        
+                        console.log('✅ IndexedDB 저장 완료:', file.name);
+                        return;  // 성공적으로 저장됨
+                        
+                    } catch (error) {
+                        console.error('IndexedDB 저장 실패:', error);
+                        alert(`파일 저장 실패: ${file.name}\n\nIndexedDB 오류가 발생했습니다.`);
+                        attachmentItem.remove();
+                        return;
                     }
-                    // 첨부파일 아이템 제거
-                    attachmentItem.remove();
-                    return;
                 } else {
                     console.log('첨부파일 용량 체크 통과:', {
                         file: file.name,
@@ -4288,28 +4498,69 @@
             reader.readAsDataURL(file);
         }
 
-        function removeAttachment(fileName, listId, buttonElement) {
+        async function removeAttachment(fileName, listId, buttonElement) {
             const attachmentItem = buttonElement.parentElement;
             attachmentItem.remove();
             
-            // 해당 배열에서도 제거
+            // 배열에서 제거하고 IndexedDB도 정리
+            let removedAttachment = null;
             if (listId === 'scheduleAttachmentList') {
+                removedAttachment = scheduleAttachments.find(att => att.name === fileName);
                 scheduleAttachments = scheduleAttachments.filter(att => att.name !== fileName);
             } else if (listId === 'dateMemoAttachmentList') {
+                removedAttachment = dateMemoAttachments.find(att => att.name === fileName);
                 dateMemoAttachments = dateMemoAttachments.filter(att => att.name !== fileName);
+            }
+            
+            // IndexedDB에서도 삭제
+            if (removedAttachment && removedAttachment.useIndexedDB && removedAttachment.indexedDbId) {
+                try {
+                    await deleteAttachmentFromDB(removedAttachment.indexedDbId);
+                    console.log('💾 IndexedDB에서 파일 삭제:', fileName);
+                } catch (error) {
+                    console.error('IndexedDB 파일 삭제 실패:', error);
+                }
             }
             
             console.log('첨부파일 제거됨:', fileName);
         }
 
-        function clearAttachments(listId, attachmentArray) {
+        async function clearAttachments(listId, attachmentArray) {
             const attachmentList = document.getElementById(listId);
             attachmentList.innerHTML = '';
+            
+            // IndexedDB에서도 삭제
+            for (const attachment of attachmentArray) {
+                if (attachment.useIndexedDB && attachment.indexedDbId) {
+                    try {
+                        await deleteAttachmentFromDB(attachment.indexedDbId);
+                        console.log('💾 IndexedDB에서 파일 삭제:', attachment.name);
+                    } catch (error) {
+                        console.error('IndexedDB 파일 삭제 실패:', error);
+                    }
+                }
+            }
+            
             attachmentArray.length = 0;
         }
 
-        function downloadAttachment(fileName, data, type) {
+        async function downloadAttachment(fileName, dataOrId, type, useIndexedDB = false) {
             try {
+                let data = dataOrId;
+                
+                // IndexedDB에서 파일 데이터 가져오기
+                if (useIndexedDB && typeof dataOrId === 'number') {
+                    console.log('💾 IndexedDB에서 파일 로드 중...', dataOrId);
+                    const attachment = await getAttachmentFromDB(dataOrId);
+                    if (!attachment) {
+                        alert('첨부파일을 찾을 수 없습니다.');
+                        return;
+                    }
+                    data = attachment.data;
+                    fileName = attachment.fileName;
+                    type = attachment.fileType;
+                }
+                
                 // Base64 데이터를 Blob으로 변환
                 const byteCharacters = atob(data.split(',')[1]);
                 const byteNumbers = new Array(byteCharacters.length);
@@ -4330,7 +4581,7 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 
-                console.log('파일 다운로드:', fileName);
+                console.log('✅ 파일 다운로드 완료:', fileName);
             } catch (error) {
                 console.error('파일 다운로드 오류:', error);
                 alert('파일 다운로드 중 오류가 발생했습니다.');
@@ -4792,18 +5043,24 @@
                     attachmentContainer.style.display = 'block';
                     const attachmentList = attachmentContainer.querySelector('.attachment-list');
                     if (attachmentList) {
-                        attachmentList.innerHTML = memo.attachments.map(attachment => `
+                        attachmentList.innerHTML = memo.attachments.map(attachment => {
+                            const useIndexedDB = attachment.useIndexedDB || attachment.indexedDbId;
+                            const dataOrId = useIndexedDB ? attachment.indexedDbId : attachment.data;
+                            const storageIcon = useIndexedDB ? '💾' : '📎';
+                            
+                            return `
                             <div class="attachment-item">
                                 <div class="attachment-info">
                                     <span class="attachment-icon">${getFileIcon(attachment.name)}</span>
                                     <span class="attachment-name" title="${attachment.name}">${attachment.name}</span>
                                     <span class="attachment-size">${formatFileSize(attachment.size)}</span>
+                                    <span class="attachment-status">${storageIcon}</span>
                                 </div>
-                                <button class="btn-attachment" onclick="downloadAttachment('${attachment.name}', '${attachment.data}', '${attachment.type}')">
+                                <button class="btn-attachment" onclick="downloadAttachment('${attachment.name}', ${useIndexedDB ? attachment.indexedDbId : `'${attachment.data}'`}, '${attachment.type}', ${useIndexedDB})">
                                     💾 다운로드
                                 </button>
                             </div>
-                        `).join('');
+                        `}).join('');
                     }
                 } else {
                     attachmentContainer.style.display = 'none';
@@ -5131,7 +5388,7 @@
             document.getElementById('dateMemoContentInput').value = '';
         }
 
-        function saveDateMemo() {
+        async function saveDateMemo() {
             if (!selectedDate) return;
 
             const title = document.getElementById('dateMemoTitleInput').value.trim();
@@ -5142,13 +5399,44 @@
                 return;
             }
 
+            const memoId = Date.now();
             const memo = {
-                id: Date.now(),
+                id: memoId,
                 title: title,
                 content: content,
                 date: selectedDate,
                 timestamp: new Date().toISOString()
             };
+            
+            // 첨부파일 처리 - IndexedDB의 임시 ID를 실제 메모 ID로 업데이트
+            if (dateMemoAttachments.length > 0) {
+                memo.attachments = [...dateMemoAttachments];
+                
+                // IndexedDB에 저장된 파일들의 memoId 업데이트
+                for (const attachment of dateMemoAttachments) {
+                    if (attachment.useIndexedDB && attachment.indexedDbId) {
+                        try {
+                            // IndexedDB에서 파일 가져오기
+                            const dbAttachment = await getAttachmentFromDB(attachment.indexedDbId);
+                            if (dbAttachment) {
+                                // 기존 임시 ID를 삭제하고
+                                await deleteAttachmentFromDB(attachment.indexedDbId);
+                                // 실제 메모 ID로 다시 저장
+                                const updatedAttachment = await saveAttachmentToDB({
+                                    name: dbAttachment.fileName,
+                                    size: dbAttachment.fileSize,
+                                    type: dbAttachment.fileType,
+                                    data: dbAttachment.data
+                                }, memoId);
+                                // 메모의 첨부파일 정보 업데이트
+                                attachment.indexedDbId = updatedAttachment.id;
+                            }
+                        } catch (error) {
+                            console.error('첨부파일 ID 업데이트 실패:', error);
+                        }
+                    }
+                }
+            }
 
             memos.unshift(memo);
             
@@ -5159,6 +5447,7 @@
             }
             
             clearDateMemoForm();
+            clearAttachments('dateMemoAttachmentList', dateMemoAttachments);
             if (window.displayDateMemos) window.displayDateMemos();
             updateCalendarDisplay(); // 달력 표시 업데이트
             
