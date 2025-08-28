@@ -3754,6 +3754,7 @@
         window.getStorageSize = getStorageSize;
         window.testStorageCapacity = testStorageCapacity;
         window.showStorageStatus = showStorageStatus;
+        window.cleanupStorage = cleanupStorage;
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -3813,17 +3814,95 @@
         
         function showStorageStatus() {
             const currentSize = getStorageSize();
-            const memosSize = (localStorage.getItem('calendarMemos') || '').length;
+            const memosData = localStorage.getItem('calendarMemos') || '[]';
+            const memosSize = memosData.length;
             const otherSize = currentSize - memosSize;
+            
+            // 메모별 첨부파일 크기 분석
+            let memos = JSON.parse(memosData);
+            let attachmentStats = [];
+            memos.forEach(memo => {
+                if (memo.attachments && memo.attachments.length > 0) {
+                    let totalSize = 0;
+                    memo.attachments.forEach(att => {
+                        if (att.data) {
+                            totalSize += att.data.length;
+                        }
+                    });
+                    if (totalSize > 0) {
+                        attachmentStats.push({
+                            title: memo.title || '제목 없음',
+                            date: memo.date,
+                            attachmentCount: memo.attachments.length,
+                            size: totalSize
+                        });
+                    }
+                }
+            });
+            
+            // 크기 순으로 정렬
+            attachmentStats.sort((a, b) => b.size - a.size);
             
             console.log('📊 저장소 상태:', {
                 total: formatFileSize(currentSize),
                 memos: formatFileSize(memosSize),
                 other: formatFileSize(otherSize),
-                memosPercent: Math.round((memosSize / currentSize) * 100) + '%'
+                memosPercent: Math.round((memosSize / currentSize) * 100) + '%',
+                attachmentStats: attachmentStats.map(s => ({
+                    ...s,
+                    size: formatFileSize(s.size)
+                }))
             });
             
-            alert(`📊 저장소 상태\n\n전체 사용량: ${formatFileSize(currentSize)}\n메모 데이터: ${formatFileSize(memosSize)} (${Math.round((memosSize / currentSize) * 100)}%)\n기타 데이터: ${formatFileSize(otherSize)}\n\n💡 팁: 콘솔(F12)에서 showStorageStatus()로 언제든 확인 가능`);
+            let detailMessage = `📊 저장소 상태\n\n전체 사용량: ${formatFileSize(currentSize)}\n메모 데이터: ${formatFileSize(memosSize)} (${Math.round((memosSize / currentSize) * 100)}%)\n기타 데이터: ${formatFileSize(otherSize)}\n`;
+            
+            if (attachmentStats.length > 0) {
+                detailMessage += '\n📎 큰 첨부파일 보유 메모:\n';
+                attachmentStats.slice(0, 3).forEach(stat => {
+                    detailMessage += `• ${stat.title} (${stat.date}): ${formatFileSize(stat.size)}\n`;
+                });
+            }
+            
+            detailMessage += '\n💡 팁: 큰 첨부파일을 삭제하여 공간 확보 가능';
+            
+            alert(detailMessage);
+        }
+        
+        // 저장소 정리 도구
+        function cleanupStorage() {
+            const memosData = localStorage.getItem('calendarMemos') || '[]';
+            let memos = JSON.parse(memosData);
+            let cleanedCount = 0;
+            let freedSpace = 0;
+            
+            // 큰 첨부파일 제거 (1MB 이상)
+            memos = memos.map(memo => {
+                if (memo.attachments && memo.attachments.length > 0) {
+                    const originalAttachments = [...memo.attachments];
+                    memo.attachments = memo.attachments.filter(att => {
+                        if (att.data && att.data.length > 1024 * 1024) { // 1MB 이상
+                            cleanedCount++;
+                            freedSpace += att.data.length;
+                            console.log(`🗑️ 큰 첨부파일 제거: ${att.name} (${formatFileSize(att.data.length)})`);
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+                return memo;
+            });
+            
+            if (cleanedCount > 0) {
+                const saveResult = safelyStoreData('calendarMemos', memos);
+                if (saveResult.success) {
+                    alert(`🧹 저장소 정리 완료!\n\n제거된 첨부파일: ${cleanedCount}개\n확보된 공간: ${formatFileSize(freedSpace)}\n\n1MB 이상의 큰 첨부파일들을 제거했습니다.`);
+                    if (window.refreshAllUI) window.refreshAllUI();
+                } else {
+                    alert('저장소 정리 중 오류가 발생했습니다.');
+                }
+            } else {
+                alert('정리할 큰 첨부파일이 없습니다.');
+            }
         }
         
         // 캐시된 용량 정보 (성능 향상을 위해)
@@ -4005,7 +4084,21 @@
                         margin: '95%'
                     });
                     
-                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n파일 크기: ${formatFileSize(file.size)}\n인코딩 후 크기: ${formatFileSize(estimatedSize)}\n사용 가능한 공간: ${formatFileSize(availableSpace)}\n\n해결 방법:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용하거나 압축해보세요\n• F12 콘솔에서 showStorageStatus()로 상세 정보 확인`);
+                    const userChoice = confirm(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n파일 크기: ${formatFileSize(file.size)}\n인코딩 후 크기: ${formatFileSize(estimatedSize)}\n사용 가능한 공간: ${formatFileSize(availableSpace)}\n\n자동으로 큰 첨부파일(1MB 이상)을 정리하시겠습니까?\n\n확인: 자동 정리 실행\n취소: 수동으로 관리`);
+                    
+                    if (userChoice) {
+                        // 자동 정리 실행
+                        cleanupStorage();
+                        // 정리 후 다시 용량 체크
+                        const newAvailable = testStorageCapacity() - getStorageSize();
+                        if (estimatedSize <= newAvailable * 0.95) {
+                            alert('저장 공간이 확보되었습니다. 파일을 다시 선택해주세요.');
+                        } else {
+                            alert(`정리 후에도 공간이 부족합니다.\n\n필요: ${formatFileSize(estimatedSize)}\n사용 가능: ${formatFileSize(newAvailable)}\n\nF12 콘솔에서:\n• showStorageStatus() - 상세 정보 확인\n• cleanupStorage() - 추가 정리`);
+                        }
+                    } else {
+                        alert(`수동 관리 방법:\n\nF12 콘솔에서:\n• showStorageStatus() - 큰 첨부파일 확인\n• cleanupStorage() - 자동 정리 실행\n\n또는 개별 메모에서 첨부파일 삭제`);
+                    }
                     // 첨부파일 아이템 제거
                     attachmentItem.remove();
                     return;
