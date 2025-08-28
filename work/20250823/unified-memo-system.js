@@ -218,15 +218,30 @@
         }
         
         const isUnlocked = !MemoSystem.locks.dateMemos;
-        element.innerHTML = dateMemos.map(memo => `
-            <div class="memo-item ${isUnlocked ? 'unlocked' : ''}" onclick="openMemoDetail(${memo.id})">
-                <div class="memo-item-title">${memo.title || '제목 없음'}</div>
-                <div class="memo-item-content">${(memo.content || '').substring(0, 100)}${(memo.content || '').length > 100 ? '...' : ''}</div>
-                <div class="memo-item-date">${memo.date || '날짜 없음'}</div>
-                <div class="memo-item-preview">클릭하여 보기</div>
-                ${isUnlocked ? `<button class="memo-item-delete visible" onclick="event.stopPropagation(); deleteMemoFromList(${memo.id})">✕</button>` : ''}
-            </div>
-        `).join('');
+        element.innerHTML = dateMemos.map(memo => {
+            // 리치 텍스트인 경우 HTML 태그 제거하여 순수 텍스트만 추출
+            let displayContent = memo.content || '';
+            if (memo.isRichText) {
+                // HTML 태그 제거
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = displayContent;
+                displayContent = tempDiv.textContent || tempDiv.innerText || '';
+            }
+            
+            // 내용을 100자로 제한
+            const truncatedContent = displayContent.substring(0, 100);
+            const contentWithEllipsis = displayContent.length > 100 ? truncatedContent + '...' : truncatedContent;
+            
+            return `
+                <div class="memo-item ${isUnlocked ? 'unlocked' : ''}" onclick="openMemoDetail(${memo.id})">
+                    <div class="memo-item-title">${memo.title || '제목 없음'}</div>
+                    <div class="memo-item-content">${contentWithEllipsis}</div>
+                    <div class="memo-item-date">${memo.date || '날짜 없음'}</div>
+                    <div class="memo-item-preview">클릭하여 보기</div>
+                    ${isUnlocked ? `<button class="memo-item-delete visible" onclick="event.stopPropagation(); deleteMemoFromList(${memo.id})">✕</button>` : ''}
+                </div>
+            `;
+        }).join('');
         
         // 디버깅: 생성된 메모 아이템 개수 확인
         const memoItems = element.querySelectorAll('.memo-item');
@@ -537,7 +552,7 @@
                 title: title,
                 content: mainContent,
                 isRichText: isRichText,
-                date: new Date().toLocaleDateString('ko-KR'),
+                date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
                 timestamp: new Date().toISOString()
             };
             

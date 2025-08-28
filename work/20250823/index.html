@@ -3421,7 +3421,7 @@
                 title: title,
                 content: mainContent,
                 isRichText: isRichText,
-                date: new Date().toLocaleDateString('ko-KR'),
+                date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
                 timestamp: new Date().toISOString()
             };
 
@@ -3857,7 +3857,14 @@
             // 상세 모달에 내용 채우기
             document.getElementById('memoDetailTitle').textContent = memo.title;
             document.getElementById('memoDetailDate').textContent = `📅 ${memo.date}`;
-            document.getElementById('memoDetailBody').textContent = memo.content;
+            
+            // 리치 텍스트인 경우 HTML로, 일반 텍스트인 경우 텍스트로 표시
+            const bodyElement = document.getElementById('memoDetailBody');
+            if (memo.isRichText) {
+                bodyElement.innerHTML = memo.content;
+            } else {
+                bodyElement.textContent = memo.content;
+            }
             
             // 상세 모달 위치 설정
             const memoDetailModal = document.getElementById('memoDetailModal');
