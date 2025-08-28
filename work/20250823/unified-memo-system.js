@@ -725,6 +725,12 @@
             }
         });
         
+        // displayDateMemos 함수 정의 (모달을 열지 않고 단순히 리스트만 새로고침)
+        window.displayDateMemos = function() {
+            refreshDateMemoList();
+            console.log('📋 날짜별 메모 리스트 새로고침 (모달 열지 않음)');
+        };
+        
         console.log('✅ 전역 함수 대체 완료');
     }
 
