@@ -2286,7 +2286,13 @@
                 }
                 
                 // 날짜 클릭 이벤트 추가
-                day.addEventListener('click', function() {
+                day.addEventListener('click', function(e) {
+                    // 자동 클릭 방지
+                    if (e.isTrusted === false) {
+                        console.log('🚫 자동 클릭 차단');
+                        return;
+                    }
+                    
                     if (!day.classList.contains('other-month')) {
                         openDateMemoModal(year, month, date);
                     }
@@ -3756,6 +3762,7 @@
         window.testStorageCapacity = testStorageCapacity;
         window.showStorageStatus = showStorageStatus;
         window.cleanupStorage = cleanupStorage;
+        window.autoCleanupForSpace = autoCleanupForSpace;
         window.emergencyCleanup = emergencyCleanup;
 
         function formatFileSize(bytes) {
@@ -3941,6 +3948,80 @@
             } else {
                 alert(`${formatFileSize(sizeThreshold)} 이상의 첨부파일이 없습니다.\n\n더 작은 크기로 정리하려면:\nF12 콘솔에서 cleanupStorage(100*1024) 실행\n(100KB 이상 제거)`);
             }
+        }
+        
+        // 자동 정리 함수 - 필요한 공간만큼만 정리
+        function autoCleanupForSpace(neededBytes) {
+            const memosData = localStorage.getItem('calendarMemos') || '[]';
+            let memos = JSON.parse(memosData);
+            let freedSpace = 0;
+            let removedCount = 0;
+            
+            // 첨부파일 크기별로 정렬
+            let allAttachments = [];
+            memos.forEach((memo, memoIndex) => {
+                if (memo.attachments && memo.attachments.length > 0) {
+                    memo.attachments.forEach((att, attIndex) => {
+                        if (att.data) {
+                            allAttachments.push({
+                                memoIndex,
+                                attIndex,
+                                name: att.name,
+                                size: att.data.length,
+                                memoTitle: memo.title || '제목 없음'
+                            });
+                        }
+                    });
+                }
+            });
+            
+            // 크기 순으로 정렬 (큰 것부터)
+            allAttachments.sort((a, b) => b.size - a.size);
+            
+            // 필요한 공간만큼 제거
+            const toRemove = [];
+            for (let att of allAttachments) {
+                if (freedSpace >= neededBytes) break;
+                
+                // 200KB 이상인 파일만 제거
+                if (att.size > 200 * 1024) {
+                    toRemove.push(att);
+                    freedSpace += att.size;
+                }
+            }
+            
+            if (toRemove.length > 0) {
+                console.log(`🧹 자동 정리: ${toRemove.length}개 파일 제거 예정 (${formatFileSize(freedSpace)})`);
+                
+                // 역순으로 제거
+                toRemove.sort((a, b) => b.memoIndex - a.memoIndex || b.attIndex - a.attIndex);
+                
+                toRemove.forEach(item => {
+                    if (memos[item.memoIndex] && memos[item.memoIndex].attachments) {
+                        memos[item.memoIndex].attachments.splice(item.attIndex, 1);
+                        removedCount++;
+                        console.log(`  제거: ${item.name} (${formatFileSize(item.size)})`);
+                    }
+                });
+                
+                // 빈 첨부파일 배열 정리
+                memos = memos.map(memo => {
+                    if (memo.attachments && memo.attachments.length === 0) {
+                        delete memo.attachments;
+                    }
+                    return memo;
+                });
+                
+                // 저장 (에러 무시)
+                try {
+                    localStorage.setItem('calendarMemos', JSON.stringify(memos));
+                    console.log(`✅ ${removedCount}개 파일 제거, ${formatFileSize(freedSpace)} 확보`);
+                } catch (e) {
+                    console.error('정리 후 저장 실패:', e);
+                }
+            }
+            
+            return freedSpace;
         }
         
         // 긴급 정리 함수 (모든 첨부파일 제거)
@@ -4156,20 +4237,33 @@
                         margin: '95%'
                     });
                     
-                    const userChoice = confirm(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n파일 크기: ${formatFileSize(file.size)}\n인코딩 후 크기: ${formatFileSize(estimatedSize)}\n사용 가능한 공간: ${formatFileSize(availableSpace)}\n\n자동으로 큰 첨부파일(1MB 이상)을 정리하시겠습니까?\n\n확인: 자동 정리 실행\n취소: 수동으로 관리`);
+                    // 용량 부족 시 즉시 자동 정리 시도
+                    console.log('🧹 자동 정리 시작 - 필요 공간:', formatFileSize(estimatedSize));
                     
-                    if (userChoice) {
-                        // 자동 정리 실행
-                        cleanupStorage();
-                        // 정리 후 다시 용량 체크
-                        const newAvailable = testStorageCapacity() - getStorageSize();
-                        if (estimatedSize <= newAvailable * 0.95) {
-                            alert('저장 공간이 확보되었습니다. 파일을 다시 선택해주세요.');
-                        } else {
-                            alert(`정리 후에도 공간이 부족합니다.\n\n필요: ${formatFileSize(estimatedSize)}\n사용 가능: ${formatFileSize(newAvailable)}\n\nF12 콘솔에서:\n• showStorageStatus() - 상세 정보 확인\n• cleanupStorage() - 추가 정리`);
-                        }
+                    // 먼저 300KB 이상 파일 정리
+                    autoCleanupForSpace(estimatedSize);
+                    
+                    // 정리 후 재측정
+                    const newSize = getStorageSize();
+                    const newCapacity = testStorageCapacity();
+                    const newAvailable = newCapacity - newSize;
+                    
+                    if (estimatedSize <= newAvailable * 0.95) {
+                        // 공간 확보 성공 - 파일 추가 계속 진행
+                        console.log('✅ 공간 확보 성공! 파일 첨부 진행');
+                        
+                        // 첨부파일 추가 (정리 성공 후 진행)
+                        attachmentArray.push({
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            data: base64Data
+                        });
+                        console.log('첨부파일 추가됨:', file.name, '예상 크기:', formatFileSize(estimatedSize));
+                        return; // 정상 진행
                     } else {
-                        alert(`수동 관리 방법:\n\nF12 콘솔에서:\n• showStorageStatus() - 큰 첨부파일 확인\n• cleanupStorage() - 자동 정리 실행\n\n또는 개별 메모에서 첨부파일 삭제`);
+                        // 그래도 공간 부족
+                        alert(`파일이 너무 큽니다.\n\n파일: ${file.name}\n크기: ${formatFileSize(estimatedSize)}\n사용 가능: ${formatFileSize(newAvailable)}\n\n더 많은 공간이 필요합니다.\nF12 콘솔에서 emergencyCleanup() 실행하여 모든 첨부파일을 제거할 수 있습니다.`);
                     }
                     // 첨부파일 아이템 제거
                     attachmentItem.remove();
