@@ -4160,10 +4160,13 @@
     <!-- Google Drive 동기화 상태창 -->
     <script src="sync-status-window.js"></script>
     
-    <!-- 화면 깜빡임 수정 (마지막에 로드) -->
+    <!-- 기존 수정 파일들 비활성화 (충돌 방지) -->
+    <!--
     <script src="stop-flickering-fix.js"></script>
-    
-    <!-- 클릭 문제 수정 -->
     <script src="fix-click-issues.js"></script>
+    -->
+    
+    <!-- 모든 충돌 해결 통합 스크립트 (반드시 마지막에 로드) -->
+    <script src="resolve-all-conflicts.js"></script>
 </body>
 </html>
