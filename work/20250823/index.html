@@ -3752,6 +3752,8 @@
         window.safelyStoreData = safelyStoreData;
         window.checkStorageSpace = checkStorageSpace;
         window.getStorageSize = getStorageSize;
+        window.testStorageCapacity = testStorageCapacity;
+        window.showStorageStatus = showStorageStatus;
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -3773,9 +3775,20 @@
         }
         
         function getStorageLimit() {
-            // 대부분의 브라우저에서 localStorage는 약 5-10MB 제한
-            // 30MB 파일 지원을 위해 8MB로 설정 (Base64 인코딩 고려)
-            return 8 * 1024 * 1024; // 8MB
+            // 실제 브라우저의 localStorage 제한을 동적으로 감지
+            try {
+                const testKey = 'storageTest';
+                const chunk = 'x'.repeat(1024); // 1KB
+                let currentSize = getStorageSize();
+                let testSize = 0;
+                
+                // 현재 저장된 데이터의 90%까지만 사용하도록 제한
+                const safeLimit = currentSize + (1024 * 1024); // 현재 + 1MB 여유분
+                return safeLimit;
+            } catch (e) {
+                // 폴백: 보수적으로 4MB 설정
+                return 4 * 1024 * 1024; // 4MB
+            }
         }
         
         function checkStorageSpace(additionalBytes = 0) {
@@ -3798,12 +3811,87 @@
             }
         }
         
+        function showStorageStatus() {
+            const currentSize = getStorageSize();
+            const memosSize = (localStorage.getItem('calendarMemos') || '').length;
+            const otherSize = currentSize - memosSize;
+            
+            console.log('📊 저장소 상태:', {
+                total: formatFileSize(currentSize),
+                memos: formatFileSize(memosSize),
+                other: formatFileSize(otherSize),
+                memosPercent: Math.round((memosSize / currentSize) * 100) + '%'
+            });
+            
+            alert(`📊 저장소 상태\n\n전체 사용량: ${formatFileSize(currentSize)}\n메모 데이터: ${formatFileSize(memosSize)} (${Math.round((memosSize / currentSize) * 100)}%)\n기타 데이터: ${formatFileSize(otherSize)}\n\n💡 팁: 콘솔(F12)에서 showStorageStatus()로 언제든 확인 가능`);
+        }
+        
+        // 캐시된 용량 정보 (성능 향상을 위해)
+        let _cachedCapacity = null;
+        let _cacheTime = 0;
+        
+        function testStorageCapacity() {
+            const now = Date.now();
+            const CACHE_DURATION = 30000; // 30초 캐시
+            
+            // 캐시된 값이 있고 유효하면 반환
+            if (_cachedCapacity && (now - _cacheTime) < CACHE_DURATION) {
+                return _cachedCapacity;
+            }
+            
+            const testKey = 'capacityTest';
+            const currentSize = getStorageSize();
+            
+            try {
+                localStorage.removeItem(testKey);
+                
+                // 이진 탐색으로 효율적으로 용량 찾기
+                let low = 0;
+                let high = 10 * 1024 * 1024; // 10MB
+                let maxSize = currentSize;
+                
+                while (low <= high) {
+                    const mid = Math.floor((low + high) / 2);
+                    const testData = 'x'.repeat(mid);
+                    
+                    try {
+                        localStorage.setItem(testKey, testData);
+                        localStorage.removeItem(testKey);
+                        maxSize = currentSize + mid;
+                        low = mid + 1;
+                    } catch (e) {
+                        high = mid - 1;
+                    }
+                }
+                
+                _cachedCapacity = maxSize;
+                _cacheTime = now;
+                return maxSize;
+            } catch (e) {
+                const fallback = currentSize + 1024 * 1024; // 1MB 여유분
+                _cachedCapacity = fallback;
+                _cacheTime = now;
+                return fallback;
+            }
+        }
+        
         function safelyStoreData(key, data) {
             try {
                 const jsonData = JSON.stringify(data);
                 const dataSize = jsonData.length;
                 
-                if (!checkStorageSpace(dataSize)) {
+                // 실제 저장 시도 전에 용량 체크
+                const currentSize = getStorageSize();
+                const availableSpace = testStorageCapacity() - currentSize;
+                
+                console.log('정확한 저장소 체크:', {
+                    current: formatFileSize(currentSize),
+                    available: formatFileSize(availableSpace),
+                    needed: formatFileSize(dataSize),
+                    canStore: dataSize <= availableSpace * 0.9 // 90% 안전 마진
+                });
+                
+                if (dataSize > availableSpace * 0.9) {
                     throw new Error('저장 공간이 부족합니다.');
                 }
                 
@@ -3813,10 +3901,15 @@
                 console.error('데이터 저장 실패:', error);
                 
                 if (error.name === 'QuotaExceededError' || error.message.includes('quota') || error.message.includes('저장 공간')) {
+                    // 현재 저장소 상태 분석
+                    const currentSize = getStorageSize();
+                    const memosSize = (localStorage.getItem('calendarMemos') || '').length;
+                    const otherSize = currentSize - memosSize;
+                    
                     return { 
                         success: false, 
                         error: 'storage_full',
-                        message: '저장 공간이 부족합니다. 기존 메모의 첨부파일을 삭제하거나 더 작은 파일을 사용해주세요.'
+                        message: `저장 공간이 부족합니다.\n\n현재 사용량: ${formatFileSize(currentSize)}\n메모 데이터: ${formatFileSize(memosSize)}\n기타 데이터: ${formatFileSize(otherSize)}\n\n해결 방법:\n• 기존 메모의 큰 첨부파일을 삭제해주세요\n• 파일을 압축하거나 더 작은 파일을 사용해주세요\n• 브라우저의 저장 공간 제한으로 인한 문제입니다`
                     };
                 } else {
                     return { 
@@ -3866,9 +3959,21 @@
                 const base64Data = e.target.result;
                 const estimatedSize = base64Data.length;
                 
-                // localStorage 용량 체크
-                if (!checkStorageSpace(estimatedSize)) {
-                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n저장 공간을 확보하려면:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용해보세요 (권장: 20MB 이하)\n• 또는 파일을 압축해보세요`);
+                // localStorage 용량 체크 (실제 용량 기준)
+                const currentSize = getStorageSize();
+                const totalCapacity = testStorageCapacity();
+                const availableSpace = totalCapacity - currentSize;
+                
+                if (estimatedSize > availableSpace * 0.8) { // 80% 안전 마진
+                    console.log('용량 부족:', {
+                        file: file.name,
+                        fileSize: formatFileSize(estimatedSize),
+                        currentUsage: formatFileSize(currentSize),
+                        totalCapacity: formatFileSize(totalCapacity),
+                        available: formatFileSize(availableSpace)
+                    });
+                    
+                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n파일 크기: ${formatFileSize(file.size)}\n인코딩 후 크기: ${formatFileSize(estimatedSize)}\n사용 가능한 공간: ${formatFileSize(availableSpace)}\n\n해결 방법:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용하거나 압축해보세요\n• F12 콘솔에서 showStorageStatus()로 상세 정보 확인`);
                     // 첨부파일 아이템 제거
                     attachmentItem.remove();
                     return;
