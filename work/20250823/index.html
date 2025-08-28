@@ -5040,6 +5040,19 @@
         // 초기화
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM 로딩 완료 - 초기화 시작');
+            
+            // 모든 메모 모달 강제 닫기 (DOM 로드 후 즉시)
+            const memoModals = ['dateMemoModal', 'memoDetailModal'];
+            memoModals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                    modal.classList.remove('has-positioned-content');
+                }
+            });
+            console.log('🔒 DOM 초기화 시 메모 모달 닫기 완료');
+            
             setupModalWatcher();
             
             try {

@@ -727,8 +727,16 @@
         
         // displayDateMemos 함수 정의 (모달을 열지 않고 단순히 리스트만 새로고침)
         window.displayDateMemos = function() {
-            refreshDateMemoList();
-            console.log('📋 날짜별 메모 리스트 새로고침 (모달 열지 않음)');
+            // 모달이 열려있지 않을 때만 리스트 새로고침
+            const dateModal = document.getElementById('dateMemoModal');
+            const detailModal = document.getElementById('memoDetailModal');
+            const isAnyModalOpen = (dateModal && dateModal.style.display === 'block') || 
+                                 (detailModal && detailModal.style.display === 'block');
+            
+            if (!isAnyModalOpen) {
+                refreshDateMemoList();
+                console.log('📋 날짜별 메모 리스트 새로고침 (모달 열지 않음)');
+            }
         };
         
         console.log('✅ 전역 함수 대체 완료');
@@ -791,6 +799,25 @@
         
         console.log('🚀 통합 메모 관리 시스템 초기화');
         
+        // 모든 모달 강제 닫기 (초기화 시)
+        const modals = ['dateMemoModal', 'memoDetailModal'];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                // 모든 인라인 스타일 제거
+                modal.style.position = '';
+                modal.style.top = '';
+                modal.style.left = '';
+                modal.style.width = '';
+                modal.style.height = '';
+                modal.style.backgroundColor = '';
+                modal.classList.remove('has-positioned-content');
+            }
+        });
+        console.log('🔒 초기화 시 모든 메모 모달 닫기 완료');
+        
         // 데이터 로드
         loadMemosFromStorage();
         
@@ -805,6 +832,10 @@
         
         // 디버깅 도구
         addDebugTools();
+        
+        // 모든 상태 변수 초기화
+        MemoSystem.selectedDate = null;
+        MemoSystem.currentDetailId = null;
         
         // 초기화 완료 표시
         MemoSystem.initialized = true;
