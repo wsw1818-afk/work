@@ -2407,7 +2407,12 @@
             // 기존 메모에 추가
             let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
             memos.unshift(memo);
-            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+            
+            const saveResult = safelyStoreData('calendarMemos', memos);
+            if (!saveResult.success) {
+                alert('일정 저장 실패: ' + saveResult.message);
+                return;
+            }
             
             // 알람이 설정된 경우 스케줄링
             if (enableAlarm) {
@@ -3643,7 +3648,12 @@
             };
 
             memos.unshift(memo);
-            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+            
+            const saveResult = safelyStoreData('calendarMemos', memos);
+            if (!saveResult.success) {
+                alert('스티커 메모 저장 실패: ' + saveResult.message);
+                return;
+            }
             
             clearStickyMemoForm();
             loadStickyMemos();
@@ -3739,6 +3749,9 @@
         window.removeAttachment = removeAttachment;
         window.clearAttachments = clearAttachments;
         window.downloadAttachment = downloadAttachment;
+        window.safelyStoreData = safelyStoreData;
+        window.checkStorageSpace = checkStorageSpace;
+        window.getStorageSize = getStorageSize;
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -3746,6 +3759,73 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // localStorage 용량 체크 함수들
+        function getStorageSize() {
+            let total = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    total += localStorage[key].length;
+                }
+            }
+            return total;
+        }
+        
+        function getStorageLimit() {
+            // 대부분의 브라우저에서 localStorage는 약 5-10MB 제한
+            // 안전을 위해 5MB로 설정
+            return 5 * 1024 * 1024; // 5MB
+        }
+        
+        function checkStorageSpace(additionalBytes = 0) {
+            try {
+                const currentSize = getStorageSize();
+                const limit = getStorageLimit();
+                const availableSpace = limit - currentSize;
+                
+                console.log('저장소 현황:', {
+                    current: formatFileSize(currentSize),
+                    limit: formatFileSize(limit),
+                    available: formatFileSize(availableSpace),
+                    additional: formatFileSize(additionalBytes)
+                });
+                
+                return additionalBytes <= availableSpace;
+            } catch (e) {
+                console.error('저장소 용량 확인 실패:', e);
+                return false;
+            }
+        }
+        
+        function safelyStoreData(key, data) {
+            try {
+                const jsonData = JSON.stringify(data);
+                const dataSize = jsonData.length;
+                
+                if (!checkStorageSpace(dataSize)) {
+                    throw new Error('저장 공간이 부족합니다.');
+                }
+                
+                localStorage.setItem(key, jsonData);
+                return { success: true };
+            } catch (error) {
+                console.error('데이터 저장 실패:', error);
+                
+                if (error.name === 'QuotaExceededError' || error.message.includes('quota') || error.message.includes('저장 공간')) {
+                    return { 
+                        success: false, 
+                        error: 'storage_full',
+                        message: '저장 공간이 부족합니다. 기존 메모의 첨부파일을 삭제하거나 더 작은 파일을 사용해주세요.'
+                    };
+                } else {
+                    return { 
+                        success: false, 
+                        error: 'unknown',
+                        message: '메모 저장 중 오류가 발생했습니다: ' + error.message
+                    };
+                }
+            }
         }
 
         function getFileIcon(fileName) {
@@ -3782,13 +3862,25 @@
             // 파일을 Base64로 인코딩하여 저장
             const reader = new FileReader();
             reader.onload = function(e) {
+                // 파일 데이터 크기 확인 (Base64는 원본보다 약 33% 더 큼)
+                const base64Data = e.target.result;
+                const estimatedSize = base64Data.length;
+                
+                // localStorage 용량 체크
+                if (!checkStorageSpace(estimatedSize)) {
+                    alert(`파일 "${file.name}"을 저장할 공간이 부족합니다.\n\n저장 공간을 확보하려면:\n• 기존 메모의 첨부파일을 삭제해보세요\n• 더 작은 파일을 사용해보세요 (권장: 5MB 이하)`);
+                    // 첨부파일 아이템 제거
+                    attachmentItem.remove();
+                    return;
+                }
+                
                 attachmentArray.push({
                     name: file.name,
                     size: file.size,
                     type: file.type,
-                    data: e.target.result
+                    data: base64Data
                 });
-                console.log('첨부파일 추가됨:', file.name);
+                console.log('첨부파일 추가됨:', file.name, '예상 크기:', formatFileSize(estimatedSize));
             };
             reader.readAsDataURL(file);
         }
@@ -4010,8 +4102,9 @@
                     console.log('일정 첨부파일 선택됨:', e.target.files.length, '개');
                     const files = Array.from(e.target.files);
                     files.forEach(file => {
-                        if (file.size > 50 * 1024 * 1024) { // 50MB 제한
-                            alert(`파일 "${file.name}"은 너무 큽니다. (최대 50MB)`);
+                        // 더 엄격한 파일 크기 제한 (5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert(`파일 "${file.name}"은 너무 큽니다.\n\n권장 크기: 5MB 이하\n현재 크기: ${formatFileSize(file.size)}\n\n작은 파일을 사용하거나 파일을 압축해보세요.`);
                             return;
                         }
                         addAttachmentItem(file, 'scheduleAttachmentList', scheduleAttachments);
@@ -4029,8 +4122,9 @@
                     console.log('날짜별 메모 첨부파일 선택됨:', e.target.files.length, '개');
                     const files = Array.from(e.target.files);
                     files.forEach(file => {
-                        if (file.size > 50 * 1024 * 1024) { // 50MB 제한
-                            alert(`파일 "${file.name}"은 너무 큽니다. (최대 50MB)`);
+                        // 더 엄격한 파일 크기 제한 (5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert(`파일 "${file.name}"은 너무 큽니다.\n\n권장 크기: 5MB 이하\n현재 크기: ${formatFileSize(file.size)}\n\n작은 파일을 사용하거나 파일을 압축해보세요.`);
                             return;
                         }
                         addAttachmentItem(file, 'dateMemoAttachmentList', dateMemoAttachments);
@@ -4212,7 +4306,12 @@
             };
 
             memos.unshift(memo);
-            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+            
+            const saveResult = safelyStoreData('calendarMemos', memos);
+            if (!saveResult.success) {
+                alert('메모 저장 실패: ' + saveResult.message);
+                return;
+            }
             
             clearMemoForm();
             loadMemos();
@@ -4445,7 +4544,13 @@
 
         function deleteMemo(id) {
             memos = memos.filter(m => m.id !== id);
-            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+            
+            const saveResult = safelyStoreData('calendarMemos', memos);
+            if (!saveResult.success) {
+                alert('메모 삭제 실패: ' + saveResult.message);
+                return;
+            }
+            
             loadMemos();
             if (window.displayDateMemos) window.displayDateMemos(); // 날짜별 메모도 새로고침
         }
@@ -4643,7 +4748,12 @@
             };
 
             memos.unshift(memo);
-            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+            
+            const saveResult = safelyStoreData('calendarMemos', memos);
+            if (!saveResult.success) {
+                alert('날짜 메모 저장 실패: ' + saveResult.message);
+                return;
+            }
             
             clearDateMemoForm();
             if (window.displayDateMemos) window.displayDateMemos();

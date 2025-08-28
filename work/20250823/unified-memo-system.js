@@ -46,7 +46,18 @@
     // localStorage에 메모 저장
     function saveMemosToStorage() {
         try {
-            localStorage.setItem('calendarMemos', JSON.stringify(MemoSystem.data));
+            // HTML에서 정의된 safelyStoreData 함수 사용
+            if (typeof window.safelyStoreData === 'function') {
+                const saveResult = window.safelyStoreData('calendarMemos', MemoSystem.data);
+                if (!saveResult.success) {
+                    console.error('❌ 메모 저장 실패:', saveResult.message);
+                    alert('메모 저장 실패: ' + saveResult.message);
+                    return false;
+                }
+            } else {
+                // 폴백: 기본 localStorage 사용
+                localStorage.setItem('calendarMemos', JSON.stringify(MemoSystem.data));
+            }
             
             // 전역 변수 동기화
             window.memos = MemoSystem.data;
@@ -57,6 +68,7 @@
             return true;
         } catch (error) {
             console.error('❌ 메모 저장 실패:', error);
+            alert('메모 저장 중 오류 발생: ' + error.message);
             return false;
         }
     }
