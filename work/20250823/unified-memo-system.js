@@ -621,53 +621,60 @@
             console.log('💾 날짜별 메모 저장:', memo.title, '(날짜:', MemoSystem.selectedDate, ')');
         };
         
-        // 날짜별 메모 모달 열기
-        window.openDateMemoModal = function(year, month, date) {
-            const selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-            MemoSystem.selectedDate = selectedDate;
-            
-            const titleEl = document.getElementById('dateMemoTitle');
-            if (titleEl) titleEl.textContent = `📅 ${selectedDate} 메모`;
-            
-            const modal = document.getElementById('dateMemoModal');
-            if (modal) modal.style.display = 'block';
-            
-            // 잠금 상태를 기본 잠김으로 설정 (보안상 안전)
-            MemoSystem.locks.dateMemos = true;
-            
-            // UI도 잠금 상태로 업데이트
-            const toggle = document.getElementById('dateMemoLockToggle');
-            if (toggle) {
-                const icon = toggle.querySelector('.lock-icon');
-                const text = toggle.querySelector('.lock-text');
-                
-                toggle.classList.remove('unlocked');
-                if (icon) icon.textContent = '🔒';
-                if (text) text.textContent = '잠금';
-            }
-            
-            refreshDateMemoList();
-            
-            console.log('📅 날짜별 메모 모달 열기 (기본 잠김 상태):', selectedDate);
-        };
+        // 날짜별 메모 모달 열기 - HTML 함수와 충돌 방지
+        const originalOpenDateMemoModal = window.openDateMemoModal;
         
-        // 날짜별 메모 모달 닫기 (HTML 함수가 우선 처리하므로 호환성 유지)
-        window.closeDateMemoModal = function() {
-            const modal = document.getElementById('dateMemoModal');
-            if (modal) modal.style.display = 'none';
-            
-            // 입력창 초기화
-            const titleInput = document.getElementById('dateMemoTitleInput');
-            const contentInput = document.getElementById('dateMemoContentInput');
-            if (titleInput) titleInput.value = '';
-            if (contentInput) contentInput.value = '';
-            
-            // unified 시스템 상태 동기화
-            MemoSystem.locks.dateMemos = true;
-            MemoSystem.selectedDate = null;
-            
-            console.log('📅 날짜별 메모 모달 닫기 (HTML 자동 잠금과 동기화)');
-        };
+        if (typeof originalOpenDateMemoModal === 'function') {
+            // HTML 함수가 있으면 그대로 사용하고 후처리만 추가
+            window.openDateMemoModal = function(year, month, date) {
+                // 원래 HTML 함수 실행
+                originalOpenDateMemoModal(year, month, date);
+                
+                // unified 시스템 추가 처리
+                const selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                MemoSystem.selectedDate = selectedDate;
+                MemoSystem.locks.dateMemos = true;
+                refreshDateMemoList();
+                
+                console.log('📅 HTML openDateMemoModal + unified 시스템 처리 완료:', selectedDate);
+            };
+        } else {
+            // HTML 함수가 없는 경우에만 백업 함수 제공
+            window.openDateMemoModal = function(year, month, date) {
+                const selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                MemoSystem.selectedDate = selectedDate;
+                
+                const modal = document.getElementById('dateMemoModal');
+                if (modal) modal.style.display = 'block';
+                
+                MemoSystem.locks.dateMemos = true;
+                refreshDateMemoList();
+                
+                console.log('📅 백업 openDateMemoModal 함수 실행:', selectedDate);
+            };
+        }
+        
+        // 날짜별 메모 모달 닫기 - HTML 함수를 덮어쓰지 않고 백업만 제공
+        // HTML의 closeDateMemoModal 함수를 그대로 사용하되, 상태만 동기화
+        const originalCloseDateMemoModal = window.closeDateMemoModal;
+        
+        // HTML 함수 실행 후 추가 처리를 위한 훅만 설정
+        if (typeof originalCloseDateMemoModal === 'function') {
+            // HTML 함수가 있으면 그대로 사용 (덮어쓰지 않음)
+            console.log('✅ HTML closeDateMemoModal 함수 유지 - unified 시스템은 상태만 동기화');
+        } else {
+            // HTML 함수가 없는 경우에만 백업 함수 제공
+            window.closeDateMemoModal = function() {
+                const modal = document.getElementById('dateMemoModal');
+                if (modal) modal.style.display = 'none';
+                
+                // unified 시스템 상태 동기화
+                MemoSystem.locks.dateMemos = true;
+                MemoSystem.selectedDate = null;
+                
+                console.log('📅 백업 closeDateMemoModal 함수 실행');
+            };
+        }
         
         // 스티커 메모 관련 함수들은 HTML에서 처리 (덮어쓰지 않음)
         // HTML의 openStickyMemo, closeStickyMemo, createStickyMemo, loadStickyMemos 등을 그대로 사용
