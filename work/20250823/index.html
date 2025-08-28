@@ -4294,6 +4294,7 @@
             
             // 상세 모달 표시 - 전체 화면 오버레이 강제 적용
             memoDetailModal.style.display = 'block';
+            memoDetailModal.style.visibility = 'visible';
             memoDetailModal.style.position = 'fixed';
             memoDetailModal.style.top = '0';
             memoDetailModal.style.left = '0';
@@ -4304,18 +4305,32 @@
 
         function closeMemoDetail() {
             const memoDetailModal = document.getElementById('memoDetailModal');
-            const modalContent = memoDetailModal.querySelector('.memo-modal-content');
+            if (!memoDetailModal) return;
             
-            // 모달 위치 및 스타일 리셋
-            modalContent.style.position = '';
-            modalContent.style.left = '';
-            modalContent.style.top = '';
-            modalContent.style.margin = '';
-            modalContent.classList.remove('dragging');
+            const modalContent = memoDetailModal.querySelector('.memo-modal-content');
+            if (modalContent) {
+                // 모달 위치 및 스타일 리셋
+                modalContent.style.position = '';
+                modalContent.style.left = '';
+                modalContent.style.top = '';
+                modalContent.style.margin = '';
+                modalContent.classList.remove('dragging');
+            }
+            
+            // 모달 완전히 숨기기
+            memoDetailModal.style.display = 'none';
+            memoDetailModal.style.visibility = 'hidden';
             memoDetailModal.classList.remove('has-positioned-content');
             memoDetailModal.style.zIndex = '';
             
-            memoDetailModal.style.display = 'none';
+            // 모든 인라인 스타일 제거
+            memoDetailModal.style.position = '';
+            memoDetailModal.style.top = '';
+            memoDetailModal.style.left = '';
+            memoDetailModal.style.width = '';
+            memoDetailModal.style.height = '';
+            memoDetailModal.style.backgroundColor = '';
+            
             currentMemoId = null;
         }
 
@@ -4493,6 +4508,7 @@
             
             // 날짜 메모 모달 표시 - 전체 화면 오버레이 강제 적용
             dateMemoModal.style.display = 'block';
+            dateMemoModal.style.visibility = 'visible';
             dateMemoModal.style.position = 'fixed';
             dateMemoModal.style.top = '0';
             dateMemoModal.style.left = '0';
@@ -4511,17 +4527,30 @@
 
         function closeDateMemoModal() {
             const dateMemoModal = document.getElementById('dateMemoModal');
-            const modalContent = dateMemoModal.querySelector('.memo-modal-content');
+            if (!dateMemoModal) return;
             
-            // 모달 위치 리셋
-            modalContent.style.position = '';
-            modalContent.style.left = '';
-            modalContent.style.top = '';
-            modalContent.style.margin = '';
-            modalContent.classList.remove('dragging');
+            const modalContent = dateMemoModal.querySelector('.memo-modal-content');
+            if (modalContent) {
+                // 모달 위치 리셋
+                modalContent.style.position = '';
+                modalContent.style.left = '';
+                modalContent.style.top = '';
+                modalContent.style.margin = '';
+                modalContent.classList.remove('dragging');
+            }
+            
+            // 모달 완전히 숨기기
+            dateMemoModal.style.display = 'none';
+            dateMemoModal.style.visibility = 'hidden';
             dateMemoModal.classList.remove('has-positioned-content');
             
-            dateMemoModal.style.display = 'none';
+            // 모든 인라인 스타일 제거
+            dateMemoModal.style.position = '';
+            dateMemoModal.style.top = '';
+            dateMemoModal.style.left = '';
+            dateMemoModal.style.width = '';
+            dateMemoModal.style.height = '';
+            dateMemoModal.style.backgroundColor = '';
             clearDateMemoForm();
             selectedDate = null;
             // 모달 닫을 때 잠금 상태로 리셋
