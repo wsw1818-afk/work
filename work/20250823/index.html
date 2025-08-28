@@ -235,7 +235,7 @@
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 5px;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
         }
 
         .weekday {
@@ -510,14 +510,14 @@
         }
 
         .sticky-memo-content {
-            padding: 20px;
+            padding: 8px;
             height: calc(100% - 60px);
             display: flex;
             flex-direction: column;
         }
 
         .sticky-memo-form {
-            margin-bottom: 20px;
+            margin-bottom: 8px;
             display: flex;
             flex-direction: column;
             flex: 1;
@@ -532,7 +532,7 @@
             border-radius: 8px;
             font-size: calc(14px * var(--font-scale));
             font-family: 'Malgun Gothic', sans-serif;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
@@ -552,7 +552,7 @@
             font-size: calc(14px * var(--font-scale));
             font-family: 'Malgun Gothic', sans-serif;
             resize: vertical;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
@@ -566,14 +566,14 @@
             width: 100%;
             flex: 1;
             min-height: 120px;
-            padding: 15px;
+            padding: 8px;
             border: none;
             background: rgba(255, 255, 255, 0.7);
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: calc(14px * var(--font-scale));
             font-family: 'Malgun Gothic', sans-serif;
             resize: none; /* 개별 resize 비활성화, 전체 창 resize만 사용 */
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
             line-height: 1.5;
         }
@@ -671,11 +671,11 @@
         .text-editor-toolbar {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            padding: 10px;
+            gap: 6px;
+            padding: 6px;
             background: rgba(255, 255, 255, 0.5);
-            border-radius: 8px;
-            margin-bottom: 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
             border: 1px solid rgba(0, 0, 0, 0.1);
             flex-shrink: 0; /* 크기가 축소되지 않도록 */
         }
@@ -715,6 +715,17 @@
             cursor: pointer;
         }
 
+        .reset-color-btn {
+            background: linear-gradient(135deg, #ff6b6b, #feca57) !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        .reset-color-btn:hover {
+            background: linear-gradient(135deg, #ff5252, #ff9f43) !important;
+            transform: scale(1.05);
+        }
+
         #fontFamilySelect, #fontSizeSelect {
             padding: 4px 8px;
             border: 1px solid #ddd;
@@ -735,13 +746,13 @@
             width: 100%;
             flex: 1;
             min-height: 120px;
-            padding: 15px;
+            padding: 8px;
             border: none;
             background: rgba(255, 255, 255, 0.7);
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: calc(14px * var(--font-scale));
             font-family: 'Malgun Gothic', sans-serif;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
             line-height: 1.5;
             overflow-y: auto;
@@ -762,7 +773,7 @@
 
         .editor-toggle {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             flex-shrink: 0; /* 크기가 축소되지 않도록 */
         }
 
@@ -896,7 +907,7 @@
             border: 2px solid #ddd;
             border-radius: 5px;
             font-size: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
         }
 
         .memo-textarea {
@@ -1010,7 +1021,7 @@
             color: #4a5568;
             font-size: calc(14px * var(--font-scale));
             line-height: 1.5;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -3237,6 +3248,9 @@
                             <div class="toolbar-group">
                                 <input type="color" id="textColorPicker" class="color-picker" value="#000000" onchange="formatText('foreColor', this.value)" title="글자색">
                                 <input type="color" id="bgColorPicker" class="color-picker" value="#ffffff" onchange="formatText('backColor', this.value)" title="배경색">
+                                <button class="toolbar-btn reset-color-btn" onclick="resetColors()" title="색상 초기화">
+                                    🎨
+                                </button>
                             </div>
                             <div class="toolbar-group">
                                 <select id="fontFamilySelect" onchange="formatText('fontName', this.value)" title="폰트">
@@ -3489,6 +3503,53 @@
                 toolbar.style.display = 'none';
                 toggleBtn.textContent = '🎨 리치 에디터로 전환';
             }
+        }
+
+        // 색상 초기화 함수
+        function resetColors() {
+            const richEditor = document.getElementById('stickyMemoRichEditor');
+            const textColorPicker = document.getElementById('textColorPicker');
+            const bgColorPicker = document.getElementById('bgColorPicker');
+            
+            if (richEditor.style.display === 'none') {
+                alert('색상 초기화 기능을 사용하려면 리치 에디터로 전환하세요.');
+                return;
+            }
+            
+            // 선택된 텍스트가 있는지 확인
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                // 선택된 텍스트의 색상만 초기화
+                richEditor.focus();
+                
+                // 글자색을 기본값(검정)으로 초기화
+                document.execCommand('foreColor', false, '#000000');
+                
+                // 배경색을 투명으로 초기화
+                document.execCommand('backColor', false, 'transparent');
+                
+                alert('선택된 텍스트의 색상이 초기화되었습니다.');
+            } else {
+                // 전체 에디터의 색상을 초기화
+                if (confirm('전체 텍스트의 색상을 초기화하시겠습니까?')) {
+                    // 전체 선택 후 색상 초기화
+                    document.execCommand('selectAll', false, null);
+                    document.execCommand('foreColor', false, '#000000');
+                    document.execCommand('backColor', false, 'transparent');
+                    
+                    // 선택 해제
+                    selection.removeAllRanges();
+                    
+                    alert('전체 텍스트의 색상이 초기화되었습니다.');
+                }
+            }
+            
+            // 컬러 피커도 기본값으로 리셋
+            if (textColorPicker) textColorPicker.value = '#000000';
+            if (bgColorPicker) bgColorPicker.value = '#ffffff';
+            
+            // 도구 모음 버튼 상태 업데이트
+            updateToolbarButtons();
         }
 
         // clearStickyMemoForm 함수 업데이트
