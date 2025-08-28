@@ -7,7 +7,8 @@
       "Bash(python:*)",
       "Bash(git commit:*)",
       "Bash(git config:*)",
-      "Bash(pip search:*)"
+      "Bash(pip search:*)",
+      "Bash(git revert:*)"
     ],
     "deny": [],
     "ask": []
