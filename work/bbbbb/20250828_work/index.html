@@ -43,9 +43,7 @@
             font-family: 'Malgun Gothic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 20px;
             font-size: calc(16px * var(--font-scale));
             
             /* 텍스트 선명도 향상 */
@@ -58,11 +56,11 @@
         }
 
         .calendar-container {
-            max-width: calc(1200px * var(--width-scale));
-            width: calc(1200px * var(--width-scale)); /* 고정 너비, 글자크기와 독립 */
+            max-width: calc(1400px * var(--width-scale));
+            width: calc(90% * var(--width-scale)); /* 화면 너비의 90% 사용 */
             height: auto; /* 높이는 내용에 따라 자동 조정하되 글자크기와 독립 */
-            margin: 20px;
-            background: rgba(255, 255, 255, 0.95);
+            margin: 20px auto; /* 중앙 정렬 */
+            background: rgba(255, 255, 255, 0.98);
             /* backdrop-filter: blur(20px); 모달 오버레이 문제로 임시 비활성화 */
             border-radius: 20px;
             padding: 30px;
@@ -265,9 +263,9 @@
         }
 
         .day {
-            min-height: calc(120px * var(--height-scale));
-            width: calc(var(--base-day-width, 160px) * var(--width-scale)); /* 고정 너비, 글자크기와 독립 */
-            padding: 15px;
+            min-height: calc(100px * var(--height-scale));
+            width: auto; /* 그리드에 맞춰 자동 조절 */
+            padding: 12px;
             background: white;
             border-radius: 12px;
             cursor: pointer;
