@@ -4872,22 +4872,29 @@
                             startModalDrag(e, modalContent);
                         });
                         
-                        // 헤더에서 클릭 이벤트 처리 (캡처 단계에서 처리)
-                        header.addEventListener('click', function(e) {
-                            // X 버튼 클릭만 닫기 처리
-                            if (e.target.classList.contains('close-btn') || e.target.id === 'closeDateMemo') {
+                        // X 버튼에만 직접 이벤트 리스너 추가
+                        const closeBtn = header.querySelector('#closeDateMemo');
+                        if (closeBtn) {
+                            closeBtn.addEventListener('click', function(e) {
                                 console.log('🎯 X 버튼 클릭 감지 - 창 닫기');
                                 e.stopPropagation();
                                 e.preventDefault();
+                                
+                                // 중복 호출 방지
+                                if (closeBtn.dataset.clicking === 'true') {
+                                    console.log('⚠️ X 버튼 중복 클릭 무시');
+                                    return;
+                                }
+                                
+                                closeBtn.dataset.clicking = 'true';
                                 closeDateMemoModal();
-                                return;
-                            }
-                            
-                            // X 버튼이 아닌 모든 헤더 클릭은 차단 (드래그 영역, 제목 포함)
-                            e.stopPropagation();
-                            e.preventDefault();
-                            console.log('🎯 헤더 클릭 차단 - 드래그 전용 영역');
-                        }, true); // 캡처 단계에서 처리
+                                
+                                // 500ms 후 플래그 해제
+                                setTimeout(() => {
+                                    closeBtn.dataset.clicking = 'false';
+                                }, 500);
+                            });
+                        }
                     }
                 }
             });
@@ -5489,10 +5496,7 @@
             dateMemoModal.style.height = '100vh';
             dateMemoModal.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
             
-            // 외부 클릭 보호 활성화 (즉시 닫히지 않도록)
-            if (typeof window.protectModalFromOutsideClick === 'function') {
-                window.protectModalFromOutsideClick();
-            }
+            // 외부 클릭 보호 제거 - 간소화된 로직 사용
             
             // 부드러운 열기 애니메이션
             dateMemoModal.classList.add('opening');
@@ -5530,7 +5534,10 @@
             }
             
             const dateMemoModal = document.getElementById('dateMemoModal');
-            if (!dateMemoModal) return;
+            if (!dateMemoModal || dateMemoModal.style.display === 'none') {
+                console.log('⚠️ 모달이 이미 닫혀있음');
+                return;
+            }
             
             // 닫기 중 플래그 설정
             isDateMemoModalClosing = true;
@@ -5979,72 +5986,18 @@
                 console.log('메모 상세 모달 외부 클릭 이벤트 등록 완료');
             }
 
-            // 날짜별 메모 모달 외부 클릭 시 닫기 (강력한 보호 버전)
+            // 날짜별 메모 모달 외부 클릭 시 닫기 (간소화 버전)
             const dateMemoModal = document.getElementById('dateMemoModal');
             if (dateMemoModal) {
-                let clickProtectionActive = false;
-                let protectionTimeout = null;
-                let lastClickTime = 0;
-                let isClosing = false;
-                
-                // 전역 모달 열기 보호 함수
-                window.protectModalFromOutsideClick = function() {
-                    clickProtectionActive = true;
-                    isClosing = false;
-                    
-                    // 이전 타이머 정리
-                    if (protectionTimeout) {
-                        clearTimeout(protectionTimeout);
-                    }
-                    
-                    console.log('🛡️ 모달 외부 클릭 보호 활성화 (2500ms)');
-                    
-                    protectionTimeout = setTimeout(() => {
-                        clickProtectionActive = false;
-                        console.log('✅ 모달 외부 클릭 보호 해제');
-                    }, 2500); // 2.5초로 연장
-                };
-                
                 dateMemoModal.addEventListener('click', function(e) {
-                    const now = Date.now();
-                    
-                    console.log('🔍 모달 클릭 감지:', {
-                        target: e.target.tagName + (e.target.className ? '.' + e.target.className : ''),
-                        targetId: e.target.id,
-                        isModal: e.target === dateMemoModal,
-                        protectionActive: clickProtectionActive,
-                        isClosing: isClosing
-                    });
-                    
-                    // 중복 클릭 방지 (500ms 내 중복 클릭 무시)
-                    if (now - lastClickTime < 500) {
-                        console.log('⚡ 중복 클릭 무시 (500ms 내)');
-                        return;
-                    }
-                    
-                    // 보호 모드가 활성화되어 있으면 클릭 무시
-                    if (clickProtectionActive) {
-                        console.log('🛡️ 보호 모드: 외부 클릭 무시');
-                        return;
-                    }
-                    
-                    // 이미 닫히는 중이면 무시
-                    if (isClosing) {
-                        console.log('🔒 이미 닫히는 중, 외부 클릭 무시');
-                        return;
-                    }
-                    
-                    // 모달 외부 클릭 감지시에만 닫기
+                    // 모달 배경(외부)을 직접 클릭했을 때만 닫기
                     if (e.target === dateMemoModal) {
                         console.log('📝 모달 외부 클릭으로 닫기');
-                        isClosing = true;
                         closeDateMemoModal();
-                    } else {
-                        console.log('📝 모달 내부 클릭 - 닫지 않음');
                     }
                 });
                 
-                console.log('날짜 메모 모달 외부 클릭 이벤트 등록 완료 (강력한 보호 모드)');
+                console.log('날짜 메모 모달 외부 클릭 이벤트 등록 완료');
             }
 
             // Enter 키로 메모 저장
