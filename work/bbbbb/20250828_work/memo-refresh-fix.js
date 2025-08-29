@@ -378,14 +378,12 @@
         console.log('🛠️ 디버깅: debugMemoRefresh(), forceRefreshAllLists()');
     }
 
-    // DOM 로드 완료 후 초기화
+    // DOM 로드 완료 후 초기화 (한 번만)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initialize);
     } else {
+        // DOM이 이미 로드된 경우 한 번만 초기화
         initialize();
     }
-
-    // 지연 초기화
-    setTimeout(initialize, 1500);
 
 })();

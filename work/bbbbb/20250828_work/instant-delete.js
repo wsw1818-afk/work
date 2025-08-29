@@ -334,17 +334,12 @@
         console.log('⚡ 이제 모든 메모가 확인 창 없이 즉시 삭제됩니다');
     }
 
-    // DOM 로드 완료 후 초기화
+    // DOM 로드 완료 후 초기화 (한 번만)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initialize);
     } else {
+        // DOM이 이미 로드된 경우 한 번만 초기화
         initialize();
     }
-
-    // 즉시 초기화
-    initialize();
-
-    // 지연 초기화 (다른 스크립트들이 모두 로드된 후)
-    setTimeout(initialize, 2500);
 
 })();

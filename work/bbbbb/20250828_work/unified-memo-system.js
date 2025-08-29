@@ -695,16 +695,9 @@
                     return;
                 }
                 
-                // 모달이 방금 닫힌 상태면 무시 (재열림 방지) - 1.5초 후 자동 해제
+                // 모달이 방금 닫힌 상태면 무시 (재열림 방지)
                 if (typeof window.modalJustClosed !== 'undefined' && window.modalJustClosed) {
                     console.log('🔒 unified: 모달이 방금 닫힌 상태 - 재열림 차단:', year, month, date);
-                    // 1.5초 후 자동으로 플래그 해제 (이미 index.html에서 처리하지만 백업용)
-                    setTimeout(() => {
-                        if (window.modalJustClosed) {
-                            window.modalJustClosed = false;
-                            console.log('✅ unified: 모달 재열림 보호 강제 해제');
-                        }
-                    }, 1600);
                     return;
                 }
                 

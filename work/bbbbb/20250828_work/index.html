@@ -4872,9 +4872,10 @@
                             startModalDrag(e, modalContent);
                         });
                         
-                        // X 버튼에만 직접 이벤트 리스너 추가
+                        // X 버튼에만 직접 이벤트 리스너 추가 (중복 방지)
                         const closeBtn = header.querySelector('#closeDateMemo');
-                        if (closeBtn) {
+                        if (closeBtn && !closeBtn.dataset.listenerAdded) {
+                            closeBtn.dataset.listenerAdded = 'true';
                             closeBtn.addEventListener('click', function(e) {
                                 console.log('🎯 X 버튼 클릭 감지 - 창 닫기');
                                 e.stopPropagation();
