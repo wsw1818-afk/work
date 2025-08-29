@@ -466,7 +466,11 @@
                 updateDriveButton();
                 
                 const user = response.result.user;
-                const remainingTime = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+                // 토큰이 유효하면 최소 1시간 이상 남은 것으로 표시 (실제 만료 시간이 과거일 수 있음)
+                let remainingTime = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+                if (remainingTime <= 0) {
+                    remainingTime = 1; // 토큰이 유효하면 최소 1시간으로 표시
+                }
                 
                 console.log(`✅ 구글 드라이브 자동 인증 성공!`);
                 console.log(`👤 사용자: ${user.displayName} (${user.emailAddress})`);

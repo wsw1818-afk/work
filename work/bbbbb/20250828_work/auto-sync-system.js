@@ -737,6 +737,15 @@
                 return false;
             }
             
+            // 오늘 이미 백업했는지 확인
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const lastBackupDate = localStorage.getItem('lastBackupDate');
+            
+            if (lastBackupDate === today) {
+                console.log('✅ 오늘 이미 백업 완료 - 중복 백업 방지');
+                return true; // 성공으로 처리 (중복 백업 방지)
+            }
+            
             // 현재 모든 데이터 수집
             const backupData = {
                 memos: JSON.parse(localStorage.getItem('calendarMemos') || '[]'),
@@ -758,7 +767,16 @@
             if (typeof window.uploadBackupWithCustomName === 'function') {
                 const result = await window.uploadBackupWithCustomName(fileName, true); // silent=true for auto backup
                 // result에 id나 fileId가 있으면 성공으로 처리
-                return result && (result.success || result.id || result.fileId || result.fileLink);
+                const isSuccess = result && (result.success || result.id || result.fileId || result.fileLink);
+                
+                // 백업 성공 시 오늘 날짜 저장
+                if (isSuccess) {
+                    const today = new Date().toISOString().split('T')[0];
+                    localStorage.setItem('lastBackupDate', today);
+                    console.log(`✅ 백업 성공 - 날짜 기록: ${today}`);
+                }
+                
+                return isSuccess;
             } else if (typeof window.uploadFileToGoogleDrive === 'function') {
                 const result = await window.uploadFileToGoogleDrive(fileName, JSON.stringify(backupData, null, 2), 'application/json');
                 return result && result.id;
@@ -979,7 +997,11 @@
             
             // Google Drive의 기존 백업 함수 사용
             if (typeof window.uploadBackupWithCustomName === 'function') {
-                const fileName = `manual-backup-${new Date().toISOString().split('T')[0]}.json`;
+                // 수동 백업은 시간 정보 포함하여 중복 허용
+                const now = new Date();
+                const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+                const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, ''); // HHMMSS
+                const fileName = `manual-backup-${dateStr}-${timeStr}.json`;
                 const result = await window.uploadBackupWithCustomName(fileName, false); // silent=false for manual backup
                 
                 if (result && (result.success || result.id || result.fileId || result.fileLink)) {
