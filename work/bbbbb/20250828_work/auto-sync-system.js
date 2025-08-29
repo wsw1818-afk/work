@@ -757,7 +757,8 @@
             // Google Drive API를 통해 업로드 (기존 함수 사용)
             if (typeof window.uploadBackupWithCustomName === 'function') {
                 const result = await window.uploadBackupWithCustomName(fileName, true); // silent=true for auto backup
-                return result && (result.success || result.fileId);
+                // result에 id나 fileId가 있으면 성공으로 처리
+                return result && (result.success || result.id || result.fileId || result.fileLink);
             } else if (typeof window.uploadFileToGoogleDrive === 'function') {
                 const result = await window.uploadFileToGoogleDrive(fileName, JSON.stringify(backupData, null, 2), 'application/json');
                 return result && result.id;
@@ -981,11 +982,13 @@
                 const fileName = `manual-backup-${new Date().toISOString().split('T')[0]}.json`;
                 const result = await window.uploadBackupWithCustomName(fileName, false); // silent=false for manual backup
                 
-                if (result && (result.success || result.fileId)) {
+                if (result && (result.success || result.id || result.fileId || result.fileLink)) {
                     lastBackupTime = Date.now();
                     localStorage.setItem('lastBackupTime', lastBackupTime.toString());
                     
-                    showBackupNotification('success', `✅ 수동 백업 완료!\n파일명: ${fileName}\n시간: ${new Date().toLocaleString()}`);
+                    const actualFileName = result.fileName || fileName;
+                    const memoCount = result.memoCount || '';
+                    showBackupNotification('success', `✅ 수동 백업 완료!\n파일명: ${actualFileName}\n메모: ${memoCount}개\n시간: ${new Date().toLocaleString()}`);
                     console.log('✅ 수동 백업 성공:', result);
                 } else {
                     showBackupNotification('error', `❌ 수동 백업 실패: 결과 없음`);
