@@ -143,6 +143,12 @@
      * 토큰 에러 콜백
      */
     function onTokenError(error) {
+        // 자동 갱신 시도 중의 팝업 오류는 조용히 처리
+        if (error.type === 'popup_failed_to_open') {
+            console.warn('자동 갱신 팝업 차단됨 (정상적임) - 사용자가 필요시 수동 갱신');
+            return; // 자동 인증 모드로 전환하지 않음
+        }
+        
         console.error('❌ 토큰 획득 오류:', error);
         
         if (error.type === 'popup_closed' || error.message === 'Popup window closed') {
@@ -575,9 +581,10 @@
             
             // silent 갱신 시도 (팝업 없이)
             try {
+                const currentToken = getSavedToken();
                 tokenClient.requestAccessToken({ 
                     prompt: 'none',  // 팝업 표시 안함
-                    hint: savedToken?.access_token  // 기존 토큰 힌트
+                    hint: currentToken?.access_token  // 기존 토큰 힌트
                 });
             } catch (error) {
                 console.warn('자동 갱신 실패 (정상적임):', error.message);
@@ -785,15 +792,20 @@
             
             window.addEventListener('message', messageListener);
             
-            // 창이 닫혔는지 확인
+            // 창이 닫혔는지 확인 (Cross-Origin-Opener-Policy 오류 방지)
             const checkClosed = setInterval(() => {
-                if (authWindow.closed) {
-                    clearInterval(checkClosed);
-                    const authCodeInput = document.getElementById('authCodeInput');
-                    if (!authCodeInput.value) {
-                        authStatus.innerHTML = '<p style="margin: 0; color: #dc3545;">❌ 인증이 취소되었거나 실패했습니다. 다시 시도하거나 수동으로 코드를 입력하세요.</p>';
+                try {
+                    if (authWindow.closed) {
+                        clearInterval(checkClosed);
+                        const authCodeInput = document.getElementById('authCodeInput');
+                        if (!authCodeInput.value) {
+                            authStatus.innerHTML = '<p style="margin: 0; color: #dc3545;">❌ 인증이 취소되었거나 실패했습니다. 다시 시도하거나 수동으로 코드를 입력하세요.</p>';
+                        }
+                        window.removeEventListener('message', messageListener);
                     }
-                    window.removeEventListener('message', messageListener);
+                } catch (error) {
+                    // Cross-Origin-Opener-Policy 오류는 무시 (정상적인 브라우저 보안 정책)
+                    // 타이머는 계속 실행하여 사용자가 수동으로 코드를 입력할 수 있도록 함
                 }
             }, 1000);
         };
