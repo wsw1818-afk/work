@@ -261,7 +261,7 @@
                         <div style="margin-bottom: 30px;">
                             <h4 style="margin-bottom: 20px; color: #2c3e50; display: flex; align-items: center;">
                                 <span style="margin-right: 10px;">⚙️</span>
-                                동기화 설정
+                                동기화 및 백업 설정
                             </h4>
                             
                             <div style="margin-bottom: 25px;">
@@ -337,6 +337,44 @@
                                     📊 동기화 기록
                                 </button>
                             </div>
+                            
+                            <!-- 자동 백업 설정 섹션 -->
+                            <div style="margin-top: 30px; padding: 20px; background: #f1f8ff; border-radius: 12px; border: 2px solid #e3f2fd;">
+                                <h5 style="margin: 0 0 15px 0; color: #1565c0; display: flex; align-items: center;">
+                                    <span style="margin-right: 8px;">📦</span>
+                                    자동 백업 (5분마다)
+                                </h5>
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="autoBackupEnabled" ${autoSyncSystem && autoSyncSystem.getBackupStatus ? autoSyncSystem.getBackupStatus().autoBackupEnabled : true} 
+                                               style="margin-right: 12px; transform: scale(1.2);">
+                                        <span style="font-weight: 500; color: #2c3e50;">📦 5분마다 자동으로 클라우드에 백업</span>
+                                    </label>
+                                    <div style="margin-top: 8px; font-size: 12px; color: #666; margin-left: 32px;">
+                                        메모나 일정이 변경되면 5분 후 자동으로 Google Drive에 백업됩니다.
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                                    <button onclick="window.performManualBackup()" 
+                                            style="background: #8e44ad; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; flex: 1; min-width: 140px;">
+                                        📦 지금 백업
+                                    </button>
+                                    <button onclick="window.checkCloudBackups()" 
+                                            style="background: #e67e22; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; flex: 1; min-width: 140px;">
+                                        📥 클라우드에서 복원
+                                    </button>
+                                    <button onclick="window.viewBackupStatus()" 
+                                            style="background: #34495e; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; flex: 1; min-width: 140px;">
+                                        📊 백업 상태
+                                    </button>
+                                </div>
+                                
+                                <div id="backupStatus" style="margin-top: 15px; padding: 12px; background: rgba(52, 152, 219, 0.1); border-radius: 8px; font-size: 13px; color: #2980b9; display: none;">
+                                    백업 상태를 확인 중...
+                                </div>
+                            </div>
+                            
                             <div id="syncTestResult" style="padding: 15px; border-radius: 8px; font-size: 14px; font-weight: 500; display: none;"></div>
                         </div>
                     `}
