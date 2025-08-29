@@ -5257,14 +5257,32 @@
             // 모달 컨테이너도 리셋
             memoDetailModal.classList.remove('has-positioned-content');
             
-            // 모든 인라인 스타일 제거
+            // 모든 인라인 스타일 제거 (display와 visibility 제외)
             memoDetailModal.style.position = '';
             memoDetailModal.style.top = '';
             memoDetailModal.style.left = '';
             memoDetailModal.style.width = '';
             memoDetailModal.style.height = '';
-            memoDetailModal.style.visibility = '';
             memoDetailModal.style.zIndex = '';
+            
+            // 디버깅을 위한 최종 상태 로그
+            console.log('📊 메모 상세 모달 최종 상태:', {
+                display: memoDetailModal.style.display,
+                visibility: memoDetailModal.style.visibility,
+                classList: memoDetailModal.classList.toString()
+            });
+            
+            // 강제로 모달 완전 숨기기
+            setTimeout(() => {
+                const modal = document.getElementById('memoDetailModal');
+                if (modal && modal.style.display !== 'block') {
+                    modal.style.setProperty('display', 'none', 'important');
+                    modal.style.setProperty('visibility', 'hidden', 'important');
+                    modal.style.setProperty('opacity', '0', 'important');
+                    modal.style.setProperty('pointer-events', 'none', 'important');
+                    console.log('🔒 메모 상세 모달 강제 숨기기 완료');
+                }
+            }, 100);
             
             currentMemoId = null;
             
