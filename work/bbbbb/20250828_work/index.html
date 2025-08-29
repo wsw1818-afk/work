@@ -5947,24 +5947,34 @@
                 console.log('알람 체크박스 이벤트 등록 완료');
             }
 
-            // 날짜별 메모 모달 X 버튼 이벤트 (한 번만 등록)
-            const closeDateMemoBtn = document.getElementById('closeDateMemo');
-            if (closeDateMemoBtn) {
-                // 기존 이벤트 리스너 제거
-                const newCloseDateMemoBtn = closeDateMemoBtn.cloneNode(true);
-                closeDateMemoBtn.parentNode.replaceChild(newCloseDateMemoBtn, closeDateMemoBtn);
-                
-                // 새로운 이벤트 리스너 추가
-                newCloseDateMemoBtn.addEventListener('click', function(e) {
-                    console.log('🎯 X 버튼 클릭 - 날짜 메모 모달 닫기');
-                    e.stopPropagation();
-                    e.preventDefault();
-                    closeDateMemoModal();
-                });
-                console.log('날짜 메모 X 버튼 이벤트 등록 완료');
-            } else {
-                console.error('❌ 날짜 메모 X 버튼을 찾을 수 없습니다');
-            }
+            // 날짜별 메모 모달 X 버튼 이벤트 - setTimeout으로 지연 실행
+            setTimeout(() => {
+                const closeDateMemoBtn = document.getElementById('closeDateMemo');
+                if (closeDateMemoBtn) {
+                    // onclick 속성으로 직접 설정
+                    closeDateMemoBtn.onclick = function(e) {
+                        console.log('🎯 X 버튼 클릭 - 날짜 메모 모달 닫기 (onclick)');
+                        if (e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }
+                        closeDateMemoModal();
+                        return false;
+                    };
+                    
+                    // addEventListener도 추가 (백업)
+                    closeDateMemoBtn.addEventListener('click', function(e) {
+                        console.log('🎯 X 버튼 클릭 - 날짜 메모 모달 닫기 (addEventListener)');
+                        e.stopPropagation();
+                        e.preventDefault();
+                        closeDateMemoModal();
+                    }, true); // capture 단계에서 처리
+                    
+                    console.log('✅ 날짜 메모 X 버튼 이벤트 등록 완료 (onclick + addEventListener)');
+                } else {
+                    console.error('❌ 날짜 메모 X 버튼을 찾을 수 없습니다');
+                }
+            }, 1000); // 1초 지연 후 등록
 
             const saveDateMemoBtn = document.getElementById('saveDateMemo');
             if (saveDateMemoBtn) {
