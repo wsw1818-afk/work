@@ -695,23 +695,29 @@
                     return;
                 }
                 
-                // 모달이 방금 닫힌 상태면 무시 (재열림 방지)
+                // 모달이 방금 닫힌 상태면 무시하되, 다른 날짜는 허용 (재열림 방지)
+                const selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
                 if (typeof window.modalJustClosed !== 'undefined' && window.modalJustClosed) {
-                    console.log('🔒 unified: 모달이 방금 닫힌 상태 - 재열림 차단:', year, month, date);
-                    return;
+                    // 같은 날짜만 차단하고, 다른 날짜는 허용
+                    if (window.lastClosedModalDate === selectedDate) {
+                        console.log('🔒 unified: 같은 날짜 모달 재열림 차단:', selectedDate);
+                        return;
+                    } else {
+                        console.log('🔄 unified: 다른 날짜이므로 모달 열림 허용:', selectedDate);
+                        window.modalJustClosed = false; // 다른 날짜면 차단 해제
+                    }
                 }
                 
                 // 이미 같은 날짜로 모달이 열려있으면 실행하지 않음
-                const selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
                 const dateModal = document.getElementById('dateMemoModal');
                 if (dateModal && dateModal.style.display === 'block' && MemoSystem.selectedDate === selectedDate) {
                     console.log('📅 이미 같은 날짜 모달이 열려있음:', selectedDate);
                     return;
                 }
                 
-                // 초기화 중 자동 열림 방지
-                if (window._preventAutoOpenDateModal) {
-                    console.log('🚫 초기화 중 날짜 메모창 자동 열림 차단');
+                // 초기화 중 자동 열림 방지 (사용자 클릭은 허용)
+                if (window._preventAutoOpenDateModal && !window._userClickOverride) {
+                    console.log('🚫 초기화 중 자동 열림 차단');
                     return;
                 }
                 
@@ -911,7 +917,7 @@
             window._preventAutoOpenDateModal = false;
             window.modalJustClosed = false; // 모달 재열림 차단도 함께 해제
             console.log('✅ 날짜 메모창 자동 열림 방지 해제');
-        }, 2000); // 2초 후 플래그 해제
+        }, 500); // 0.5초로 단축하여 빠른 사용자 상호작용 허용
         
         // 데이터 로드
         loadMemosFromStorage();

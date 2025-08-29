@@ -2366,8 +2366,16 @@
                         e.stopImmediatePropagation();
                         e.preventDefault();
                         
+                        // 사용자 클릭 플래그 설정 (차단 로직 우회)
+                        window._userClickOverride = true;
+                        
                         // 지연 없이 즉시 모달 열기 (지연으로 인한 이벤트 누적 방지)
                         openDateMemoModal(year, month, date);
+                        
+                        // 플래그 즉시 해제
+                        setTimeout(() => {
+                            window._userClickOverride = false;
+                        }, 100);
                     }
                 });
                 
@@ -5622,6 +5630,7 @@
             // 닫힌 후 보호 모드 활성화 (재열림 방지)
             modalJustClosed = true;
             window.modalJustClosed = true; // 전역 변수도 업데이트
+            window.lastClosedModalDate = selectedDate; // 닫힌 날짜 기록
             
             // 이전 보호 타이머 정리
             if (closeProtectionTimeout) {
