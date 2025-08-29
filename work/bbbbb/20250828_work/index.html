@@ -5429,8 +5429,10 @@
         }
 
         function resetDateMemoLock() {
+            console.log('🔄 resetDateMemoLock 호출됨, isDateMemosUnlocked:', isDateMemosUnlocked);
             if (isDateMemosUnlocked) {
                 isDateMemosUnlocked = false;
+                console.log('🔒 HTML 잠금 상태 설정: 잠김');
                 
                 // unified 시스템의 잠금 상태도 동기화
                 if (typeof window.MemoSystem !== 'undefined' && window.MemoSystem.locks) {
@@ -5445,7 +5447,10 @@
                     toggle.classList.remove('unlocked');
                     icon.textContent = '🔒';
                     text.textContent = '잠금';
+                    console.log('🔒 UI 잠금 버튼 상태 업데이트 완료');
                 }
+            } else {
+                console.log('⚠️ 이미 잠겨있음 - 잠금 리셋 불필요');
             }
         }
 
