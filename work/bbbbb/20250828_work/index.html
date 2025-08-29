@@ -1919,7 +1919,6 @@
         </div>
 
         <div class="action-bar">
-            <button class="action-btn" id="noticeBtn">📢 공지 쓰기</button>
             <button class="action-btn" id="createBtn">➕ 일정 추가</button>
             <button class="action-btn" id="memoBtn">📝 스티커</button>
             <button class="action-btn" id="excelBtn">📊 엑셀</button>
@@ -1956,35 +1955,6 @@
 
     <button class="theme-toggle" id="themeToggle">🌙</button>
 
-    <!-- 공지 쓰기 모달 -->
-    <div class="modal" id="noticeModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">📢 공지 쓰기</h2>
-                <button class="modal-close" onclick="closeModal('noticeModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">공지 제목</label>
-                    <input type="text" class="form-input" placeholder="공지 제목을 입력하세요">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">공지 내용</label>
-                    <textarea class="form-textarea" placeholder="공지 내용을 입력하세요"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">중요도</label>
-                    <select class="form-select">
-                        <option>일반</option>
-                        <option>중요</option>
-                        <option>긴급</option>
-                    </select>
-                </div>
-                <button class="btn-primary" onclick="saveNotice()">공지 등록</button>
-                <button class="btn-secondary" onclick="closeModal('noticeModal')">취소</button>
-            </div>
-        </div>
-    </div>
 
     <!-- 생성 모드 모달 -->
     <div class="modal" id="createModal">
@@ -2428,11 +2398,6 @@
             }
         }
 
-        // 공지 저장
-        function saveNotice() {
-            alert('공지가 등록되었습니다! 📢');
-            closeModal('noticeModal');
-        }
 
         // 일정 데이터 저장소
         let schedules = JSON.parse(localStorage.getItem('calendarSchedules') || '[]');
@@ -5797,17 +5762,6 @@
         function initButtons() {
             console.log('버튼 초기화 시작...');
             
-            // 공지 쓰기
-            const noticeBtn = document.getElementById('noticeBtn');
-            if (noticeBtn) {
-                noticeBtn.addEventListener('click', function() {
-                    console.log('공지 버튼 클릭됨');
-                    openModal('noticeModal');
-                });
-                console.log('공지 버튼 이벤트 등록 완료');
-            } else {
-                console.error('공지 버튼을 찾을 수 없습니다');
-            }
 
             // 생성 모드
             const createBtn = document.getElementById('createBtn');
