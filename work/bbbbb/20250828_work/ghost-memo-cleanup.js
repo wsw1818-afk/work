@@ -69,11 +69,28 @@
             console.log(`🧹 ${listId}에서 ${removedCount}개 유령 메모 제거됨`);
         }
 
-        // 메모가 모두 사라졌으면 빈 상태 메시지 표시
+        // 메모가 모두 사라졌는지 확인 - 실제 localStorage와 비교
         const remainingItems = listElement.querySelectorAll('.memo-item');
         if (remainingItems.length === 0) {
-            const emptyMessage = '<div style="text-align: center; color: #999; padding: 20px;">저장된 메모가 없습니다</div>';
-            listElement.innerHTML = emptyMessage;
+            // localStorage에서 실제 메모 개수 확인
+            let actualMemos = [];
+            try {
+                const stored = localStorage.getItem('calendarMemos');
+                if (stored) {
+                    actualMemos = JSON.parse(stored);
+                }
+            } catch (error) {
+                console.error('❌ localStorage 읽기 실패:', error);
+            }
+            
+            // 실제로 메모가 없을 때만 빈 메시지 표시
+            if (actualMemos.length === 0) {
+                const emptyMessage = '<div style="text-align: center; color: #999; padding: 20px;">저장된 메모가 없습니다</div>';
+                listElement.innerHTML = emptyMessage;
+                console.log('✅ 실제로 메모가 없어서 빈 메시지 표시');
+            } else {
+                console.log('⚠️ 실제로는 메모가 있음 - 빈 메시지 표시하지 않음:', actualMemos.length, '개');
+            }
         }
     }
 

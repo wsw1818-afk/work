@@ -129,9 +129,24 @@
 
         console.log('📋 일반 메모 리스트 업데이트:', memos.length, '개');
 
-        if (memos.length === 0) {
+        // localStorage에서도 확인하여 실제로 빈지 체크
+        let actualMemos = memos;
+        try {
+            const stored = localStorage.getItem('calendarMemos');
+            if (stored) {
+                actualMemos = JSON.parse(stored);
+            }
+        } catch (error) {
+            console.error('localStorage 확인 실패:', error);
+        }
+
+        if (actualMemos.length === 0) {
             memoList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">저장된 메모가 없습니다</div>';
             return;
+        } else if (memos.length === 0 && actualMemos.length > 0) {
+            console.log('⚠️ window.memos는 비어있지만 localStorage에는 메모가 있음 - 동기화 시도');
+            window.memos = actualMemos;
+            memos = actualMemos;
         }
 
         const isMemosUnlocked = window.isMemosUnlocked || false;
@@ -170,9 +185,23 @@
 
         console.log('📌 스티커 메모 리스트 업데이트:', memos.length, '개');
 
-        if (memos.length === 0) {
+        // localStorage에서도 확인하여 실제로 빈지 체크
+        let actualMemos = memos;
+        try {
+            const stored = localStorage.getItem('calendarMemos');
+            if (stored) {
+                actualMemos = JSON.parse(stored);
+            }
+        } catch (error) {
+            console.error('localStorage 확인 실패:', error);
+        }
+
+        if (actualMemos.length === 0) {
             stickyMemoList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">저장된 메모가 없습니다</div>';
             return;
+        } else if (memos.length === 0 && actualMemos.length > 0) {
+            console.log('⚠️ window.memos는 비어있지만 localStorage에는 메모가 있음 - 동기화 시도');
+            memos = actualMemos;
         }
 
         const isMemosUnlocked = window.isMemosUnlocked || false;
@@ -215,8 +244,19 @@
             return;
         }
 
+        // localStorage에서도 확인하여 실제로 빈지 체크
+        let actualMemos = allMemos;
+        try {
+            const stored = localStorage.getItem('calendarMemos');
+            if (stored) {
+                actualMemos = JSON.parse(stored);
+            }
+        } catch (error) {
+            console.error('localStorage 확인 실패:', error);
+        }
+
         // 선택된 날짜의 메모들만 필터링
-        const dateMemos = allMemos.filter(memo => memo.date === selectedDate);
+        const dateMemos = actualMemos.filter(memo => memo.date === selectedDate);
         
         console.log('📅 날짜별 메모 리스트 업데이트:', dateMemos.length, '개 (날짜:', selectedDate, ')');
 

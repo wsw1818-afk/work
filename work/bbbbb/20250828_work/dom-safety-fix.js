@@ -26,8 +26,20 @@
                 return;
             }
 
-            // 메모 데이터 확인
-            const memos = window.memos || [];
+            // localStorage에서 직접 메모 데이터 확인
+            let memos = [];
+            try {
+                const stored = localStorage.getItem('calendarMemos');
+                if (stored) {
+                    memos = JSON.parse(stored);
+                } else {
+                    memos = window.memos || [];
+                }
+            } catch (error) {
+                console.error('localStorage 읽기 실패:', error);
+                memos = window.memos || [];
+            }
+            
             console.log('현재 메모 개수:', memos.length);
             
             if (memos.length === 0) {
@@ -82,7 +94,20 @@
                 return;
             }
 
-            const memos = window.memos || [];
+            // localStorage에서 직접 메모 데이터 확인
+            let memos = [];
+            try {
+                const stored = localStorage.getItem('calendarMemos');
+                if (stored) {
+                    memos = JSON.parse(stored);
+                } else {
+                    memos = window.memos || [];
+                }
+            } catch (error) {
+                console.error('localStorage 읽기 실패:', error);
+                memos = window.memos || [];
+            }
+            
             const isMemosUnlocked = window.isMemosUnlocked || false;
             
             if (memos.length === 0) {
@@ -139,7 +164,20 @@
                 return;
             }
 
-            const memos = window.memos || [];
+            // localStorage에서 직접 메모 데이터 확인
+            let memos = [];
+            try {
+                const stored = localStorage.getItem('calendarMemos');
+                if (stored) {
+                    memos = JSON.parse(stored);
+                } else {
+                    memos = window.memos || [];
+                }
+            } catch (error) {
+                console.error('localStorage 읽기 실패:', error);
+                memos = window.memos || [];
+            }
+            
             const dateMemos = memos.filter(memo => memo.date === selectedDate);
             const isDateMemosUnlocked = window.isDateMemosUnlocked || false;
             
