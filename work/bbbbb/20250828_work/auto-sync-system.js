@@ -755,14 +755,17 @@
             const fileName = customFileName || `calendar-backup-${new Date().toISOString().split('T')[0]}.json`;
             
             // Google Drive API를 통해 업로드 (기존 함수 사용)
-            if (typeof window.uploadFileToGoogleDrive === 'function') {
+            if (typeof window.uploadBackupFile === 'function') {
+                const result = await window.uploadBackupFile(fileName, JSON.stringify(backupData, null, 2));
+                return result && result.success;
+            } else if (typeof window.uploadFileToGoogleDrive === 'function') {
                 const result = await window.uploadFileToGoogleDrive(fileName, JSON.stringify(backupData, null, 2), 'application/json');
                 return result && result.id;
             } else if (typeof window.uploadToGoogleDrive === 'function') {
                 const result = await window.uploadToGoogleDrive(fileName, JSON.stringify(backupData, null, 2));
                 return result.success;
             } else {
-                console.log('❌ Google Drive 업로드 함수 없음');
+                console.log('❌ Google Drive 업로드 함수 없음 - uploadBackupFile 함수를 확인하세요');
                 return false;
             }
             

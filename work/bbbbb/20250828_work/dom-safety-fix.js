@@ -325,7 +325,7 @@
                 element = document.createElement(type);
                 element.id = id;
                 element.className = className;
-                element.innerHTML = `<div style="text-align: center; color: #999; padding: 20px;">${context} 로딩 중...</div>`;
+                element.innerHTML = ''; // 로딩 메시지 제거
                 
                 // 적절한 위치에 추가 (body의 끝에 임시로)
                 document.body.appendChild(element);
