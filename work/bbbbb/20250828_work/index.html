@@ -3891,7 +3891,9 @@
         // IndexedDB에서 첨부파일 가져오기
         async function getAttachmentFromDB(attachmentId) {
             try {
+                console.log('🔍 IndexedDB에서 첨부파일 조회 시작. ID:', attachmentId);
                 if (!attachmentDB) {
+                    console.log('📋 IndexedDB 초기화 중...');
                     await initAttachmentDB();
                 }
                 
@@ -3903,21 +3905,32 @@
                     request.onsuccess = () => {
                         const attachment = request.result;
                         if (attachment) {
-                            console.log('✅ IndexedDB에서 첨부파일 로드:', attachment.fileName);
+                            console.log('✅ IndexedDB에서 첨부파일 로드 성공:', {
+                                id: attachmentId,
+                                fileName: attachment.fileName,
+                                fileSize: attachment.fileSize,
+                                dataExists: !!attachment.data,
+                                dataLength: attachment.data?.length
+                            });
                             resolve(attachment);
                         } else {
-                            console.warn('⚠️ 첨부파일을 찾을 수 없음:', attachmentId);
+                            console.warn('⚠️ IndexedDB에서 첨부파일을 찾을 수 없음. ID:', attachmentId);
+                            // 모든 ID 목록 확인
+                            const allRequest = store.getAllKeys();
+                            allRequest.onsuccess = () => {
+                                console.log('📋 IndexedDB에 저장된 모든 ID:', allRequest.result);
+                            };
                             resolve(null);
                         }
                     };
                     
                     request.onerror = () => {
-                        console.error('❌ IndexedDB 조회 실패:', request.error);
+                        console.error('❌ IndexedDB 조회 실패. ID:', attachmentId, 'Error:', request.error);
                         reject(request.error);
                     };
                 });
             } catch (error) {
-                console.error('IndexedDB 조회 중 오류:', error);
+                console.error('❌ IndexedDB 조회 중 오류. ID:', attachmentId, 'Error:', error);
                 throw error;
             }
         }
@@ -4592,45 +4605,70 @@
 
         async function downloadAttachment(fileName, dataOrId, type, useIndexedDB = false) {
             try {
+                console.log('🔽 다운로드 시작:', {fileName, dataOrId, type, useIndexedDB});
                 let data = dataOrId;
                 
                 // IndexedDB에서 파일 데이터 가져오기
                 if (useIndexedDB && typeof dataOrId === 'number') {
-                    console.log('💾 IndexedDB에서 파일 로드 중...', dataOrId);
+                    console.log('💾 IndexedDB에서 파일 로드 중... ID:', dataOrId);
                     const attachment = await getAttachmentFromDB(dataOrId);
+                    console.log('💾 IndexedDB 조회 결과:', attachment ? '찾음' : '없음');
                     if (!attachment) {
-                        alert('첨부파일을 찾을 수 없습니다.');
+                        console.error('❌ IndexedDB에서 첨부파일 찾지 못함. ID:', dataOrId);
+                        alert(`첨부파일을 찾을 수 없습니다. (ID: ${dataOrId})`);
                         return;
                     }
                     data = attachment.data;
                     fileName = attachment.fileName;
                     type = attachment.fileType;
+                    console.log('✅ IndexedDB에서 파일 정보 가져옴:', {fileName, type, dataLength: data?.length});
                 }
                 
+                // 데이터 유효성 검사
+                if (!data) {
+                    console.error('❌ 파일 데이터가 없습니다');
+                    alert('파일 데이터가 없습니다.');
+                    return;
+                }
+                
+                console.log('🔄 Base64 데이터를 Blob으로 변환 시작...');
                 // Base64 데이터를 Blob으로 변환
-                const byteCharacters = atob(data.split(',')[1]);
+                const base64Data = data.includes(',') ? data.split(',')[1] : data;
+                console.log('📊 Base64 데이터 길이:', base64Data.length);
+                
+                const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
                 }
                 const byteArray = new Uint8Array(byteNumbers);
                 const blob = new Blob([byteArray], { type: type });
+                console.log('✅ Blob 생성 완료:', {size: blob.size, type: blob.type});
                 
                 // 다운로드 링크 생성 및 클릭
+                console.log('🔗 다운로드 링크 생성 중...');
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
                 a.download = fileName;
                 document.body.appendChild(a);
+                console.log('👆 다운로드 링크 클릭 실행...');
                 a.click();
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 
                 console.log('✅ 파일 다운로드 완료:', fileName);
             } catch (error) {
-                console.error('파일 다운로드 오류:', error);
-                alert('파일 다운로드 중 오류가 발생했습니다.');
+                console.error('❌ 파일 다운로드 오류 상세:', {
+                    error: error.message,
+                    stack: error.stack,
+                    fileName, 
+                    dataOrId, 
+                    type, 
+                    useIndexedDB
+                });
+                alert(`파일 다운로드 중 오류가 발생했습니다.\n오류: ${error.message}`);
             }
         }
 
