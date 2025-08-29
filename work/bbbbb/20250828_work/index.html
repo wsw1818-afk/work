@@ -5365,7 +5365,21 @@
             const memo = memos.find(m => m.id === currentMemoId);
             if (!memo) return;
             
+            // 잠금 상태 확인 - 날짜별 메모인지 일반 메모인지 구분
+            const currentDate = selectedDate; // 현재 선택된 날짜
+            const isDateMemo = memo.date === currentDate; // 현재 날짜의 메모인지 확인
+            
+            if (isDateMemo && !isDateMemosUnlocked) {
+                alert('🔒 날짜별 메모 삭제가 잠겨있습니다!\n\n먼저 🔓 잠금을 해제하세요.');
+                return;
+            } else if (!isDateMemo && !isMemosUnlocked) {
+                alert('🔒 메모 삭제가 잠겨있습니다!\n\n먼저 🔓 잠금을 해제하세요.');
+                return;
+            }
+            
+            // 잠금이 해제된 경우에만 확인 후 삭제
             if (confirm(`"${memo.title}" 메모를 삭제하시겠습니까?`)) {
+                console.log('🗑️ 메모 상세에서 삭제 진행:', memo.title, '(잠금 해제 상태)');
                 deleteMemo(currentMemoId);
                 closeMemoDetail();
                 updateCalendarDisplay();

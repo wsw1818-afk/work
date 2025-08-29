@@ -43,15 +43,39 @@
             }
         };
 
-        // 2. 메모 상세 모달의 삭제 버튼 - 확인 창 없이 즉시 삭제
+        // 2. 메모 상세 모달의 삭제 버튼 - 잠금 상태 확인 후 즉시 삭제
         window.updateDetailModalDeleteButton = function() {
             const deleteBtn = document.getElementById('deleteMemoBtn');
             if (deleteBtn) {
                 deleteBtn.onclick = function() {
                     if (window.currentMemoId) {
-                        console.log('🗑️ 상세 모달에서 즉시 삭제, ID:', window.currentMemoId);
+                        console.log('🗑️ 상세 모달에서 즉시 삭제 요청, ID:', window.currentMemoId);
                         
-                        // 확인 창 없이 바로 삭제
+                        // 메모 정보 가져오기
+                        const memos = window.memos || [];
+                        const memo = memos.find(m => m.id == window.currentMemoId);
+                        if (!memo) {
+                            console.error('메모를 찾을 수 없습니다:', window.currentMemoId);
+                            return;
+                        }
+                        
+                        // 잠금 상태 확인
+                        const currentDate = window.selectedDate;
+                        const isDateMemo = memo.date === currentDate;
+                        const isMemosLocked = !window.isMemosUnlocked;
+                        const isDateMemosLocked = !window.isDateMemosUnlocked;
+                        
+                        if (isDateMemo && isDateMemosLocked) {
+                            alert('🔒 날짜별 메모 삭제가 잠겨있습니다!\n\n먼저 🔓 잠금을 해제하세요.');
+                            return;
+                        } else if (!isDateMemo && isMemosLocked) {
+                            alert('🔒 메모 삭제가 잠겨있습니다!\n\n먼저 🔓 잠금을 해제하세요.');
+                            return;
+                        }
+                        
+                        console.log('🔓 잠금 해제 상태 - 즉시 삭제 진행:', memo.title);
+                        
+                        // 잠금이 해제된 경우에만 즉시 삭제
                         if (window.deleteMemo) {
                             window.deleteMemo(window.currentMemoId);
                             
@@ -71,7 +95,7 @@
                         }
                     }
                 };
-                console.log('✅ 상세 모달 삭제 버튼 즉시 삭제로 업데이트');
+                console.log('✅ 상세 모달 삭제 버튼 잠금 확인 후 즉시 삭제로 업데이트');
             }
         };
 

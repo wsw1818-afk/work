@@ -221,10 +221,36 @@
         window.deleteMemo = function(id) {
             console.log('🗑️ deleteMemo 호출됨 (안전한 버전), ID:', id);
             
-            // 메모 데이터 확인 및 삭제
+            // 메모 데이터 확인
             const memos = window.memos || [];
-            const beforeCount = memos.length;
+            const memo = memos.find(m => m.id == id);
             
+            if (!memo) {
+                console.warn('⚠️ 삭제할 메모를 찾지 못했습니다. ID:', id);
+                return;
+            }
+            
+            // 잠금 상태 확인 (메모 상세 모달에서 호출되는 경우에만)
+            const currentDate = window.selectedDate;
+            const isDateMemo = memo.date === currentDate;
+            const isMemosLocked = !window.isMemosUnlocked;
+            const isDateMemosLocked = !window.isDateMemosUnlocked;
+            
+            // 메모 상세 모달에서 호출된 경우 (currentMemoId가 설정된 경우)
+            if (window.currentMemoId == id) {
+                if (isDateMemo && isDateMemosLocked) {
+                    console.log('🔒 날짜별 메모 삭제 차단 (잠금 상태)');
+                    alert('🔒 날짜별 메모 삭제가 잠겨있습니다!\n\n먼저 🔓 잠금을 해제하세요.');
+                    return;
+                } else if (!isDateMemo && isMemosLocked) {
+                    console.log('🔒 일반 메모 삭제 차단 (잠금 상태)');
+                    alert('🔒 메모 삭제가 잠겨있습니다!\n\n먼저 🔓 잠금을 해제하세요.');
+                    return;
+                }
+            }
+            
+            // 메모 삭제 실행
+            const beforeCount = memos.length;
             window.memos = memos.filter(m => m.id != id); // != 사용 (타입 변환 허용)
             const afterCount = window.memos.length;
             
