@@ -5209,6 +5209,12 @@
             }
             
             // 상세 모달 표시 - 전체 화면 오버레이 강제 적용
+            // 먼저 기존 강제 숨기기 스타일들 제거
+            memoDetailModal.style.removeProperty('display');
+            memoDetailModal.style.removeProperty('visibility');
+            memoDetailModal.style.removeProperty('opacity');
+            memoDetailModal.style.removeProperty('pointer-events');
+            
             memoDetailModal.style.display = 'block';
             memoDetailModal.style.visibility = 'visible';
             memoDetailModal.style.position = 'fixed';
@@ -5217,6 +5223,8 @@
             memoDetailModal.style.width = '100vw';
             memoDetailModal.style.height = '100vh';
             memoDetailModal.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+            
+            console.log('📋 메모 상세 모달 표시 - 강제 스타일 제거 후 표시');
             
             // 부드러운 열기 애니메이션
             memoDetailModal.classList.add('opening');
@@ -5275,7 +5283,7 @@
             // 강제로 모달 완전 숨기기
             setTimeout(() => {
                 const modal = document.getElementById('memoDetailModal');
-                if (modal && modal.style.display !== 'block') {
+                if (modal && modal.style.display === 'none') {
                     modal.style.setProperty('display', 'none', 'important');
                     modal.style.setProperty('visibility', 'hidden', 'important');
                     modal.style.setProperty('opacity', '0', 'important');
