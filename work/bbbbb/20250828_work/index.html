@@ -4871,31 +4871,6 @@
                             }
                             startModalDrag(e, modalContent);
                         });
-                        
-                        // X 버튼에만 직접 이벤트 리스너 추가 (중복 방지)
-                        const closeBtn = header.querySelector('#closeDateMemo');
-                        if (closeBtn && !closeBtn.dataset.listenerAdded) {
-                            closeBtn.dataset.listenerAdded = 'true';
-                            closeBtn.addEventListener('click', function(e) {
-                                console.log('🎯 X 버튼 클릭 감지 - 창 닫기');
-                                e.stopPropagation();
-                                e.preventDefault();
-                                
-                                // 중복 호출 방지
-                                if (closeBtn.dataset.clicking === 'true') {
-                                    console.log('⚠️ X 버튼 중복 클릭 무시');
-                                    return;
-                                }
-                                
-                                closeBtn.dataset.clicking = 'true';
-                                closeDateMemoModal();
-                                
-                                // 500ms 후 플래그 해제
-                                setTimeout(() => {
-                                    closeBtn.dataset.clicking = 'false';
-                                }, 500);
-                            });
-                        }
                     }
                 }
             });
@@ -5954,8 +5929,17 @@
                 console.log('알람 체크박스 이벤트 등록 완료');
             }
 
-            // 날짜별 메모 모달 닫기 버튼 - 헤더 이벤트에서 이미 처리하므로 제거
-            console.log('날짜 메모 닫기 버튼은 헤더 이벤트에서 처리됨');
+            // 날짜별 메모 모달 X 버튼 이벤트 (한 번만 등록)
+            const closeDateMemoBtn = document.getElementById('closeDateMemo');
+            if (closeDateMemoBtn) {
+                closeDateMemoBtn.addEventListener('click', function(e) {
+                    console.log('🎯 X 버튼 클릭 - 모달 닫기');
+                    e.stopPropagation();
+                    e.preventDefault();
+                    closeDateMemoModal();
+                });
+                console.log('날짜 메모 X 버튼 이벤트 등록 완료');
+            }
 
             const saveDateMemoBtn = document.getElementById('saveDateMemo');
             if (saveDateMemoBtn) {
