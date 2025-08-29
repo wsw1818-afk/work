@@ -5749,10 +5749,15 @@
             
             // 첨부파일 처리 - IndexedDB의 임시 ID를 실제 메모 ID로 업데이트
             if (dateMemoAttachments.length > 0) {
-                memo.attachments = [...dateMemoAttachments];
+                // 첨부파일 배열 복사 (참조가 아닌 깊은 복사)
+                memo.attachments = [];
                 
                 // IndexedDB에 저장된 파일들의 memoId 업데이트
-                for (const attachment of dateMemoAttachments) {
+                for (let i = 0; i < dateMemoAttachments.length; i++) {
+                    const attachment = dateMemoAttachments[i];
+                    // 첨부파일 정보 복사
+                    const attachmentCopy = {...attachment};
+                    
                     if (attachment.useIndexedDB && attachment.indexedDbId) {
                         try {
                             // IndexedDB에서 파일 가져오기
@@ -5767,10 +5772,14 @@
                                     type: dbAttachment.fileType,
                                     data: dbAttachment.data
                                 }, memoId);
-                                // 메모의 첨부파일 정보 업데이트
-                                attachment.indexedDbId = updatedAttachment.id;
+                                
+                                // 이전 ID 저장
+                                const oldId = attachment.indexedDbId;
+                                // 복사본의 첨부파일 ID 업데이트
+                                attachmentCopy.indexedDbId = updatedAttachment.id;
+                                
                                 console.log('✅ 첨부파일 ID 업데이트 완료:', {
-                                    이전ID: attachment.indexedDbId,
+                                    이전ID: oldId,
                                     새ID: updatedAttachment.id,
                                     파일명: dbAttachment.fileName
                                 });
@@ -5779,6 +5788,9 @@
                             console.error('첨부파일 ID 업데이트 실패:', error);
                         }
                     }
+                    
+                    // 업데이트된 첨부파일 정보를 메모에 추가
+                    memo.attachments.push(attachmentCopy);
                 }
             }
 
