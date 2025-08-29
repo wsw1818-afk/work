@@ -5121,13 +5121,30 @@
             
             window._openingMemoDetail = true;
             
-            // unified-memo-system 데이터 우선 사용, 없으면 기존 memos 사용
-            let memo = null;
-            if (window.MemoSystem && window.MemoSystem.data) {
+            // 최신 메모 데이터를 localStorage에서 직접 로드 (첨부파일 ID 동기화를 위해)
+            console.log('🔄 최신 메모 데이터 로드 시작...');
+            let allMemos = [];
+            try {
+                const storedMemos = localStorage.getItem('calendarMemos');
+                if (storedMemos) {
+                    allMemos = JSON.parse(storedMemos);
+                    console.log('✅ localStorage에서 메모 로드 완료:', allMemos.length, '개');
+                }
+            } catch (error) {
+                console.error('❌ localStorage에서 메모 로드 실패:', error);
+            }
+            
+            // 최신 데이터에서 해당 메모 찾기
+            let memo = allMemos.find(m => m.id == id);
+            
+            // 최신 데이터에 없으면 기존 데이터에서 찾기 (폴백)
+            if (!memo && window.MemoSystem && window.MemoSystem.data) {
                 memo = window.MemoSystem.data.find(m => m.id == id);
+                console.log('⚠️ localStorage에서 찾지 못해 MemoSystem에서 찾음');
             }
             if (!memo) {
                 memo = memos.find(m => m.id == id);
+                console.log('⚠️ MemoSystem에서도 찾지 못해 memos에서 찾음');
             }
             
             if (!memo) {
@@ -5150,17 +5167,25 @@
                 bodyElement.textContent = memo.content;
             }
             
-            // 첨부파일 표시
+            // 첨부파일 표시 (최신 데이터 기준)
             const attachmentContainer = document.getElementById('memoDetailAttachments');
             if (attachmentContainer) {
                 if (memo.attachments && memo.attachments.length > 0) {
                     attachmentContainer.style.display = 'block';
                     const attachmentList = attachmentContainer.querySelector('.attachment-list');
                     if (attachmentList) {
-                        attachmentList.innerHTML = memo.attachments.map(attachment => {
+                        console.log('📎 첨부파일 표시 시작:', memo.attachments.length, '개');
+                        attachmentList.innerHTML = memo.attachments.map((attachment, index) => {
                             const useIndexedDB = attachment.useIndexedDB || attachment.indexedDbId;
                             const dataOrId = useIndexedDB ? attachment.indexedDbId : attachment.data;
                             const storageIcon = useIndexedDB ? '💾' : '📎';
+                            
+                            console.log(`📎 첨부파일 ${index + 1}:`, {
+                                name: attachment.name,
+                                useIndexedDB,
+                                indexedDbId: attachment.indexedDbId,
+                                dataOrId
+                            });
                             
                             return `
                             <div class="attachment-item">
@@ -5175,9 +5200,11 @@
                                 </button>
                             </div>
                         `}).join('');
+                        console.log('✅ 첨부파일 UI 생성 완료');
                     }
                 } else {
                     attachmentContainer.style.display = 'none';
+                    console.log('📎 첨부파일 없음 - 컨테이너 숨김');
                 }
             }
             
@@ -5742,6 +5769,11 @@
                                 }, memoId);
                                 // 메모의 첨부파일 정보 업데이트
                                 attachment.indexedDbId = updatedAttachment.id;
+                                console.log('✅ 첨부파일 ID 업데이트 완료:', {
+                                    이전ID: attachment.indexedDbId,
+                                    새ID: updatedAttachment.id,
+                                    파일명: dbAttachment.fileName
+                                });
                             }
                         } catch (error) {
                             console.error('첨부파일 ID 업데이트 실패:', error);
@@ -5760,8 +5792,20 @@
             
             clearDateMemoForm();
             clearAttachments('dateMemoAttachmentList', dateMemoAttachments);
-            if (window.displayDateMemos) window.displayDateMemos();
+            
+            // 첨부파일 ID 업데이트 후 UI 강제 새로고침
+            console.log('🔄 메모 저장 완료 - UI 강제 새로고침 시작');
+            if (window.displayDateMemos) {
+                window.displayDateMemos();
+                console.log('✅ displayDateMemos 호출 완료');
+            }
             updateCalendarDisplay(); // 달력 표시 업데이트
+            
+            // 통합 시스템 UI 새로고침 (첨부파일 ID 반영을 위해)
+            if (typeof window.MemoSystem !== 'undefined' && window.MemoSystem.refreshAllUI) {
+                window.MemoSystem.refreshAllUI();
+                console.log('✅ 통합 시스템 UI 새로고침 완료');
+            }
             
             // alert(`📝 ${selectedDate} 메모가 저장되었습니다!`); // 메시지 제거
         }
