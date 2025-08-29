@@ -5561,19 +5561,20 @@
             // 즉시 닫기 (애니메이션 제거)
             dateMemoModal.style.transition = 'none';
             dateMemoModal.style.display = 'none';
+            dateMemoModal.style.visibility = 'hidden'; // visibility를 명시적으로 hidden 설정
             dateMemoModal.classList.remove('closing');
+            dateMemoModal.classList.remove('opening'); // opening 클래스도 제거
             
             // 모달 컨테이너도 리셋
             dateMemoModal.classList.remove('has-positioned-content');
             
-            // 모든 인라인 스타일 제거
+            // 모든 인라인 스타일 제거 (display와 visibility 제외)
             dateMemoModal.style.position = '';
             dateMemoModal.style.top = '';
             dateMemoModal.style.left = '';
             dateMemoModal.style.width = '';
             dateMemoModal.style.height = '';
             dateMemoModal.style.backgroundColor = '';
-            dateMemoModal.style.visibility = '';
             
             clearDateMemoForm();
             selectedDate = null;
@@ -5593,11 +5594,24 @@
             }
             
             console.log('🔒 모달 닫힌 후 재열림 보호 활성화 (1.5초)');
+            console.log('📊 모달 최종 상태:', {
+                display: dateMemoModal.style.display,
+                visibility: dateMemoModal.style.visibility,
+                classList: dateMemoModal.classList.toString()
+            });
             
             closeProtectionTimeout = setTimeout(() => {
                 modalJustClosed = false;
                 window.modalJustClosed = false; // 전역 변수도 업데이트
                 console.log('✅ 모달 재열림 보호 해제');
+                
+                // 보호 해제 시점에도 모달 상태 확인
+                const modal = document.getElementById('dateMemoModal');
+                if (modal && modal.style.display !== 'none') {
+                    console.error('⚠️ 경고: 모달이 다시 표시됨!', modal.style.display);
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                }
             }, 1500); // 1.5초간 재열림 방지 (3초는 너무 길어서 단축)
             
             console.log('✅ 날짜 메모 모달 닫기 완료 - 플래그 해제');
