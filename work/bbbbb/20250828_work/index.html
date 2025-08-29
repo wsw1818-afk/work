@@ -1298,6 +1298,14 @@
             user-select: none !important;
         }
         
+        /* 메모 상세 모달 X 버튼 특별 처리 */
+        #closeMemoDetail {
+            pointer-events: auto !important;
+            z-index: 1000001 !important;
+            cursor: pointer !important;
+            user-select: none !important;
+        }
+        
         /* 메모 상세 모달은 더 높은 z-index */
         #memoDetailModal {
             z-index: 999999 !important;
@@ -5243,6 +5251,7 @@
             
             memoDetailModal.style.transition = 'none';
             memoDetailModal.style.display = 'none';
+            memoDetailModal.style.visibility = 'hidden'; // visibility도 hidden으로 설정
             memoDetailModal.classList.remove('closing', 'opening');
             
             // 모달 컨테이너도 리셋
@@ -5922,16 +5931,35 @@
                 console.log('메모 저장 버튼 이벤트 등록 완료');
             }
 
-            // 메모 상세보기 모달 이벤트
+            // 메모 상세보기 모달 X 버튼 이벤트 - 강화된 버전
             const closeMemoDetailBtn = document.getElementById('closeMemoDetail');
             if (closeMemoDetailBtn) {
-                closeMemoDetailBtn.addEventListener('click', function(e) {
-                    console.log('🔴 메모 상세 닫기 버튼 클릭됨');
-                    e.preventDefault();
+                // 기존 이벤트 리스너 제거
+                const newBtn = closeMemoDetailBtn.cloneNode(true);
+                closeMemoDetailBtn.parentNode.replaceChild(newBtn, closeMemoDetailBtn);
+                
+                // 새 버튼에 이벤트 등록
+                const finalBtn = document.getElementById('closeMemoDetail');
+                
+                // 클릭 이벤트 직접 등록 (가장 높은 우선순위)
+                finalBtn.addEventListener('click', function(e) {
+                    console.log('🔴 메모 상세 X 버튼 클릭됨');
                     e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
                     closeMemoDetail();
-                });
-                console.log('메모 상세 닫기 버튼 이벤트 등록 완료');
+                }, true); // capture phase에서 처리
+                
+                // mousedown 이벤트도 처리 (드래그 방지)
+                finalBtn.addEventListener('mousedown', function(e) {
+                    console.log('🛑 메모 상세 X 버튼 mousedown - 드래그 차단');
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }, true);
+                
+                console.log('✅ 메모 상세 닫기 버튼 강화된 이벤트 등록 완료');
+            } else {
+                console.error('❌ 메모 상세 X 버튼을 찾을 수 없습니다');
             }
 
             const editMemoBtn = document.getElementById('editMemoBtn');
