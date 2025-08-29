@@ -185,7 +185,13 @@
         if (isAuthenticated) {
             const savedToken = getSavedTokenForStatus();
             if (savedToken && savedToken.expires_at) {
-                const remainingHours = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+                let remainingHours = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+                
+                // 토큰이 유효하면 최소 1시간으로 표시 (Google Drive 통합과 동일한 로직)
+                if (remainingHours <= 0 && isAuthenticated) {
+                    remainingHours = 1; // 인증이 성공했으면 최소 1시간으로 표시
+                }
+                
                 if (remainingHours > 0) {
                     updateDriveStatus('connected', '연결됨', `${remainingHours}시간 남음`);
                 } else {
@@ -236,7 +242,13 @@
                 // 토큰 만료 시간 확인
                 const savedToken = getSavedTokenForStatus();
                 if (savedToken && savedToken.expires_at) {
-                    const remainingHours = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+                    let remainingHours = Math.floor((savedToken.expires_at - Date.now()) / (1000 * 60 * 60));
+                    
+                    // 토큰이 유효하면 최소 1시간으로 표시 (Google Drive 통합과 동일한 로직)
+                    if (remainingHours <= 0 && isAuthenticated) {
+                        remainingHours = 1; // 인증이 성공했으면 최소 1시간으로 표시
+                    }
+                    
                     if (remainingHours > 0) {
                         updateDriveStatus('connected', '연결됨', `${remainingHours}시간 남음`);
                     } else {
