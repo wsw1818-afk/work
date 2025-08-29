@@ -518,14 +518,16 @@
                     }
                 }
                 
-                // 토큰 만료 30분 전에 자동 갱신 시도
-                const renewTime = savedToken.expires_at - Date.now() - (30 * 60 * 1000);
-                if (renewTime > 0) {
+                // 토큰 만료 10분 전에 자동 갱신 시도 (30분 -> 10분으로 단축)
+                const renewTime = savedToken.expires_at - Date.now() - (10 * 60 * 1000);
+                if (renewTime > 0 && renewTime < (50 * 60 * 1000)) { // 50분 이내일 때만 갱신 시도
                     console.log(`⏰ ${Math.floor(renewTime / (1000 * 60))}분 후 토큰 자동 갱신 예정`);
                     setTimeout(() => {
                         console.log('🔄 토큰 자동 갱신 시도...');
                         silentTokenRenewal();
                     }, renewTime);
+                } else if (renewTime <= 0) {
+                    console.log('⚠️ 토큰이 곧 만료됩니다 - 필요시 수동 갱신하세요');
                 }
                 
             } else {
@@ -571,11 +573,15 @@
                 showMessage(`구글 드라이브 토큰이 자동 갱신되었습니다 (${expiresIn}시간)`, 'info');
             };
             
-            // prompt 없이 자동 갱신 시도
+            // silent 갱신 시도 (팝업 없이)
             try {
-                tokenClient.requestAccessToken({ prompt: '' });
+                tokenClient.requestAccessToken({ 
+                    prompt: 'none',  // 팝업 표시 안함
+                    hint: savedToken?.access_token  // 기존 토큰 힌트
+                });
             } catch (error) {
-                console.error('자동 갱신 중 오류:', error);
+                console.warn('자동 갱신 실패 (정상적임):', error.message);
+                // 자동 갱신 실패는 정상적인 상황 - 사용자가 필요시 수동 갱신
             }
         }
     }
