@@ -5431,6 +5431,13 @@
         function resetDateMemoLock() {
             if (isDateMemosUnlocked) {
                 isDateMemosUnlocked = false;
+                
+                // unified 시스템의 잠금 상태도 동기화
+                if (typeof window.MemoSystem !== 'undefined' && window.MemoSystem.locks) {
+                    window.MemoSystem.locks.dateMemos = true;
+                    console.log('🔒 unified 시스템 잠금 상태 동기화: 잠김');
+                }
+                
                 const toggle = document.getElementById('dateMemoLockToggle');
                 if (toggle) {
                     const icon = toggle.querySelector('.lock-icon');
