@@ -1286,6 +1286,16 @@
             pointer-events: auto !important;
             position: relative;
             z-index: 1000000 !important;
+            cursor: pointer !important;
+            user-select: none !important;
+        }
+        
+        /* 날짜 메모 모달 X 버튼 특별 처리 */
+        #closeDateMemo {
+            pointer-events: auto !important;
+            z-index: 1000001 !important;
+            cursor: pointer !important;
+            user-select: none !important;
         }
         
         /* 메모 상세 모달은 더 높은 z-index */
@@ -4866,7 +4876,9 @@
                     if (header && modalContent) {
                         header.addEventListener('mousedown', function(e) {
                             // X 버튼 자체는 드래그하지 않음
-                            if (e.target.classList.contains('close-btn') || e.target.id === 'closeDateMemo') {
+                            if (e.target.classList.contains('close-btn') || e.target.id === 'closeDateMemo' || e.target.id === 'closeMemoDetail') {
+                                e.stopPropagation();
+                                console.log('🎯 X 버튼 클릭 감지 - 드래그 방지');
                                 return;
                             }
                             startModalDrag(e, modalContent);
@@ -5947,34 +5959,36 @@
                 console.log('알람 체크박스 이벤트 등록 완료');
             }
 
-            // 날짜별 메모 모달 X 버튼 이벤트 - setTimeout으로 지연 실행
-            setTimeout(() => {
-                const closeDateMemoBtn = document.getElementById('closeDateMemo');
-                if (closeDateMemoBtn) {
-                    // onclick 속성으로 직접 설정
-                    closeDateMemoBtn.onclick = function(e) {
-                        console.log('🎯 X 버튼 클릭 - 날짜 메모 모달 닫기 (onclick)');
-                        if (e) {
-                            e.stopPropagation();
-                            e.preventDefault();
-                        }
-                        closeDateMemoModal();
-                        return false;
-                    };
-                    
-                    // addEventListener도 추가 (백업)
-                    closeDateMemoBtn.addEventListener('click', function(e) {
-                        console.log('🎯 X 버튼 클릭 - 날짜 메모 모달 닫기 (addEventListener)');
-                        e.stopPropagation();
-                        e.preventDefault();
-                        closeDateMemoModal();
-                    }, true); // capture 단계에서 처리
-                    
-                    console.log('✅ 날짜 메모 X 버튼 이벤트 등록 완료 (onclick + addEventListener)');
-                } else {
-                    console.error('❌ 날짜 메모 X 버튼을 찾을 수 없습니다');
-                }
-            }, 1000); // 1초 지연 후 등록
+            // 날짜별 메모 모달 X 버튼 이벤트 - 즉시 등록
+            const closeDateMemoBtn = document.getElementById('closeDateMemo');
+            if (closeDateMemoBtn) {
+                // 기존 이벤트 리스너 제거
+                const newBtn = closeDateMemoBtn.cloneNode(true);
+                closeDateMemoBtn.parentNode.replaceChild(newBtn, closeDateMemoBtn);
+                
+                // 새 버튼에 이벤트 등록
+                const finalBtn = document.getElementById('closeDateMemo');
+                
+                // 클릭 이벤트 직접 등록 (가장 높은 우선순위)
+                finalBtn.addEventListener('click', function(e) {
+                    console.log('🎯 X 버튼 클릭됨 - 날짜 메모 모달 닫기');
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    closeDateMemoModal();
+                }, true); // capture phase에서 처리
+                
+                // mousedown 이벤트도 처리 (드래그 방지)
+                finalBtn.addEventListener('mousedown', function(e) {
+                    console.log('🛑 X 버튼 mousedown - 드래그 차단');
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }, true);
+                
+                console.log('✅ 날짜 메모 X 버튼 이벤트 즉시 등록 완료');
+            } else {
+                console.error('❌ 날짜 메모 X 버튼을 찾을 수 없습니다');
+            }
 
             const saveDateMemoBtn = document.getElementById('saveDateMemo');
             if (saveDateMemoBtn) {
