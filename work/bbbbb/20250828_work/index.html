@@ -5510,8 +5510,14 @@
             }
             
             const dateMemoModal = document.getElementById('dateMemoModal');
-            if (!dateMemoModal || dateMemoModal.style.display === 'none') {
-                console.log('⚠️ 모달이 이미 닫혀있음');
+            if (!dateMemoModal) {
+                console.log('⚠️ 모달 요소를 찾을 수 없음');
+                return;
+            }
+            
+            // display가 none이거나 빈 문자열이면 이미 닫혀있음
+            if (dateMemoModal.style.display === 'none' || dateMemoModal.style.display === '') {
+                console.log('⚠️ 모달이 이미 닫혀있음 (display: ' + dateMemoModal.style.display + ')');
                 return;
             }
             
