@@ -5508,6 +5508,9 @@
                 stickyMemo.style.setProperty('display', 'none', 'important');
             }
             
+            // selectedDate 전역 변수 설정 (displayDateMemos가 사용)
+            window.selectedDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+            
             if (window.displayDateMemos) window.displayDateMemos();
         }
 
@@ -5578,7 +5581,7 @@
                 clearTimeout(closeProtectionTimeout);
             }
             
-            console.log('🔒 모달 닫힌 후 재열림 보호 활성화 (3초)');
+            console.log('🔒 모달 닫힌 후 재열림 보호 활성화 (1.5초)');
             
             closeProtectionTimeout = setTimeout(() => {
                 modalJustClosed = false;
