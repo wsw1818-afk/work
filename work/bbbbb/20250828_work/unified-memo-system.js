@@ -638,50 +638,55 @@
             console.log('💾 스티커 메모 저장 (통합 방식):', memo.title);
         };
         
-        // 날짜별 메모 저장
-        window.saveDateMemo = function() {
-            if (!MemoSystem.selectedDate) {
-                alert('날짜가 선택되지 않았습니다!');
-                return;
-            }
-            
-            const title = document.getElementById('dateMemoTitleInput')?.value?.trim();
-            const content = document.getElementById('dateMemoContentInput')?.value?.trim();
-            
-            if (!title) {
-                alert('메모 제목을 입력해주세요!');
-                return;
-            }
-            
-            // 첨부파일 포함하여 메모 생성
-            const memo = {
-                id: Date.now(),
-                title: title,
-                content: content,
-                date: MemoSystem.selectedDate,
-                attachments: window.dateMemoAttachments ? [...window.dateMemoAttachments] : [], // 첨부파일 추가
-                timestamp: new Date().toISOString()
+        // 날짜별 메모 저장 - HTML 함수 우선 사용 (첨부파일 처리 때문에)
+        // HTML의 saveDateMemo 함수가 있으면 덮어쓰지 않음
+        if (typeof window.saveDateMemo !== 'function') {
+            window.saveDateMemo = function() {
+                if (!MemoSystem.selectedDate) {
+                    alert('날짜가 선택되지 않았습니다!');
+                    return;
+                }
+                
+                const title = document.getElementById('dateMemoTitleInput')?.value?.trim();
+                const content = document.getElementById('dateMemoContentInput')?.value?.trim();
+                
+                if (!title) {
+                    alert('메모 제목을 입력해주세요!');
+                    return;
+                }
+                
+                // 첨부파일 포함하여 메모 생성 (간단한 버전)
+                const memo = {
+                    id: Date.now(),
+                    title: title,
+                    content: content,
+                    date: MemoSystem.selectedDate,
+                    attachments: window.dateMemoAttachments ? [...window.dateMemoAttachments] : [],
+                    timestamp: new Date().toISOString()
+                };
+                
+                MemoSystem.data.unshift(memo);
+                saveMemosToStorage();
+                
+                // 입력창 초기화
+                const titleInput = document.getElementById('dateMemoTitleInput');
+                const contentInput = document.getElementById('dateMemoContentInput');
+                if (titleInput) titleInput.value = '';
+                if (contentInput) contentInput.value = '';
+                
+                // 첨부파일 초기화
+                if (window.clearAttachments && window.dateMemoAttachments) {
+                    window.clearAttachments('dateMemoAttachmentList', window.dateMemoAttachments);
+                }
+                
+                // UI 새로고침
+                refreshAllUI();
+                
+                console.log('💾 unified 백업 날짜별 메모 저장:', memo.title, '(날짜:', MemoSystem.selectedDate, ')');
             };
-            
-            MemoSystem.data.unshift(memo);
-            saveMemosToStorage();
-            
-            // 입력창 초기화
-            const titleInput = document.getElementById('dateMemoTitleInput');
-            const contentInput = document.getElementById('dateMemoContentInput');
-            if (titleInput) titleInput.value = '';
-            if (contentInput) contentInput.value = '';
-            
-            // 첨부파일 초기화
-            if (window.clearAttachments && window.dateMemoAttachments) {
-                window.clearAttachments('dateMemoAttachmentList', window.dateMemoAttachments);
-            }
-            
-            // UI 새로고침
-            refreshAllUI();
-            
-            console.log('💾 날짜별 메모 저장:', memo.title, '(날짜:', MemoSystem.selectedDate, ')');
-        };
+        } else {
+            console.log('✅ HTML saveDateMemo 함수 유지 - unified 시스템은 백업만 제공');
+        }
         
         // 날짜별 메모 모달 열기 - HTML 함수와 충돌 방지
         const originalOpenDateMemoModal = window.openDateMemoModal;
