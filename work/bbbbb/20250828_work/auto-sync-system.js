@@ -755,9 +755,9 @@
             const fileName = customFileName || `calendar-backup-${new Date().toISOString().split('T')[0]}.json`;
             
             // Google Drive API를 통해 업로드 (기존 함수 사용)
-            if (typeof window.uploadBackupFile === 'function') {
-                const result = await window.uploadBackupFile(fileName, JSON.stringify(backupData, null, 2));
-                return result && result.success;
+            if (typeof window.uploadBackupWithCustomName === 'function') {
+                const result = await window.uploadBackupWithCustomName(fileName, true); // silent=true for auto backup
+                return result && (result.success || result.fileId);
             } else if (typeof window.uploadFileToGoogleDrive === 'function') {
                 const result = await window.uploadFileToGoogleDrive(fileName, JSON.stringify(backupData, null, 2), 'application/json');
                 return result && result.id;
@@ -765,7 +765,7 @@
                 const result = await window.uploadToGoogleDrive(fileName, JSON.stringify(backupData, null, 2));
                 return result.success;
             } else {
-                console.log('❌ Google Drive 업로드 함수 없음 - uploadBackupFile 함수를 확인하세요');
+                console.log('❌ Google Drive 업로드 함수 없음 - 사용 가능한 함수들:', Object.keys(window).filter(key => key.includes('upload')));
                 return false;
             }
             
@@ -846,54 +846,62 @@
             
             showBackupNotification('info', '클라우드에서 데이터를 복원하고 있습니다...');
             
-            // Google Drive에서 파일 다운로드
-            if (typeof window.downloadGoogleDriveFile === 'function') {
-                const content = await window.downloadGoogleDriveFile(fileId);
-                const backupData = JSON.parse(content);
-                
-                // 데이터 복원
-                if (backupData.memos) {
-                    localStorage.setItem('calendarMemos', JSON.stringify(backupData.memos));
-                    console.log('✅ 메모 데이터 복원 완료:', backupData.memos.length, '개');
-                }
-                if (backupData.schedules) {
-                    localStorage.setItem('calendarSchedules', JSON.stringify(backupData.schedules));
-                    console.log('✅ 일정 데이터 복원 완료:', backupData.schedules.length, '개');
-                }
-                if (backupData.settings) {
-                    const settings = backupData.settings;
-                    if (settings.fontSize) localStorage.setItem('fontSize', settings.fontSize);
-                    if (settings.calendarSize) localStorage.setItem('calendarSize', JSON.stringify(settings.calendarSize));
-                    if (settings.theme) localStorage.setItem('theme', settings.theme);
-                    if (settings.startOfWeek) localStorage.setItem('startOfWeek', settings.startOfWeek);
-                    console.log('✅ 설정 데이터 복원 완료');
-                }
-                
-                // 복원 완료 후 상태 업데이트
-                lastBackupTime = Date.now();
-                localStorage.setItem('lastBackupTime', lastBackupTime.toString());
-                
-                console.log('✅ 클라우드 복원 완료');
-                showBackupNotification('success', `📥 ${fileName}에서 데이터를 성공적으로 복원했습니다.`);
-                
-                // 페이지 새로고침하여 복원된 데이터 적용
-                setTimeout(() => {
-                    if (confirm('✅ 복원이 완료되었습니다!\n\n복원된 데이터를 적용하려면 페이지를 새로고침해야 합니다.\n지금 새로고침하시겠습니까?')) {
-                        location.reload();
-                    }
-                }, 2000);
-                
-                return true;
-                
-            } else {
-                console.log('❌ Google Drive 다운로드 함수 없음');
-                showBackupNotification('error', 'Google Drive 연결을 확인해주세요.');
-                return false;
+            // Google Drive에서 파일 다운로드 (GAPI 직접 사용)
+            if (!window.gapi || !window.gapi.client || !window.gapi.client.drive) {
+                throw new Error('Google Drive API가 초기화되지 않았습니다');
+            }
+
+            const response = await gapi.client.drive.files.get({
+                fileId: fileId,
+                alt: 'media'
+            });
+            
+            const content = response.body || response.result;
+            const backupData = JSON.parse(content);
+            
+            // 데이터 복원
+            if (backupData.memos) {
+                localStorage.setItem('calendarMemos', JSON.stringify(backupData.memos));
+                console.log('✅ 메모 데이터 복원 완료:', Object.keys(backupData.memos).length, '개');
+            }
+            if (backupData.schedules) {
+                localStorage.setItem('calendarSchedules', JSON.stringify(backupData.schedules));
+                console.log('✅ 일정 데이터 복원 완료:', backupData.schedules.length, '개');
+            }
+            if (backupData.settings) {
+                const settings = backupData.settings;
+                if (settings.fontSize) localStorage.setItem('fontSize', settings.fontSize);
+                if (settings.calendarSize) localStorage.setItem('calendarSize', JSON.stringify(settings.calendarSize));
+                if (settings.theme) localStorage.setItem('theme', settings.theme);
+                if (settings.startOfWeek) localStorage.setItem('startOfWeek', settings.startOfWeek);
+                console.log('✅ 설정 데이터 복원 완료');
             }
             
+            // 복원 완료 후 상태 업데이트
+            lastBackupTime = Date.now();
+            localStorage.setItem('lastBackupTime', lastBackupTime.toString());
+            
+            console.log('✅ 클라우드 복원 완료');
+            showBackupNotification('success', `📥 ${fileName}에서 데이터를 성공적으로 복원했습니다.`);
+            
+            // 페이지 새로고침하여 복원된 데이터 적용
+            setTimeout(() => {
+                if (confirm('✅ 복원이 완료되었습니다!\n\n복원된 데이터를 적용하려면 페이지를 새로고침해야 합니다.\n지금 새로고침하시겠습니까?')) {
+                    location.reload();
+                }
+            }, 2000);
+            
+            return true;
+                
         } catch (error) {
-            console.error('클라우드 복원 오류:', error);
-            showBackupNotification('error', `복원 중 오류가 발생했습니다: ${error.message}`);
+            console.error('❌ 클라우드 복원 오류:', error);
+            showBackupNotification('error', `❌ 복원 실패: ${error.message}`);
+            
+            // 상태 인디케이터 업데이트
+            if (typeof window.updateSyncStatus === 'function') {
+                window.updateSyncStatus('error', '복원 실패', error.message);
+            }
+            
             return false;
         }
     }
@@ -968,13 +976,23 @@
             console.log('🚀 수동 백업 시작');
             showBackupNotification('info', '수동 백업을 시작합니다...');
             
-            const result = await backupToCloud();
-            if (result.success) {
-                showBackupNotification('success', `✅ 수동 백업 완료!\n파일명: ${result.fileName}\n시간: ${new Date().toLocaleString()}`);
-                console.log('✅ 수동 백업 성공:', result);
+            // Google Drive의 기존 백업 함수 사용
+            if (typeof window.uploadBackupWithCustomName === 'function') {
+                const fileName = `manual-backup-${new Date().toISOString().split('T')[0]}.json`;
+                const result = await window.uploadBackupWithCustomName(fileName, false); // silent=false for manual backup
+                
+                if (result && (result.success || result.fileId)) {
+                    lastBackupTime = Date.now();
+                    localStorage.setItem('lastBackupTime', lastBackupTime.toString());
+                    
+                    showBackupNotification('success', `✅ 수동 백업 완료!\n파일명: ${fileName}\n시간: ${new Date().toLocaleString()}`);
+                    console.log('✅ 수동 백업 성공:', result);
+                } else {
+                    showBackupNotification('error', `❌ 수동 백업 실패: 결과 없음`);
+                    console.error('❌ 수동 백업 실패:', result);
+                }
             } else {
-                showBackupNotification('error', `❌ 수동 백업 실패: ${result.error}`);
-                console.error('❌ 수동 백업 실패:', result.error);
+                throw new Error('Google Drive 업로드 함수가 없습니다');
             }
         } catch (error) {
             showBackupNotification('error', `❌ 수동 백업 중 오류: ${error.message}`);
@@ -990,16 +1008,19 @@
             console.log('🔍 클라우드 백업 목록 확인 중...');
             showBackupNotification('info', '클라우드에서 백업 목록을 확인하고 있습니다...');
             
-            if (typeof window.listGoogleDriveFiles !== 'function') {
+            // GAPI를 통해 직접 파일 목록 조회
+            if (!window.gapi || !window.gapi.client || !window.gapi.client.drive) {
                 throw new Error('Google Drive API가 초기화되지 않았습니다');
             }
 
-            const files = await window.listGoogleDriveFiles();
-            const backupFiles = files.filter(file => 
-                file.name.includes('달력메모-백업') || 
-                file.name.includes('calendar-backup') ||
-                file.name.includes('달력메모')
-            ).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+            const response = await gapi.client.drive.files.list({
+                q: "trashed=false and (name contains 'calendar-backup' or name contains 'manual-backup' or name contains '달력메모')",
+                orderBy: 'createdTime desc',
+                pageSize: 20,
+                fields: 'files(id, name, createdTime, size, modifiedTime)'
+            });
+
+            const backupFiles = response.result.files || [];
 
             if (backupFiles.length === 0) {
                 showBackupNotification('info', '📭 클라우드에 백업 파일이 없습니다');
@@ -1009,8 +1030,9 @@
             // 백업 선택 UI 표시
             let options = '🔍 클라우드 백업 목록:\n\n';
             backupFiles.slice(0, 10).forEach((file, index) => {
-                const date = new Date(file.modifiedTime).toLocaleString();
-                options += `${index + 1}. ${file.name}\n   📅 ${date}\n   💾 ${(file.size / 1024).toFixed(1)}KB\n\n`;
+                const date = new Date(file.modifiedTime || file.createdTime).toLocaleString();
+                const size = file.size ? `${(file.size / 1024).toFixed(1)}KB` : '크기 불명';
+                options += `${index + 1}. ${file.name}\n   📅 ${date}\n   💾 ${size}\n\n`;
             });
 
             options += '복원할 백업을 선택하세요 (1-' + Math.min(10, backupFiles.length) + ', 취소는 0):';
@@ -1020,7 +1042,7 @@
             
             if (choiceNum > 0 && choiceNum <= backupFiles.length) {
                 const selectedFile = backupFiles[choiceNum - 1];
-                const confirmMsg = `📥 선택한 백업으로 복원하시겠습니까?\n\n파일: ${selectedFile.name}\n시간: ${new Date(selectedFile.modifiedTime).toLocaleString()}\n\n⚠️ 현재 데이터는 덮어쓰여집니다!`;
+                const confirmMsg = `📥 선택한 백업으로 복원하시겠습니까?\n\n파일: ${selectedFile.name}\n시간: ${new Date(selectedFile.modifiedTime || selectedFile.createdTime).toLocaleString()}\n\n⚠️ 현재 데이터는 덮어쓰여집니다!`;
                 
                 if (confirm(confirmMsg)) {
                     await restoreFromCloud(selectedFile.id, selectedFile.name);
