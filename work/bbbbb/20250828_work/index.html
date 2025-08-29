@@ -5946,18 +5946,8 @@
                 console.log('알람 체크박스 이벤트 등록 완료');
             }
 
-            // 날짜별 메모 모달 이벤트 (외부 클릭 핸들러에서 처리하므로 중복 등록 방지)
-            const closeDateMemoBtn = document.getElementById('closeDateMemo');
-            if (closeDateMemoBtn) {
-                closeDateMemoBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    console.log('🔘 닫기 버튼 직접 클릭 감지');
-                    closeDateMemoModal();
-                });
-                console.log('날짜 메모 닫기 버튼 이벤트 등록 완료 (이벤트 격리 적용)');
-            }
+            // 날짜별 메모 모달 닫기 버튼 - 헤더 이벤트에서 이미 처리하므로 제거
+            console.log('날짜 메모 닫기 버튼은 헤더 이벤트에서 처리됨');
 
             const saveDateMemoBtn = document.getElementById('saveDateMemo');
             if (saveDateMemoBtn) {
@@ -6044,12 +6034,14 @@
                         return;
                     }
                     
-                    // 모든 클릭을 차단 (X 버튼은 헤더 이벤트에서 처리)
-                    console.log('📝 모달 영역 클릭 - 헤더에서만 처리됨');
-                    
-                    // 모든 클릭 전파 차단
-                    e.stopPropagation();
-                    e.preventDefault();
+                    // 모달 외부 클릭 감지시에만 닫기
+                    if (e.target === dateMemoModal) {
+                        console.log('📝 모달 외부 클릭으로 닫기');
+                        isClosing = true;
+                        closeDateMemoModal();
+                    } else {
+                        console.log('📝 모달 내부 클릭 - 닫지 않음');
+                    }
                 });
                 
                 console.log('날짜 메모 모달 외부 클릭 이벤트 등록 완료 (강력한 보호 모드)');
@@ -6120,25 +6112,7 @@
             initMemoModalDrag();
             console.log('메모 모달 드래그 이벤트 등록 완료');
             
-            // 전역 클릭 차단 - 메모창 열려있을 때 다른 모든 클릭 차단
-            document.addEventListener('click', function(e) {
-                const dateMemoModal = document.getElementById('dateMemoModal');
-                
-                // 메모창이 열려있지 않으면 차단하지 않음
-                if (!dateMemoModal || dateMemoModal.style.display !== 'block') {
-                    return;
-                }
-                
-                // 메모창 내부 클릭이면 허용
-                if (dateMemoModal.contains(e.target)) {
-                    return;
-                }
-                
-                // 메모창 외부의 모든 클릭 차단
-                console.log('🚫 메모창이 열려있어 외부 클릭 차단');
-                e.stopPropagation();
-                e.preventDefault();
-            }, true); // capture 단계에서 처리
+            // 전역 클릭 차단 제거 - 너무 강력한 차단으로 인한 문제 해결
 
             // 첨부파일 이벤트 리스너 설정
             initAttachmentEvents();
