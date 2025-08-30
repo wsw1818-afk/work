@@ -16,7 +16,8 @@
       "WebSearch",
       "Bash(git clone:*)",
       "Bash(npm install)",
-      "Bash(npx @modelcontextprotocol/inspector:*)"
+      "Bash(npx @modelcontextprotocol/inspector:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
