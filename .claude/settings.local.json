@@ -22,6 +22,7 @@
       "Bash(node:*)",
       "Bash(taskkill:*)",
       "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)",
+      "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)",
       "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)"
     ],
     "deny": [],
