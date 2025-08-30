@@ -18,7 +18,8 @@
       "Bash(npm install)",
       "Bash(npx @modelcontextprotocol/inspector:*)",
       "Bash(npm run build:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
