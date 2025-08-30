@@ -19,7 +19,10 @@
       "Bash(npx @modelcontextprotocol/inspector:*)",
       "Bash(npm run build:*)",
       "Bash(powershell:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)",
+      "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)"
     ],
     "deny": [],
     "ask": []
