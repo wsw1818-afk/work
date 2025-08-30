@@ -29,6 +29,7 @@
       "Bash(npx @modelcontextprotocol/create-server:*)",
       "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)",
       "Bash(cmd /c \"start claude:\")",
+      "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)",
       "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)"
     ],
     "deny": [],
