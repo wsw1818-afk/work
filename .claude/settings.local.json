@@ -14,7 +14,9 @@
       "mcp__mcp-installer__install_repo_mcp_server",
       "Bash(npx @modelcontextprotocol/server-context:*)",
       "WebSearch",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(npm install)",
+      "Bash(npx @modelcontextprotocol/inspector:*)"
     ],
     "deny": [],
     "ask": []
