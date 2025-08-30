@@ -10,7 +10,11 @@
       "Bash(pip search:*)",
       "Bash(git revert:*)",
       "Bash(git add:*)",
-      "Bash(explorer:*)"
+      "Bash(explorer:*)",
+      "mcp__mcp-installer__install_repo_mcp_server",
+      "Bash(npx @modelcontextprotocol/server-context:*)",
+      "WebSearch",
+      "Bash(git clone:*)"
     ],
     "deny": [],
     "ask": []
