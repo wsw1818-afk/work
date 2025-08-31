@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗓️ 오피스 스타일 달력 앱</title>
+    
+    <!-- 기본 스타일 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        /* 모달 기본 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .close {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close:hover {
+            background: #ff3838;
+            transform: scale(1.1);
+        }
+        
+        /* 버튼 스타일 */
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* 헤더 스타일 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        /* 툴바 스타일 */
+        .toolbar {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .menu-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* 달력 스타일 */
+        .calendar {
+            padding: 30px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .calendar-day:hover {
+            background: #f0f8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .calendar-day.today {
+            background: #ffecec;
+            border-color: #ff4757;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .day-content {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <h1>📅 오피스 스타일 달력</h1>
+            <p id="currentDate"></p>
+        </div>
+        
+        <!-- 툴바 -->
+        <div class="toolbar">
+            <div class="menu-container" id="menuContainer">
+                <!-- 메뉴 버튼들이 여기 추가됩니다 -->
+            </div>
+            
+            <div class="controls">
+                <button class="primary-btn" onclick="previousMonth()">◀ 이전</button>
+                <button class="primary-btn" onclick="nextMonth()">다음 ▶</button>
+            </div>
+        </div>
+        
+        <!-- 달력 -->
+        <div class="calendar">
+            <div class="calendar-header">
+                <h2 id="calendarTitle"></h2>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- 달력 날짜들이 여기 추가됩니다 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Google API -->
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    
+    <!-- 핵심 스크립트만 로드 -->
+    <script src="calendar-complete.js"></script>
+    <script src="theme-layout-menu.js"></script>
+    <script src="advanced-controls-modal.js"></script>
+    <script src="unified-calendar-system.js"></script>
+    <script src="modal-drag-system.js"></script>
+    
+    <!-- 간단한 초기화 -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // 간단한 모달 제어
+        window.showModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                // 다른 모달 모두 닫기
+                document.querySelectorAll('.modal').forEach(m => {
+                    m.classList.remove('show');
+                });
+                // 해당 모달만 열기
+                modal.classList.add('show');
+                console.log(`✅ 모달 열기: ${modalId}`);
+            }
+        };
+        
+        window.hideModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('show');
+                console.log(`🚪 모달 닫기: ${modalId}`);
+            }
+        };
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+            }
+        });
+        
+        // 모달 외부 클릭으로 닫기
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+        
+        // 테마 적용
+        const userTheme = {
+            calendarBg: '#667eea',
+            todayBg: '#ffecec',
+            memoBg: '#f0f8ff',
+            pageBg: 'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%)',
+            calendarBoxBg: '#ffffff'
+        };
+        
+        localStorage.setItem('calendarTheme', JSON.stringify(userTheme));
+        console.log('✅ 깨끗한 달력 초기화 완료');
+    })();
+    </script>
+</body>
+</html>

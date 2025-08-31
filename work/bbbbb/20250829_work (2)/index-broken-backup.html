@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 한국 달력 2025년 8월</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calendar-container {
+            max-width: 1200px;
+            margin: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+        }
+
+        .month-year {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 0;
+        }
+
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            padding: 15px;
+            font-weight: 700;
+            font-size: 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .weekday.sunday {
+            background: #e53e3e;
+        }
+
+        .weekday.saturday {
+            background: #3182ce;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .day {
+            min-height: 120px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .day:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .day.other-month {
+            opacity: 0.3;
+            background: #f7fafc;
+        }
+
+        .day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .day.holiday {
+            border: 2px solid #e53e3e;
+        }
+
+        .day.sunday .day-number {
+            color: #e53e3e;
+            font-weight: 700;
+        }
+
+        .day.saturday .day-number {
+            color: #3182ce;
+            font-weight: 700;
+        }
+
+        .day-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .day.today .day-number {
+            color: white;
+        }
+
+        .holiday-label {
+            font-size: 12px;
+            color: #e53e3e;
+            font-weight: 600;
+            background: rgba(229, 62, 62, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 다크 모드 */
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        }
+
+        [data-theme="dark"] .calendar-container {
+            background: rgba(45, 55, 72, 0.95);
+            color: white;
+        }
+
+        [data-theme="dark"] .day {
+            background: #4a5568;
+            color: white;
+        }
+
+        [data-theme="dark"] .day:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        [data-theme="dark"] .day-number {
+            color: white;
+        }
+
+        [data-theme="dark"] .month-year {
+            color: #90cdf4;
+        }
+
+        /* 메모 표시 스타일 */
+        .memo-container {
+            margin-top: 5px;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .memo-indicator {
+            font-size: 9px;
+            padding: 2px 4px;
+            margin: 1px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(0,0,0,0.1);
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .memo-indicator:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .memo-indicator.yellow { background: #fff740; color: #333; border-color: #d4af37; }
+        .memo-indicator.blue { background: #7dd3fc; color: #333; border-color: #0284c7; }
+        .memo-indicator.green { background: #86efac; color: #333; border-color: #16a34a; }
+        .memo-indicator.pink { background: #fda4af; color: #333; border-color: #e11d48; }
+        .memo-indicator.purple { background: #c4b5fd; color: #333; border-color: #7c3aed; }
+        .memo-indicator.orange { background: #fed7aa; color: #333; border-color: #ea580c; }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .calendar-container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .day {
+                min-height: 80px;
+                padding: 10px;
+            }
+            
+            .day-number {
+                font-size: 20px;
+            }
+            
+            .month-year {
+                font-size: 28px;
+            }
+            
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button class="nav-btn" id="prevBtn">‹</button>
+            <h1 class="month-year" id="monthYear">2025년 8월</h1>
+            <button class="nav-btn" id="nextBtn">›</button>
+        </div>
+
+        <div class="action-bar">
+            <button class="action-btn" id="noticeBtn">📢 공지 쓰기</button>
+            <button class="action-btn" id="createBtn">➕ 생성 모드</button>
+            <button class="action-btn" id="stickerBtn">📌 스티커</button>
+            <button class="action-btn" id="excelBtn">📊 엑셀</button>
+            <button class="action-btn" id="driveBtn">☁️ 구글 드라이브</button>
+            <button class="action-btn" id="settingsBtn">⚙️ 설정</button>
+        </div>
+
+        <div class="weekdays">
+            <div class="weekday sunday">일</div>
+            <div class="weekday">월</div>
+            <div class="weekday">화</div>
+            <div class="weekday">수</div>
+            <div class="weekday">목</div>
+            <div class="weekday">금</div>
+            <div class="weekday saturday">토</div>
+        </div>
+
+        <div class="days-grid" id="daysGrid"></div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+
+    <script>
+        // 달력 생성
+        function generateCalendar() {
+            const grid = document.getElementById('daysGrid');
+            const year = 2025;
+            const month = 8; // 8월
+            
+            // 8월 1일의 요일 (0=일요일)
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const prevMonthDays = new Date(year, month - 1, 0).getDate();
+            
+            grid.innerHTML = '';
+            
+            // 이전 달 날짜
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'day other-month';
+                day.innerHTML = `<span class="day-number">${prevMonthDays - i}</span>`;
+                grid.appendChild(day);
+            }
+            
+            // 현재 달 날짜
+            for (let date = 1; date <= daysInMonth; date++) {
+                const day = document.createElement('div');
+                day.className = 'day';
+                
+                // 오늘 날짜 체크
+                const today = new Date();
+                if (date === today.getDate() && month === today.getMonth() + 1 && year === today.getFullYear()) {
+                    day.classList.add('today');
+                }
+                
+                // 주말 체크
+                const dayOfWeek = (firstDay + date - 1) % 7;
+                if (dayOfWeek === 0) day.classList.add('sunday');
+                if (dayOfWeek === 6) day.classList.add('saturday');
+                
+                // 공휴일 체크 (광복절 8월 15일)
+                if (date === 15) {
+                    day.classList.add('holiday');
+                    day.innerHTML = `
+                        <span class="day-number">${date}</span>
+                        <div class="holiday-label">광복절</div>
+                    `;
+                } else {
+                    day.innerHTML = `<span class="day-number">${date}</span>`;
+                }
+                
+                grid.appendChild(day);
+            }
+            
+            // 다음 달 날짜 (42칸 채우기)
+            const totalCells = 42;
+            const currentCells = firstDay + daysInMonth;
+            const remainingCells = totalCells - currentCells;
+            
+            for (let date = 1; date <= remainingCells; date++) {
+                const day = document.createElement('div');
+                day.className = 'day other-month';
+                day.innerHTML = `<span class="day-number">${date}</span>`;
+                grid.appendChild(day);
+            }
+        }
+
+        // 테마 토글
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            if (!themeToggle) return;
+            
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                this.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            // 저장된 테마 복원
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // 스티커 노트 창 열기
+        function openStickyNotesWindow() {
+            const windowFeatures = 'width=400,height=600,left=100,top=100,resizable=yes,scrollbars=yes';
+            const stickyWindow = window.open('', 'StickyNotes', windowFeatures);
+            
+            stickyWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>📌 스티커 노트</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body {
+                            font-family: 'Segoe UI', sans-serif;
+                            background: #f5f5f5;
+                            padding: 10px;
+                        }
+                        .sticky-header {
+                            background: #0078d4;
+                            color: white;
+                            padding: 10px;
+                            margin-bottom: 10px;
+                            border-radius: 4px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+                        .new-note-btn {
+                            background: #28a745;
+                            color: white;
+                            border: none;
+                            padding: 8px 15px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        }
+                        .new-note-btn:hover { background: #218838; }
+                        .sticky-form {
+                            background: white;
+                            padding: 15px;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                            margin-bottom: 15px;
+                            display: none;
+                        }
+                        .form-row {
+                            margin-bottom: 10px;
+                        }
+                        .form-row label {
+                            display: block;
+                            margin-bottom: 5px;
+                            font-weight: bold;
+                            font-size: 12px;
+                        }
+                        .form-row input, .form-row textarea {
+                            width: 100%;
+                            padding: 8px;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            font-size: 12px;
+                        }
+                        .form-row textarea {
+                            height: 80px;
+                            resize: vertical;
+                        }
+                        .form-buttons {
+                            display: flex;
+                            gap: 8px;
+                            justify-content: flex-end;
+                        }
+                        .btn {
+                            padding: 6px 12px;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        }
+                        .btn-save { background: #007bff; color: white; }
+                        .btn-cancel { background: #6c757d; color: white; }
+                        .btn:hover { opacity: 0.9; }
+                        .memo-list {
+                            background: white;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        }
+                        .memo-item {
+                            padding: 12px;
+                            border-bottom: 1px solid #eee;
+                            cursor: pointer;
+                            transition: background 0.2s;
+                        }
+                        .memo-item:hover {
+                            background: #f8f9fa;
+                        }
+                        .memo-item:last-child {
+                            border-bottom: none;
+                        }
+                        .memo-title {
+                            font-weight: bold;
+                            font-size: 13px;
+                            margin-bottom: 4px;
+                            color: #333;
+                        }
+                        .memo-preview {
+                            font-size: 11px;
+                            color: #666;
+                            max-height: 30px;
+                            overflow: hidden;
+                        }
+                        .memo-date {
+                            font-size: 10px;
+                            color: #999;
+                            float: right;
+                        }
+                        .color-selector {
+                            display: flex;
+                            gap: 5px;
+                            margin-top: 5px;
+                        }
+                        .color-btn {
+                            width: 20px;
+                            height: 20px;
+                            border: 2px solid #ccc;
+                            border-radius: 50%;
+                            cursor: pointer;
+                        }
+                        .color-btn.active { border-color: #000; }
+                        .color-btn.yellow { background: #fff740; }
+                        .color-btn.blue { background: #7dd3fc; }
+                        .color-btn.green { background: #86efac; }
+                        .color-btn.pink { background: #fda4af; }
+                        .color-btn.purple { background: #c4b5fd; }
+                        .color-btn.orange { background: #fed7aa; }
+                    </style>
+                </head>
+                <body>
+                    <div class="sticky-header">
+                        <h3>📌 스티커 노트</h3>
+                        <button class="new-note-btn" onclick="showNewNoteForm()">+ 새 메모</button>
+                    </div>
+
+                    <div class="sticky-form" id="stickyForm">
+                        <div class="form-row">
+                            <label>📅 날짜</label>
+                            <input type="date" id="memoDate" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        <div class="form-row">
+                            <label>📝 제목</label>
+                            <input type="text" id="memoTitle" placeholder="메모 제목을 입력하세요">
+                        </div>
+                        <div class="form-row">
+                            <label>📄 내용</label>
+                            <textarea id="memoContent" placeholder="메모 내용을 입력하세요"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>🎨 색상</label>
+                            <div class="color-selector">
+                                <div class="color-btn yellow active" data-color="yellow"></div>
+                                <div class="color-btn blue" data-color="blue"></div>
+                                <div class="color-btn green" data-color="green"></div>
+                                <div class="color-btn pink" data-color="pink"></div>
+                                <div class="color-btn purple" data-color="purple"></div>
+                                <div class="color-btn orange" data-color="orange"></div>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
+                            <button class="btn btn-cancel" onclick="hideNoteForm()">취소</button>
+                            <button class="btn btn-save" onclick="saveMemoToCalendar()">저장</button>
+                        </div>
+                    </div>
+
+                    <div class="memo-list" id="memoList">
+                        <!-- 메모 리스트가 여기에 표시됩니다 -->
+                    </div>
+
+                    <script>
+                        let selectedColor = 'yellow';
+
+                        function showNewNoteForm() {
+                            document.getElementById('stickyForm').style.display = 'block';
+                            document.getElementById('memoTitle').focus();
+                        }
+
+                        function hideNoteForm() {
+                            document.getElementById('stickyForm').style.display = 'none';
+                            clearForm();
+                        }
+
+                        function clearForm() {
+                            document.getElementById('memoTitle').value = '';
+                            document.getElementById('memoContent').value = '';
+                            document.getElementById('memoDate').value = new Date().toISOString().split('T')[0];
+                        }
+
+                        function saveMemoToCalendar() {
+                            const title = document.getElementById('memoTitle').value.trim();
+                            const content = document.getElementById('memoContent').value.trim();
+                            const date = document.getElementById('memoDate').value;
+
+                            if (!title) {
+                                alert('제목을 입력하세요!');
+                                return;
+                            }
+
+                            const memo = {
+                                id: Date.now(),
+                                title: title,
+                                content: content,
+                                date: date,
+                                color: selectedColor,
+                                created: new Date().toISOString()
+                            };
+
+                            // localStorage에 저장
+                            const existingMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                            existingMemos.push(memo);
+                            localStorage.setItem('calendarMemos', JSON.stringify(existingMemos));
+
+                            // 부모 창의 달력 업데이트
+                            if (window.opener && !window.opener.closed) {
+                                window.opener.refreshCalendarMemos();
+                            }
+
+                            hideNoteForm();
+                            loadMemoList();
+                            
+                            alert('메모가 달력에 저장되었습니다! 📅');
+                        }
+
+                        function loadMemoList() {
+                            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                            const memoList = document.getElementById('memoList');
+                            
+                            if (memos.length === 0) {
+                                memoList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">저장된 메모가 없습니다</div>';
+                                return;
+                            }
+
+                            memoList.innerHTML = memos.map(memo => 
+                                '<div class="memo-item" onclick="viewMemoDetail(' + memo.id + ')">' +
+                                    '<div class="memo-date">' + memo.date + '</div>' +
+                                    '<div class="memo-title">' + memo.title + '</div>' +
+                                    '<div class="memo-preview">' + (memo.content.substring(0, 50) + (memo.content.length > 50 ? '...' : '')) + '</div>' +
+                                '</div>'
+                            ).join('');
+                        }
+
+                        function viewMemoDetail(memoId) {
+                            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                            const memo = memos.find(m => m.id === memoId);
+                            
+                            if (memo) {
+                                if (confirm('📝 ' + memo.title + '\\n\\n' + memo.content + '\\n\\n📅 ' + memo.date + '\\n\\n이 메모를 삭제하시겠습니까?')) {
+                                    deleteMemo(memo.id);
+                                }
+                            }
+                        }
+
+                        function deleteMemo(memoId) {
+                            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                            const filteredMemos = memos.filter(m => m.id !== memoId);
+                            localStorage.setItem('calendarMemos', JSON.stringify(filteredMemos));
+                            
+                            // 부모 창의 달력 업데이트
+                            if (window.opener && !window.opener.closed) {
+                                window.opener.refreshCalendarMemos();
+                            }
+                            
+                            loadMemoList();
+                        }
+
+                        // 색상 선택 이벤트
+                        document.addEventListener('DOMContentLoaded', function() {
+                            document.querySelectorAll('.color-btn').forEach(btn => {
+                                btn.addEventListener('click', function() {
+                                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                                    this.classList.add('active');
+                                    selectedColor = this.dataset.color;
+                                });
+                            });
+                            
+                            loadMemoList();
+                        });
+                    </script>
+                </body>
+                </html>
+            `);
+            
+            stickyWindow.document.close();
+        }
+
+        // 달력에 메모 표시
+        function refreshCalendarMemos() {
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            
+            // 기존 메모 표시 제거
+            document.querySelectorAll('.memo-indicator').forEach(el => el.remove());
+            
+            // 현재 달(8월) 메모들만 필터링
+            const currentMemos = memos.filter(memo => {
+                const memoDate = new Date(memo.date);
+                return memoDate.getMonth() === 7 && memoDate.getFullYear() === 2025; // 8월 = 7
+            });
+            
+            // 각 날짜에 메모 표시
+            currentMemos.forEach(memo => {
+                const memoDate = new Date(memo.date);
+                const day = memoDate.getDate();
+                
+                const dayElements = document.querySelectorAll('.day:not(.other-month)');
+                
+                dayElements.forEach(dayEl => {
+                    const dayNum = parseInt(dayEl.querySelector('.day-number').textContent);
+                    if (dayNum === day) {
+                        // 메모 표시 추가
+                        let memoContainer = dayEl.querySelector('.memo-container');
+                        if (!memoContainer) {
+                            memoContainer = document.createElement('div');
+                            memoContainer.className = 'memo-container';
+                            dayEl.appendChild(memoContainer);
+                        }
+                        
+                        const memoItem = document.createElement('div');
+                        memoItem.className = `memo-indicator ${memo.color}`;
+                        memoItem.textContent = memo.title.substring(0, 10) + (memo.title.length > 10 ? '...' : '');
+                        memoItem.title = memo.title + '\\n' + memo.content;
+                        memoItem.onclick = () => showMemoDetail(memo);
+                        
+                        memoContainer.appendChild(memoItem);
+                    }
+                });
+            });
+        }
+
+        function showMemoDetail(memo) {
+            const detail = `📝 ${memo.title}\\n\\n${memo.content}\\n\\n📅 날짜: ${memo.date}\\n🎨 색상: ${memo.color}`;
+            
+            if (confirm(detail + '\\n\\n이 메모를 삭제하시겠습니까?')) {
+                deleteMemoFromCalendar(memo.id);
+            }
+        }
+
+        function deleteMemoFromCalendar(memoId) {
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const filteredMemos = memos.filter(m => m.id !== memoId);
+            localStorage.setItem('calendarMemos', JSON.stringify(filteredMemos));
+            
+            refreshCalendarMemos();
+        }
+
+        // 기본 버튼 이벤트
+        function initBasicEvents() {
+            // 스티커 버튼
+            document.getElementById('stickerBtn').addEventListener('click', function() {
+                openStickyNotesWindow();
+            });
+
+            // 기타 버튼들 (기본 알림만)
+            document.getElementById('noticeBtn').addEventListener('click', function() {
+                alert('📢 공지 쓰기 기능입니다');
+            });
+
+            document.getElementById('createBtn').addEventListener('click', function() {
+                alert('➕ 생성 모드 기능입니다');
+            });
+
+            document.getElementById('excelBtn').addEventListener('click', function() {
+                alert('📊 엑셀 내보내기 기능입니다');
+            });
+
+            document.getElementById('driveBtn').addEventListener('click', function() {
+                alert('☁️ 구글 드라이브 연동 기능입니다');
+            });
+
+            document.getElementById('settingsBtn').addEventListener('click', function() {
+                alert('⚙️ 설정 기능입니다');
+            });
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            generateCalendar();
+            initThemeToggle();
+            initBasicEvents();
+            refreshCalendarMemos();
+        });
+    </script>
+</body>
+</html>
