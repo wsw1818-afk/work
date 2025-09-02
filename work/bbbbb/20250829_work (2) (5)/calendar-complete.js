@@ -288,8 +288,8 @@
             if (holiday) {
                 dayDiv.classList.add('holiday');
                 dayDiv.style.cssText += `
-                    background: linear-gradient(135deg, #ffebee, #ffcdd2);
-                    border: 2px solid #f44336;
+                    background: #fafafa;
+                    border: 1px solid #e0e0e0;
                     position: relative;
                 `;
             }
@@ -305,15 +305,16 @@
             }
             
             dayDiv.innerHTML = `
-                <div class="day-number" style="font-weight: ${holiday ? 'bold' : 'normal'};">
+                <div class="day-number" style="font-weight: ${holiday ? '600' : 'normal'}; color: ${holiday ? '#e53935' : ''};">
                     ${day}
                     ${holiday ? `<div class="holiday-name" style="
                         font-size: 10px;
-                        color: #d32f2f;
-                        font-weight: bold;
+                        color: #757575;
+                        font-weight: 500;
                         margin-top: 2px;
                         line-height: 1.2;
                         text-align: center;
+                        opacity: 0.8;
                     ">${holiday}</div>` : ''}
                 </div>
                 <div class="day-content" id="day-${year}-${month + 1}-${day}"></div>
