@@ -641,7 +641,9 @@
     function resetColors() {
         const textColorPicker = document.querySelector('#textColorPicker');
         const bgColorPicker = document.querySelector('#bgColorPicker');
+        const textarea = document.querySelector('#stickyTextarea');
         
+        // 색상 피커 초기화
         if (textColorPicker) {
             textColorPicker.value = '#000000';
             window.stickyMemoState.currentTextColor = '#000000';
@@ -652,7 +654,49 @@
             window.stickyMemoState.currentBgColor = '#ffffff';
         }
         
-        updateSaveStatus('색상 초기화됨');
+        // 텍스트 영역의 모든 색상 스타일 제거
+        if (textarea) {
+            try {
+                // 모든 span 요소의 색상 관련 스타일 제거
+                const coloredSpans = textarea.querySelectorAll('span[style*="color"], span[style*="background"]');
+                coloredSpans.forEach(span => {
+                    // 색상 스타일만 제거하고 텍스트는 유지
+                    const textContent = span.textContent || span.innerText;
+                    const textNode = document.createTextNode(textContent);
+                    span.parentNode?.replaceChild(textNode, span);
+                });
+                
+                // 색상 입력 모드 클래스 제거
+                const colorModeElements = textarea.querySelectorAll('.color-input-mode, .bg-color-input-mode');
+                colorModeElements.forEach(element => {
+                    const textContent = element.textContent || element.innerText;
+                    // 기본 입력 텍스트가 아닌 경우만 유지
+                    if (textContent !== '색상 텍스트를 입력하세요' && textContent !== '배경색 텍스트를 입력하세요') {
+                        const textNode = document.createTextNode(textContent);
+                        element.parentNode?.replaceChild(textNode, element);
+                    } else {
+                        // 기본 입력 텍스트인 경우 완전 제거
+                        element.remove();
+                    }
+                });
+                
+                // 전체 텍스트 영역의 기본 색상 복원
+                textarea.style.color = '#000000';
+                textarea.style.backgroundColor = 'transparent';
+                
+                console.log('✅ 모든 색상 스타일 제거 완료');
+                updateSaveStatus('모든 색상이 초기화됨');
+                
+                // 자동 저장
+                localStorage.setItem('stickyMemoContent', textarea.innerHTML);
+                
+            } catch (error) {
+                console.error('❌ 색상 초기화 중 오류:', error);
+                updateSaveStatus('색상 초기화 실패');
+            }
+        } else {
+            updateSaveStatus('색상 피커만 초기화됨');
+        }
     }
     
     /**
