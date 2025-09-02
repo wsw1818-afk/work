@@ -55,26 +55,26 @@
                 <button class="toolbar-btn" data-action="check" title="체크박스">
                     ☑
                 </button>
-                <span class="toolbar-separator">|</span>
-                <button class="toolbar-btn" data-action="save-to-date" title="오늘 날짜로 메모 저장">
-                    📅
-                </button>
-                <button class="toolbar-btn" data-action="save" title="일반 저장">
-                    💾
-                </button>
-                <button class="toolbar-btn" data-action="clear" title="지우기">
-                    🗑️
-                </button>
             </div>
             
             <div class="sticky-memo-content">
                 <textarea id="stickyTextarea" class="sticky-memo-textarea" 
-                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;📅 버튼을 클릭하면 오늘 날짜에 메모가 저장됩니다."></textarea>
+                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;저장하면 오늘 날짜에 메모가 저장됩니다."></textarea>
             </div>
             
             <div class="sticky-memo-footer">
-                <span class="char-count">0 글자</span>
-                <span class="save-status">자동 저장됨</span>
+                <div class="footer-left">
+                    <span class="char-count">0 글자</span>
+                    <span class="save-status">자동 저장됨</span>
+                </div>
+                <div class="footer-right">
+                    <button class="footer-btn" data-action="save" title="오늘 날짜로 저장">
+                        💾 저장
+                    </button>
+                    <button class="footer-btn" data-action="clear" title="지우기">
+                        🗑️ 지우기
+                    </button>
+                </div>
             </div>
             
             <div class="resize-handle"></div>
@@ -231,6 +231,12 @@
         // 툴바 버튼들
         const toolbarBtns = sticky.querySelectorAll('.toolbar-btn');
         toolbarBtns.forEach(btn => {
+            btn.addEventListener('click', handleToolbarAction);
+        });
+        
+        // 푸터 버튼들
+        const footerBtns = sticky.querySelectorAll('.footer-btn');
+        footerBtns.forEach(btn => {
             btn.addEventListener('click', handleToolbarAction);
         });
         
@@ -427,11 +433,8 @@
             case 'check':
                 insertText(textarea, '\n☐ ');
                 break;
-            case 'save-to-date':
-                saveToDateMemo();
-                break;
             case 'save':
-                saveMemo();
+                saveToDateMemo();
                 break;
             case 'clear':
                 if (confirm('메모를 모두 지우시겠습니까?')) {
@@ -490,89 +493,61 @@
         // 현재 날짜 자동 설정
         const now = new Date();
         const selectedDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
-        const dateKey = selectedDate.replace(/-/g, ''); // YYYYMMDD
         
         // 첫째 줄과 둘째 줄 분리
         const lines = content.split('\n');
         const title = lines[0]?.trim() || '제목 없음';
         const memoContent = lines.slice(1).join('\n').trim() || content;
         
-        // 메모 데이터 구조
-        const newMemo = {
-            id: Date.now(),
-            title: title,
-            content: memoContent,
-            time: now.toLocaleTimeString('ko-KR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            }),
-            type: 'sticky-date',
-            originalContent: content
-        };
-        
-        // 해당 날짜의 메모 가져오기
-        let dateMemos = JSON.parse(localStorage.getItem(`memos_${dateKey}`) || '[]');
-        dateMemos.push(newMemo);
-        
-        // 날짜별 메모 저장
-        localStorage.setItem(`memos_${dateKey}`, JSON.stringify(dateMemos));
-        
-        // 전체 메모 목록에도 추가 (호환성)
-        let allMemos = JSON.parse(localStorage.getItem('memos') || '[]');
-        allMemos.unshift({
-            ...newMemo,
-            date: selectedDate,
-            dateKey: dateKey
-        });
-        localStorage.setItem('memos', JSON.stringify(allMemos));
-        
-        updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
-        
-        // 성공 메시지
-        setTimeout(() => {
-            if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
-                textarea.value = '';
-                localStorage.removeItem('stickyMemoContent');
-                updateSaveStatus('저장 후 지워짐');
-            }
-        }, 500);
-        
-        console.log('📅 날짜별 메모 저장됨:', {
-            date: selectedDate,
-            title: title,
-            content: memoContent,
-            memo: newMemo
-        });
+        // 달력 시스템에 맞는 메모 추가 (addMemo 함수 호출)
+        if (typeof window.addMemo === 'function') {
+            const savedMemo = window.addMemo(title, memoContent, selectedDate);
+            
+            updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
+            
+            // 성공 메시지
+            setTimeout(() => {
+                if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
+                    textarea.value = '';
+                    localStorage.removeItem('stickyMemoContent');
+                    updateSaveStatus('저장 후 지워짐');
+                }
+            }, 500);
+            
+            console.log('📅 달력에 메모 저장됨:', savedMemo);
+        } else {
+            // 백업: 기존 방식으로 저장
+            const dateKey = selectedDate.replace(/-/g, ''); // YYYYMMDD
+            
+            const newMemo = {
+                id: Date.now(),
+                title: title,
+                content: memoContent,
+                date: selectedDate,
+                time: now.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }),
+                type: 'sticky-date'
+            };
+            
+            // 날짜별 메모 저장
+            let dateMemos = JSON.parse(localStorage.getItem(`memos_${dateKey}`) || '[]');
+            dateMemos.push(newMemo);
+            localStorage.setItem(`memos_${dateKey}`, JSON.stringify(dateMemos));
+            
+            // 전체 메모 목록에도 추가
+            let allMemos = JSON.parse(localStorage.getItem('memos') || '[]');
+            allMemos.unshift(newMemo);
+            localStorage.setItem('memos', JSON.stringify(allMemos));
+            
+            updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
+            
+            console.log('📅 백업 방식으로 메모 저장됨:', newMemo);
+        }
     }
 
-    /**
-     * 메모 저장
-     */
-    function saveMemo() {
-        const textarea = document.querySelector('#stickyTextarea');
-        if (!textarea) return;
-        
-        const content = textarea.value;
-        const timestamp = new Date().toISOString();
-        
-        // 메모 저장
-        const memo = {
-            id: Date.now(),
-            content: content,
-            date: timestamp,
-            type: 'sticky'
-        };
-        
-        // 기존 메모 목록에 추가
-        let memos = JSON.parse(localStorage.getItem('memos') || '[]');
-        memos.unshift(memo);
-        localStorage.setItem('memos', JSON.stringify(memos));
-        
-        updateSaveStatus('저장 완료!');
-        
-        console.log('💾 메모 저장됨:', memo);
-    }
     
     /**
      * 텍스트 입력 처리
@@ -732,12 +707,46 @@
             .sticky-memo-footer {
                 display: flex;
                 justify-content: space-between;
+                align-items: center;
                 padding: 8px 15px;
                 background: rgba(255, 193, 7, 0.1);
                 border-top: 1px solid rgba(255, 193, 7, 0.2);
                 border-radius: 0 0 12px 12px;
                 font-size: 12px;
                 color: #666;
+            }
+            
+            .footer-left {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .footer-right {
+                display: flex;
+                gap: 8px;
+            }
+            
+            .footer-btn {
+                padding: 6px 12px;
+                border: none;
+                background: rgba(255, 193, 7, 0.2);
+                border: 1px solid rgba(255, 193, 7, 0.4);
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                color: #333;
+                transition: all 0.2s;
+            }
+            
+            .footer-btn:hover {
+                background: rgba(255, 193, 7, 0.4);
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+            }
+            
+            .footer-btn:active {
+                transform: translateY(0);
             }
             
             /* 애니메이션 */
