@@ -6910,14 +6910,16 @@
                         setTimeout(() => {
                             // 통합 시스템에서 생성된 스티커 메모 확인
                             const sticky = document.getElementById('stickyMemo') || window._currentStickyMemo;
-                            if (sticky) {
+                            if (sticky && sticky.parentNode) {
                                 console.log('✅ 5초 후 스티커 메모 정상 확인:', {
                                     display: sticky.style.display,
                                     visibility: sticky.style.visibility,
                                     opacity: sticky.style.opacity,
                                     zIndex: sticky.style.zIndex,
-                                    parentNode: sticky.parentNode.tagName
+                                    parentNode: sticky.parentNode ? sticky.parentNode.tagName : 'null'
                                 });
+                            } else if (sticky) {
+                                console.log('⚠️ 스티커 메모가 존재하지만 DOM에서 분리됨');
                             } else {
                                 console.log('ℹ️ 스티커 메모가 아직 생성되지 않았거나 다른 방식으로 관리되고 있습니다');
                             }
@@ -7634,6 +7636,9 @@
     
     <!-- 메모 삭제 추적 및 복원 방지 시스템 -->
     <script src="memo-deletion-tracker.js"></script>
+    
+    <!-- 스티커 메모 종합 보호 시스템 (자동 닫힘 방지) -->
+    <script src="sticky-comprehensive-fix.js"></script>
     
     <!-- force-modal-open.js 제거 - unified-memo-system.js와 충돌 -->
 </body>
