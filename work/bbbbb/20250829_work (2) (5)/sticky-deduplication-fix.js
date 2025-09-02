@@ -107,6 +107,14 @@
         stickyState.isOpen = true;
         stickyState.isCreating = false;
         
+        // 스티커 메모 강제 표시
+        stickyMemo.style.display = 'flex';
+        stickyMemo.style.visibility = 'visible';
+        stickyMemo.style.opacity = '1';
+        
+        // 전역 참조 설정 (다른 스크립트들을 위해)
+        window._currentStickyMemo = stickyMemo;
+        
         // 이벤트 설정
         setupUnifiedEvents(stickyMemo);
         
@@ -312,6 +320,12 @@
         // 이미 열려있는 경우 표시만
         if (stickyState.isOpen && stickyState.currentElement) {
             stickyState.currentElement.style.display = 'flex';
+            stickyState.currentElement.style.visibility = 'visible';
+            stickyState.currentElement.style.opacity = '1';
+            
+            // 전역 참조 업데이트
+            window._currentStickyMemo = stickyState.currentElement;
+            
             console.log('📝 기존 스티커 메모 표시');
             return;
         }

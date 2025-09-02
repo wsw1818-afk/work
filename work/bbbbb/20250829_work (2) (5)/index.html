@@ -6908,20 +6908,18 @@
                         
                         // 5초 후 스티커 메모 상태 재확인
                         setTimeout(() => {
-                            const sticky = document.getElementById('stickyMemo');
+                            // 통합 시스템에서 생성된 스티커 메모 확인
+                            const sticky = document.getElementById('stickyMemo') || window._currentStickyMemo;
                             if (sticky) {
-                                console.log('🔍 5초 후 스티커 메모 상태:', {
+                                console.log('✅ 5초 후 스티커 메모 정상 확인:', {
                                     display: sticky.style.display,
                                     visibility: sticky.style.visibility,
                                     opacity: sticky.style.opacity,
                                     zIndex: sticky.style.zIndex,
-                                    left: sticky.style.left,
-                                    top: sticky.style.top,
-                                    width: sticky.style.width,
-                                    height: sticky.style.height
+                                    parentNode: sticky.parentNode.tagName
                                 });
                             } else {
-                                console.error('❌ 5초 후에도 스티커 메모를 찾을 수 없음');
+                                console.log('ℹ️ 스티커 메모가 아직 생성되지 않았거나 다른 방식으로 관리되고 있습니다');
                             }
                         }, 5000);
                     } catch (error) {
