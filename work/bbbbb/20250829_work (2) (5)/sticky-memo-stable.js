@@ -335,8 +335,13 @@
                     state.element.style.transform = 'none'; // transform 초기화
                 }
             } else {
-                // 기본 위치 (화면 중앙)
-                centerElement();
+                // 기본 위치 (우하단 - 달력과 겹치지 않도록)
+                state.element.style.position = 'fixed';
+                state.element.style.right = '20px';
+                state.element.style.bottom = '20px';
+                state.element.style.left = 'auto';
+                state.element.style.top = 'auto';
+                state.element.style.transform = 'none';
             }
             
             // 크기 복원
