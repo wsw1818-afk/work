@@ -1,0 +1,44 @@
+/* 
+ * 최소한의 깜빡임 방지 CSS
+ * JavaScript 수정 없이 CSS만으로 해결
+ */
+
+/* GPU 가속으로 깜빡임 방지 */
+* {
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+}
+
+/* 달력 컨테이너 안정화 */
+.calendar-container {
+    will-change: auto !important;
+    contain: layout !important;
+}
+
+/* 날짜 요소 안정화 */
+.day {
+    will-change: auto !important;
+    contain: layout !important;
+}
+
+/* 메모 관련 요소 안정화 */
+.memo-indicator,
+.memo-count,
+.sticky-memo {
+    will-change: auto !important;
+    contain: layout !important;
+}
+
+/* 애니메이션 최소화 */
+* {
+    animation-duration: 0s !important;
+    transition-duration: 0.1s !important;
+}
+
+/* 텍스트 렌더링 최적화 */
+body {
+    text-rendering: optimizeSpeed !important;
+    -webkit-font-smoothing: subpixel-antialiased !important;
+}

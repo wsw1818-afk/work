@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Cross-Origin 정책 설정 제거 - Google OAuth 호환성 향상 -->
-    <title>📅 한국 달력 2025년 8월</title>
+    <title>📅 한국 달력</title>
     <style>
         :root {
             --font-scale: 1.0;
@@ -40,11 +40,14 @@
         }
 
         body {
-            font-family: 'Malgun Gothic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
             min-height: 100vh;
-            padding: 20px;
-            font-size: calc(16px * var(--font-scale));
+            padding: 0;
+            margin: 0;
+            font-size: calc(14px * var(--font-scale));
+            color: #3c4043;
+            line-height: 1.4;
             
             /* 텍스트 선명도 향상 */
             font-feature-settings: "liga", "kern";
@@ -56,16 +59,15 @@
         }
 
         .calendar-container {
-            max-width: calc(1400px * var(--width-scale));
-            width: calc(90% * var(--width-scale)); /* 화면 너비의 90% 사용 */
-            height: auto; /* 높이는 내용에 따라 자동 조정하되 글자크기와 독립 */
-            margin: 20px auto; /* 중앙 정렬 */
-            background: rgba(255, 255, 255, 0.98);
-            /* backdrop-filter: blur(20px); 모달 오버레이 문제로 임시 비활성화 */
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            /* transform scale 제거 - 글자크기 변경 시 달력 크기 영향 방지 */
+            max-width: calc(1200px * var(--width-scale));
+            width: 100%;
+            height: auto;
+            margin: 0;
+            background: #ffffff;
+            border-radius: 0;
+            padding: 24px;
+            box-shadow: none;
+            border: none;
             transform-origin: center top;
             position: relative;
             z-index: 1;
@@ -75,62 +77,76 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 15px;
+            margin-bottom: 24px;
+            padding: 16px 0;
+            background: transparent;
+            border-radius: 0;
+            position: relative;
+            border-bottom: 1px solid #dadce0;
         }
 
         .month-year {
-            font-size: calc(36px * var(--font-scale));
-            font-weight: 700;
-            color: #667eea;
+            font-size: calc(22px * var(--font-scale));
+            font-weight: 400;
+            color: #3c4043;
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            letter-spacing: 0;
         }
 
         .nav-btn {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border: none;
             border-radius: 50%;
-            background: #667eea;
-            color: white;
-            font-size: calc(24px * var(--font-scale));
+            background: transparent;
+            color: #5f6368;
+            font-size: calc(16px * var(--font-scale));
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .nav-btn:hover {
-            background: #5a67d8;
-            transform: scale(1.1);
+            background: #f1f3f4;
+            color: #3c4043;
         }
 
         .action-bar {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 15px;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
             flex-wrap: wrap;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
+            border: none;
         }
 
         .action-btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 10px;
-            background: #667eea;
-            color: white;
-            font-size: calc(14px * var(--font-scale));
-            font-weight: 600;
+            padding: 8px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            background: #ffffff;
+            color: #3c4043;
+            font-size: calc(13px * var(--font-scale));
+            font-weight: 400;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            box-shadow: none;
         }
 
         .action-btn:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
+            background: #f8f9fa;
+            border-color: #dadce0;
+            box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
         }
 
         /* 상태 인디케이터 스타일 */
@@ -234,86 +250,112 @@
         .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            margin-bottom: 4px;
+            gap: 0;
+            margin-bottom: 0;
+            border-bottom: 1px solid #dadce0;
         }
 
         .weekday {
             text-align: center;
-            padding: 15px;
-            font-size: calc(14px * var(--font-scale));
-            font-weight: 700;
-            background: #667eea;
-            color: white;
-            border-radius: 8px;
+            padding: 12px 8px;
+            font-size: calc(11px * var(--font-scale));
+            font-weight: 500;
+            background: transparent;
+            color: #70757a;
+            border-radius: 0;
+            letter-spacing: 0;
+            border: none;
+            text-transform: uppercase;
         }
 
         .weekday.sunday {
-            background: #e53e3e;
+            background: transparent;
+            color: #70757a;
         }
 
         .weekday.saturday {
-            background: #3182ce;
+            background: transparent;
+            color: #70757a;
         }
 
         .days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            gap: 0;
+            border: 1px solid #dadce0;
+            border-top: none;
         }
 
         .day {
-            min-height: calc(100px * var(--height-scale));
-            width: auto; /* 그리드에 맞춰 자동 조절 */
-            padding: 12px;
-            background: white;
-            border-radius: 12px;
+            min-height: calc(120px * var(--height-scale));
+            width: auto;
+            padding: 8px;
+            background: #ffffff;
+            border-radius: 0;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.1s ease;
             position: relative;
-            box-sizing: border-box; /* padding 포함한 크기 계산 */
+            box-sizing: border-box;
+            border-right: 1px solid #dadce0;
+            border-bottom: 1px solid #dadce0;
+            box-shadow: none;
+        }
+
+        .day:nth-child(7n) {
+            border-right: none;
         }
 
         .day:hover {
-            background: rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: #f1f3f4;
         }
 
         .day.other-month {
-            opacity: 0.3;
-            background: #f7fafc;
+            opacity: 1;
+            background: #ffffff;
+            color: #9aa0a6;
         }
 
         .day.today {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
-        }
-
-        .day.holiday {
-            border: 2px solid #e53e3e;
-        }
-
-        .day.sunday .day-number {
-            color: #e53e3e;
-            font-weight: 700;
-        }
-
-        .day.saturday .day-number {
-            color: #3182ce;
-            font-weight: 700;
-        }
-
-        .day-number {
-            font-size: calc(28px * var(--font-scale));
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 5px;
+            background: #ffffff;
+            color: inherit;
+            box-shadow: none;
+            border-right: 1px solid #dadce0;
+            border-bottom: 1px solid #dadce0;
         }
 
         .day.today .day-number {
+            background: #1a73e8;
             color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 400;
+        }
+
+        .day.holiday {
+            background: #ffffff;
+        }
+
+        .day.sunday .day-number {
+            color: #d93025;
+            font-weight: 400;
+        }
+
+        .day.saturday .day-number {
+            color: #3c4043;
+            font-weight: 400;
+        }
+
+        .day-number {
+            font-size: calc(13px * var(--font-scale));
+            font-weight: 400;
+            color: #3c4043;
+            margin-bottom: 4px;
+            line-height: 1;
+            display: inline-block;
         }
 
         .holiday-label {
@@ -329,13 +371,13 @@
 
         .memo-indicator {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 8px;
-            height: 8px;
-            background: #667eea;
+            top: 4px;
+            right: 4px;
+            width: 4px;
+            height: 4px;
+            background: #1a73e8;
             border-radius: 50%;
-            animation: pulse 2s infinite;
+            box-shadow: none;
         }
 
         @keyframes pulse {
@@ -355,14 +397,18 @@
 
         .memo-count {
             position: absolute;
-            bottom: 5px;
-            left: 5px;
-            background: rgba(102, 126, 234, 0.8);
+            bottom: 4px;
+            left: 4px;
+            background: #1a73e8;
             color: white;
-            font-size: calc(10px * var(--font-scale));
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: 600;
+            font-size: calc(9px * var(--font-scale));
+            padding: 1px 4px;
+            border-radius: 8px;
+            font-weight: 400;
+            min-width: 14px;
+            text-align: center;
+            box-shadow: none;
+            line-height: 1.2;
         }
 
         [data-theme="dark"] .memo-count {
@@ -372,22 +418,27 @@
 
         .theme-toggle {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border: none;
+            bottom: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #dadce0;
             border-radius: 50%;
-            background: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: #ffffff;
+            color: #5f6368;
+            box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: calc(24px * var(--font-scale));
+            transition: all 0.2s ease;
+            font-size: calc(16px * var(--font-scale));
             z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .theme-toggle:hover {
-            transform: scale(1.1);
+            background: #f8f9fa;
+            border-color: #dadce0;
         }
 
         /* 다크 모드 */
@@ -1000,17 +1051,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding: 15px 20px 10px 20px;
-            margin: -20px -20px 20px -20px;
-            border-bottom: 2px solid #667eea;
+            padding: 0 0 16px 0;
+            margin: 0 0 20px 0;
+            border-bottom: 1px solid #e8eaed;
             cursor: move;
             user-select: none;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 12px 12px 0 0;
+            background: transparent;
+            border-radius: 0;
         }
         
         .memo-header:hover {
-            background: rgba(102, 126, 234, 0.1);
+            background: #f8f9fa;
         }
         
         .memo-modal-content.dragging {
@@ -1024,23 +1075,31 @@
         }
 
         .memo-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #667eea;
+            font-size: calc(18px * var(--font-scale));
+            font-weight: 500;
+            color: #3c4043;
+            margin: 0;
         }
 
         .close-btn {
-            background: #e53e3e;
-            color: white;
+            background: transparent;
+            color: #5f6368;
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 8px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 16px;
+            font-size: calc(16px * var(--font-scale));
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease;
         }
 
         .close-btn:hover {
-            background: #c53030;
+            background: #f1f3f4;
+            color: #3c4043;
         }
 
         .memo-form {
@@ -1049,35 +1108,57 @@
 
         .memo-input {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-bottom: 4px;
+            padding: 12px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: calc(14px * var(--font-scale));
+            margin-bottom: 12px;
+            background: #ffffff;
+            color: #3c4043;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .memo-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 1px #1a73e8;
         }
 
         .memo-textarea {
             width: 100%;
             height: 150px;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 12px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: calc(14px * var(--font-scale));
             resize: vertical;
+            background: #ffffff;
+            color: #3c4043;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .memo-textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 1px #1a73e8;
         }
 
         .memo-save-btn {
-            background: #667eea;
+            background: #1a73e8;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 8px 24px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: calc(14px * var(--font-scale));
+            font-weight: 500;
+            transition: background-color 0.2s ease;
         }
 
         .memo-save-btn:hover {
-            background: #5a67d8;
+            background: #1557b0;
         }
 
         .memo-list {
@@ -1242,7 +1323,7 @@
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            background-color: rgba(0, 0, 0, 0.3) !important;
+            background-color: rgba(0, 0, 0, 0.4) !important;
             display: flex !important;
             justify-content: center;
             align-items: center;
@@ -1312,14 +1393,15 @@
         }
 
         .memo-modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 24px;
             width: 100%;
-            max-width: 500px;
+            max-width: 540px;
             max-height: calc(100vh - 40px);
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8eaed;
             position: relative;
             margin: auto;
             transform: translateZ(0);
@@ -1459,99 +1541,165 @@
             border-top-color: #4a5568;
         }
 
-        /* 알람 팝업 스타일 */
+        /* 알람 팝업 스타일 - 모던하고 깔끔한 디자인 */
         .alarm-popup {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            z-index: 2000;
-            min-width: 300px;
-            max-width: 400px;
-            animation: slideInRight 0.5s ease-out;
+            position: fixed !important;
+            top: 30px !important;
+            right: 30px !important;
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px) !important;
+            color: #2d3748 !important;
+            padding: 0 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.6) !important;
+            z-index: 9999 !important;
+            min-width: 320px !important;
+            max-width: 380px !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            animation: slideInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            overflow: hidden !important;
         }
 
         .alarm-popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 24px 16px 24px;
+            margin: 0;
+            border-radius: 16px 16px 0 0;
         }
 
         .alarm-popup-title {
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .alarm-popup-close {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
+            font-size: 16px;
+            font-weight: 600;
             color: white;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 14px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+            margin: 0;
+            letter-spacing: -0.025em;
         }
 
-        .alarm-popup-close:hover {
-            background: rgba(255, 255, 255, 0.3);
+        .alarm-popup-title span:first-child {
+            font-size: 20px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
         }
 
         .alarm-popup-content {
-            font-size: 16px;
-            line-height: 1.4;
-            margin-bottom: 15px;
+            padding: 24px;
+            background: white;
+        }
+
+        .alarm-popup-event-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+            word-break: keep-all;
+        }
+
+        .alarm-popup-description {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.5;
+            margin: 0 0 16px 0;
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
         }
 
         .alarm-popup-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 15px;
+            color: #718096;
+            margin: 0 0 24px 0;
+            font-weight: 500;
+        }
+
+        .alarm-popup-time::before {
+            content: '🕐';
+            font-size: 16px;
         }
 
         .alarm-popup-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            margin-top: auto;
         }
 
         .alarm-popup-btn {
-            padding: 8px 16px;
+            flex: 1;
+            padding: 12px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
             font-size: 14px;
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: -0.025em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alarm-popup-btn:active {
+            transform: scale(0.98);
         }
 
         .alarm-popup-btn.primary {
-            background: rgba(255, 255, 255, 0.9);
-            color: #667eea;
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .alarm-popup-btn.primary:hover {
-            background: white;
+            background: #5a67d8;
             transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
 
         .alarm-popup-btn.secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            background: #edf2f7;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
         }
 
         .alarm-popup-btn.secondary:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: #e2e8f0;
+            color: #2d3748;
+            border-color: #cbd5e0;
+        }
+
+        .alarm-popup-btn.danger {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+            font-size: 13px;
+            flex: 0.8;
+        }
+
+        .alarm-popup-btn.danger:hover {
+            background: #feb2b2;
+            color: #9b2c2c;
+        }
+
+        @keyframes slideInScale {
+            0% {
+                transform: translateX(100%) scale(0.8);
+                opacity: 0;
+            }
+            60% {
+                transform: translateX(-5%) scale(1.02);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
         }
 
         @keyframes slideInRight {
@@ -1562,6 +1710,17 @@
             to {
                 transform: translateX(0);
                 opacity: 1;
+            }
+        }
+
+        @keyframes fadeOutScale {
+            0% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100%) scale(0.9);
+                opacity: 0;
             }
         }
 
@@ -1577,7 +1736,7 @@
         }
 
         .alarm-popup.fade-out {
-            animation: fadeOut 0.3s ease-out forwards;
+            animation: fadeOutScale 0.3s cubic-bezier(0.4, 0, 1, 1) forwards !important;
         }
 
         /* 크기 조절 컨트롤 스타일 */
@@ -1680,18 +1839,20 @@
             top: 0 !important;
             width: 100% !important;
             height: 100% !important;
-            background: rgba(0, 0, 0, 0.3) !important;
+            background: rgba(0, 0, 0, 0.4) !important;
         }
 
         .modal-content {
-            background: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 600px;
+            background: #ffffff;
+            margin: 8% auto;
+            padding: 24px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 540px;
             max-height: 80%;
             overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8eaed;
         }
 
         .modal-header {
@@ -1699,48 +1860,66 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e8eaed;
         }
 
         .modal-title {
-            font-size: calc(24px * var(--font-scale));
-            font-weight: 700;
-            color: #667eea;
+            font-size: calc(18px * var(--font-scale));
+            font-weight: 500;
+            color: #3c4043;
+            margin: 0;
         }
 
         .modal-close {
-            background: #e53e3e;
-            color: white;
+            background: transparent;
+            color: #5f6368;
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 8px;
+            border-radius: 50%;
             cursor: pointer;
             font-size: calc(16px * var(--font-scale));
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease;
         }
 
         .modal-close:hover {
-            background: #c53030;
+            background: #f1f3f4;
+            color: #3c4043;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
-            font-size: calc(14px * var(--font-scale));
+            margin-bottom: 8px;
+            font-weight: 400;
+            color: #3c4043;
+            font-size: calc(13px * var(--font-scale));
         }
 
         .form-input, .form-textarea, .form-select {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: calc(16px * var(--font-scale));
+            padding: 12px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: calc(14px * var(--font-scale));
+            background: #ffffff;
+            color: #3c4043;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 1px #1a73e8;
         }
 
         .form-textarea {
@@ -1749,18 +1928,37 @@
         }
 
         .btn-primary {
-            background: #667eea;
+            background: #1a73e8;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 8px 24px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: calc(16px * var(--font-scale));
-            margin-right: 10px;
+            font-size: calc(14px * var(--font-scale));
+            font-weight: 500;
+            margin-right: 12px;
+            transition: background-color 0.2s ease;
         }
 
         .btn-primary:hover {
-            background: #5a67d8;
+            background: #1557b0;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #1a73e8;
+            border: 1px solid #dadce0;
+            padding: 8px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: calc(14px * var(--font-scale));
+            font-weight: 500;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            border-color: #1a73e8;
         }
 
         .btn-secondary {
@@ -2248,23 +2446,46 @@
     <script>
         // 달력 생성
         function createCalendar() {
-            console.log('🗓️ createCalendar 호출됨');
+            console.log('🗓️ createCalendar 호출됨 - 완전 새로 생성');
             const grid = document.getElementById('daysGrid');
-            const year = 2025;
-            const month = 8; // 8월
+            
+            // 기존 내용 완전 제거 확인 (더 강력한 정리)
+            let currentGrid = grid;
+            if (currentGrid) {
+                // 이벤트 리스너 완전 제거
+                currentGrid.replaceWith(currentGrid.cloneNode(false));
+                currentGrid = document.getElementById('daysGrid');
+                currentGrid.innerHTML = '';
+                console.log('🧹 달력 그리드 완전 초기화 (이벤트 포함)');
+            }
+            // 현재 날짜로 달력 표시
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1; // 현재 월
+            
+            // 달력 헤더 업데이트
+            const monthYearElement = document.querySelector('.month-year');
+            if (monthYearElement) {
+                monthYearElement.textContent = `${year}년 ${month}월`;
+                console.log(`📅 달력 헤더 업데이트: ${year}년 ${month}월`);
+            }
+            
+            // 내보내기 옵션 업데이트
+            const exportCurrentOption = document.querySelector('#exportPeriod option[value="current"]');
+            if (exportCurrentOption) {
+                exportCurrentOption.textContent = `현재 월 (${year}년 ${month}월)`;
+            }
             
             const firstDay = new Date(year, month - 1, 1).getDay();
             const daysInMonth = new Date(year, month, 0).getDate();
             const prevMonthDays = new Date(year, month - 1, 0).getDate();
-            
-            grid.innerHTML = '';
             
             // 이전 달 날짜
             for (let i = firstDay - 1; i >= 0; i--) {
                 const day = document.createElement('div');
                 day.className = 'day other-month';
                 day.innerHTML = `<div class="day-number">${prevMonthDays - i}</div>`;
-                grid.appendChild(day);
+                currentGrid.appendChild(day);
             }
             
             // 현재 달 날짜
@@ -2272,8 +2493,7 @@
                 const day = document.createElement('div');
                 day.className = 'day';
                 
-                // 오늘 날짜
-                const today = new Date();
+                // 오늘 날짜 체크
                 if (date === today.getDate() && month === today.getMonth() + 1 && year === today.getFullYear()) {
                     day.classList.add('today');
                 }
@@ -2283,13 +2503,28 @@
                 if (dayOfWeek === 0) day.classList.add('sunday');
                 if (dayOfWeek === 6) day.classList.add('saturday');
                 
-                // 메모 확인
+                // 메모 확인 (최신 데이터 강제 로드 + 엄격한 필터링)
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-                const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
-                const dateMemos = memos.filter(memo => memo.date === dateStr);
+                const memosRaw = localStorage.getItem('calendarMemos');
+                const memos = memosRaw ? JSON.parse(memosRaw) : [];
                 
-                // 광복절 (8월 15일)
-                if (date === 15) {
+                // 유효한 메모만 필터링 (삭제되지 않은 메모)
+                const dateMemos = memos.filter(memo => 
+                    memo && memo.date === dateStr && memo.id && memo.title
+                );
+                
+                // 디버깅: 메모 개수 로그 (상세 정보 포함)
+                if (dateMemos.length > 0) {
+                    console.log(`📅 ${dateStr}: ${dateMemos.length}개 메모 발견`);
+                    dateMemos.forEach(memo => {
+                        console.log(`  - ID: ${memo.id}, 제목: ${memo.title}`);
+                    });
+                } else {
+                    console.log(`📅 ${dateStr}: 메모 없음`);
+                }
+                
+                // 광복절 (8월 15일만)
+                if (date === 15 && month === 8) {
                     day.classList.add('holiday');
                     day.innerHTML = `
                         <div class="day-number">${date}</div>
@@ -2349,7 +2584,7 @@
                     }
                 });
                 
-                grid.appendChild(day);
+                currentGrid.appendChild(day);
             }
             
             // 다음 달 날짜
@@ -2359,7 +2594,7 @@
                 const day = document.createElement('div');
                 day.className = 'day other-month';
                 day.innerHTML = `<div class="day-number">${date}</div>`;
-                grid.appendChild(day);
+                currentGrid.appendChild(day);
             }
         }
 
@@ -2489,11 +2724,11 @@
                 timestamp: schedule.timestamp
             };
             
-            // 기존 메모에 추가
-            let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
-            memos.unshift(memo);
+            // localStorage에서 최신 메모 목록을 가져와서 새 일정 추가
+            let currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            currentMemos.unshift(memo);
             
-            const saveResult = safelyStoreData('calendarMemos', memos);
+            const saveResult = safelyStoreData('calendarMemos', currentMemos);
             if (!saveResult.success) {
                 alert('일정 저장 실패: ' + saveResult.message);
                 return;
@@ -2580,10 +2815,15 @@
                 console.log(`바로 활성화 알람이 설정되었습니다: ${schedule.title} - ${scheduleDateTime.toLocaleString()}`);
             } else if (schedule.alarm.minutesBefore === 0 && scheduleDateTime <= now) {
                 // 바로 활성화이며 일정 시간이 이미 지난 경우 즉시 실행
+                console.log(`⚠️ 과거 시간 알람 즉시 실행: ${schedule.title} - ${scheduleDateTime.toLocaleString()}`);
                 showAlarmPopup(schedule, false, true);
                 if (schedule.alarm.repeatInterval > 0) {
                     startRepeatingAlarm(schedule);
                 }
+            } else {
+                // 알람 시간이 과거인 경우
+                console.log(`❌ 예약된 알람 시간이 이미 지났습니다: ${schedule.title} - 알람시간: ${alarmTime.toLocaleString()}, 현재시간: ${now.toLocaleString()}`);
+                alert(`알람 시간이 이미 지났습니다.\n일정: ${schedule.title}\n알람 시간: ${alarmTime.toLocaleString()}\n현재 시간: ${now.toLocaleString()}\n\n미래 시간으로 다시 설정해주세요.`);
             }
         }
 
@@ -2601,9 +2841,12 @@
         }
 
         function showAlarmPopup(schedule, isRepeating = false, isImmediate = false) {
+            console.log('🔔 showAlarmPopup 호출됨:', schedule.title, {isRepeating, isImmediate});
+            
             // 기존 알람 팝업이 있다면 제거
             const existingPopup = document.querySelector('.alarm-popup');
             if (existingPopup) {
+                console.log('🗑️ 기존 팝업 제거');
                 existingPopup.remove();
             }
 
@@ -2620,49 +2863,100 @@
             });
 
             const repeatInfo = isRepeating && schedule.alarm.repeatInterval > 0 
-                ? `<div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 5px;">⏰ ${schedule.alarm.repeatInterval}분마다 반복</div>` 
+                ? `<div style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #e53e3e; background: #fed7d7; padding: 4px 8px; border-radius: 6px; margin-bottom: 16px;">
+                    <span>🔄</span>
+                    <span>${schedule.alarm.repeatInterval}분마다 반복</span>
+                </div>` 
                 : '';
 
             popup.innerHTML = `
                 <div class="alarm-popup-header">
                     <div class="alarm-popup-title">
                         <span>${isImmediate ? '⚡' : '🔔'}</span>
-                        <span>${isRepeating ? '반복 알림' : isImmediate ? '바로 활성화 알림' : '일정 알림'}</span>
+                        <span>${isRepeating ? '반복 알림' : isImmediate ? '바로 알림' : '일정 알림'}</span>
                     </div>
-                    <button class="alarm-popup-close" onclick="dismissAlarmPopup(this)">✕</button>
                 </div>
                 <div class="alarm-popup-content">
-                    <strong>${schedule.title}</strong>
-                    ${schedule.description ? `<br><span style="font-size: 14px; opacity: 0.9;">${schedule.description}</span>` : ''}
+                    <div class="alarm-popup-event-title">${schedule.title}</div>
+                    ${schedule.description && schedule.description.trim() ? `<div class="alarm-popup-description">${schedule.description}</div>` : ''}
+                    <div class="alarm-popup-time">${formatTime}</div>
                     ${repeatInfo}
-                </div>
-                <div class="alarm-popup-time">
-                    📅 ${formatTime}
-                </div>
-                <div class="alarm-popup-actions">
-                    <button class="alarm-popup-btn primary" onclick="acknowledgeAlarm('${schedule.id}', this.parentElement.parentElement)">확인</button>
-                    <button class="alarm-popup-btn secondary" onclick="snoozeAlarm('${schedule.id}', this.parentElement.parentElement)">5분 후 다시 알림</button>
-                    ${isRepeating ? `<button class="alarm-popup-btn secondary" onclick="stopRepeatingAlarm('${schedule.id}', this.parentElement.parentElement)" style="background: rgba(229, 62, 62, 0.8);">반복 중단</button>` : ''}
+                    <div class="alarm-popup-actions">
+                        <button class="alarm-popup-btn primary" onclick="acknowledgeAlarm('${schedule.id}', this.parentElement.parentElement.parentElement)">
+                            확인
+                        </button>
+                        <button class="alarm-popup-btn secondary" onclick="snoozeAlarm('${schedule.id}', this.parentElement.parentElement.parentElement)">
+                            5분 후
+                        </button>
+                        ${isRepeating ? `<button class="alarm-popup-btn danger" onclick="stopRepeatingAlarm('${schedule.id}', this.parentElement.parentElement.parentElement)">중단</button>` : ''}
+                    </div>
                 </div>
             `;
 
             document.body.appendChild(popup);
+            console.log('✅ 알람 팝업이 DOM에 추가되었습니다:', popup);
+            
+            // 팝업이 실제로 화면에 표시되는지 확인 (애니메이션 완료 후)
+            setTimeout(() => {
+                const addedPopup = document.querySelector('.alarm-popup');
+                if (addedPopup) {
+                    console.log('✅ 팝업이 DOM에 존재함:', addedPopup.style.cssText);
+                    const rect = addedPopup.getBoundingClientRect();
+                    console.log('✅ 팝업 위치 (애니메이션 후):', rect);
+                    console.log('✅ 팝업 화면에 보임:', rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.bottom > 0);
+                    console.log('✅ 팝업 클래스:', addedPopup.className);
+                    console.log('✅ 팝업 z-index:', window.getComputedStyle(addedPopup).zIndex);
+                    console.log('✅ 팝업 display:', window.getComputedStyle(addedPopup).display);
+                    console.log('✅ 팝업 visibility:', window.getComputedStyle(addedPopup).visibility);
+                } else {
+                    console.error('❌ 팝업이 DOM에서 사라짐');
+                }
+            }, 600); // 애니메이션 0.5초 완료 후 0.1초 여유
 
-            // 반복 알람이 아닌 경우에만 자동으로 닫기
-            if (!isRepeating) {
-                setTimeout(() => {
-                    if (popup.parentElement) {
-                        dismissAlarmPopup(popup);
-                    }
-                }, 10000);
-            }
+            // 알람창은 사용자가 버튼을 클릭해야만 닫히도록 변경 (자동 닫기 제거)
 
             // 브라우저 알림도 표시 (권한이 있는 경우)
             if (Notification.permission === 'granted') {
-                new Notification('일정 알림: ' + schedule.title, {
-                    body: schedule.alarm.message,
-                    icon: '/favicon.ico'
+                const scheduleDateTime = new Date(schedule.date + 'T' + schedule.time);
+                const timeStr = scheduleDateTime.toLocaleTimeString('ko-KR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
                 });
+                
+                let notificationBody = '';
+                
+                // 시간 정보 추가
+                notificationBody += `⏰ ${timeStr}`;
+                
+                // 설명 내용 추가
+                if (schedule.description && schedule.description.trim()) {
+                    notificationBody += `\n📝 ${schedule.description}`;
+                }
+                
+                // 알람 타입별 추가 정보
+                if (isImmediate) {
+                    notificationBody += '\n🔔 일정 시간입니다!';
+                } else if (isRepeating) {
+                    notificationBody += `\n🔄 ${schedule.alarm.repeatInterval}분마다 반복 알림`;
+                } else if (schedule.alarm.minutesBefore > 0) {
+                    notificationBody += `\n⚠️ ${schedule.alarm.minutesBefore}분 후 일정이 있습니다`;
+                }
+                
+                const notification = new Notification('📅 ' + schedule.title, {
+                    body: notificationBody,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">📅</text></svg>',
+                    tag: schedule.id,
+                    requireInteraction: true
+                });
+                
+                notification.onclick = function() {
+                    window.focus();
+                    this.close();
+                };
+                
+                console.log('✅ 브라우저 알림 표시됨:', schedule.title, '내용:', notificationBody);
+            } else {
+                console.log('❌ 브라우저 알림 권한이 없습니다. 현재 권한:', Notification.permission);
             }
         }
 
@@ -3509,7 +3803,7 @@
         });
 
         // 스티커 메모장 기능
-        let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+        // let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]'); // 전역 변수 제거 - 각 함수에서 직접 읽어옴
         let selectedDate = null;
         let isMemosUnlocked = false; // 메모 삭제 잠금 상태
         let isDateMemosUnlocked = false; // 날짜별 메모 삭제 잠금 상태
@@ -3732,9 +4026,11 @@
                 timestamp: new Date().toISOString()
             };
 
-            memos.unshift(memo);
+            // localStorage에서 최신 메모를 가져와서 추가
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            currentMemos.unshift(memo);
             
-            const saveResult = safelyStoreData('calendarMemos', memos);
+            const saveResult = safelyStoreData('calendarMemos', currentMemos);
             if (!saveResult.success) {
                 alert('스티커 메모 저장 실패: ' + saveResult.message);
                 return;
@@ -5067,9 +5363,11 @@
                 timestamp: new Date().toISOString()
             };
 
-            memos.unshift(memo);
+            // localStorage에서 최신 메모를 가져와서 추가
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            currentMemos.unshift(memo);
             
-            const saveResult = safelyStoreData('calendarMemos', memos);
+            const saveResult = safelyStoreData('calendarMemos', currentMemos);
             if (!saveResult.success) {
                 alert('메모 저장 실패: ' + saveResult.message);
                 return;
@@ -5086,12 +5384,15 @@
         function loadMemos() {
             const memoList = document.getElementById('memoList');
             
-            if (memos.length === 0) {
+            // localStorage에서 최신 메모 로드
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            
+            if (currentMemos.length === 0) {
                 memoList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">저장된 메모가 없습니다</div>';
                 return;
             }
 
-            memoList.innerHTML = memos.map(memo => `
+            memoList.innerHTML = currentMemos.map(memo => `
                 <div class="memo-item ${isMemosUnlocked ? 'unlocked' : ''}" onclick="openMemoDetail(${memo.id})">
                     <div class="memo-item-title">${memo.title}</div>
                     <div class="memo-item-content">${memo.content.substring(0, 100)}${memo.content.length > 100 ? '...' : ''}</div>
@@ -5147,8 +5448,10 @@
                 console.log('⚠️ localStorage에서 찾지 못해 MemoSystem에서 찾음');
             }
             if (!memo) {
-                memo = memos.find(m => m.id == id);
-                console.log('⚠️ MemoSystem에서도 찾지 못해 memos에서 찾음');
+                // localStorage에서 최신 메모를 가져와서 찾기
+                const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                memo = currentMemos.find(m => m.id == id);
+                console.log('⚠️ MemoSystem에서도 찾지 못해 localStorage에서 찾음');
             }
             
             if (!memo) {
@@ -5395,10 +5698,12 @@
                 return;
             }
             
-            const memo = memos.find(m => m.id == currentMemoId); // == 으로 변경 (문자열/숫자 비교)
+            // localStorage에서 최신 메모를 가져와서 찾기
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const memo = currentMemos.find(m => m.id == currentMemoId); // == 으로 변경 (문자열/숫자 비교)
             if (!memo) {
                 console.error('편집할 메모를 찾을 수 없습니다. ID:', currentMemoId);
-                console.log('현재 메모 목록:', memos.map(m => ({ id: m.id, title: m.title })));
+                console.log('현재 메모 목록:', currentMemos.map(m => ({ id: m.id, title: m.title })));
                 return;
             }
             
@@ -5472,7 +5777,9 @@
         function deleteMemoFromDetail() {
             if (!currentMemoId) return;
             
-            const memo = memos.find(m => m.id === currentMemoId);
+            // localStorage에서 최신 메모를 가져와서 찾기
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const memo = currentMemos.find(m => m.id === currentMemoId);
             if (!memo) return;
             
             // 잠금 상태 확인 - 날짜별 메모인지 일반 메모인지 구분
@@ -5497,9 +5804,11 @@
         }
 
         function deleteMemo(id) {
-            memos = memos.filter(m => m.id !== id);
+            // localStorage에서 최신 메모를 가져와서 삭제
+            let currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            currentMemos = currentMemos.filter(m => m.id !== id);
             
-            const saveResult = safelyStoreData('calendarMemos', memos);
+            const saveResult = safelyStoreData('calendarMemos', currentMemos);
             if (!saveResult.success) {
                 alert('메모 삭제 실패: ' + saveResult.message);
                 return;
@@ -5511,7 +5820,9 @@
 
         // 메모 리스트에서 직접 삭제 기능
         function deleteMemoFromList(id) {
-            const memo = memos.find(m => m.id === id);
+            // localStorage에서 최신 메모를 가져와서 찾기
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const memo = currentMemos.find(m => m.id === id);
             if (!memo) return;
             
             // 확인 없이 바로 삭제 (잠금 해제 상태에서만 가능하므로 안전)
@@ -5842,8 +6153,29 @@
             
             clearDateMemoForm();
             selectedDate = null;
+            
+            // 달력에 표시된 메모 리스트 숨기기
+            const dateMemoList = document.getElementById('dateMemoList');
+            if (dateMemoList) {
+                dateMemoList.innerHTML = '';
+                dateMemoList.style.display = 'none';
+                console.log('📝 달력 메모 리스트 완전 숨김');
+            }
+            
+            // 선택된 날짜 하이라이트 제거
+            const selectedDayElements = document.querySelectorAll('.day.selected');
+            selectedDayElements.forEach(day => {
+                day.classList.remove('selected');
+                console.log('📅 날짜 선택 하이라이트 제거:', day.textContent);
+            });
+            
             // 모달 닫을 때 잠금 상태로 리셋
             resetDateMemoLock();
+            
+            // 달력 표시 업데이트 (메모 인디케이터 정리)
+            console.log('🚀 closeDateMemoModal에서 updateCalendarDisplay 호출 시작');
+            updateCalendarDisplay();
+            console.log('✅ closeDateMemoModal에서 updateCalendarDisplay 호출 완료');
             
             // 닫기 중 플래그 해제
             isDateMemoModalClosing = false;
@@ -5970,9 +6302,11 @@
                 }
             }
 
-            memos.unshift(memo);
+            // localStorage에서 최신 메모 목록을 가져와서 새 메모 추가 (전역 변수 사용 안 함)
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            currentMemos.unshift(memo);
             
-            const saveResult = safelyStoreData('calendarMemos', memos);
+            const saveResult = safelyStoreData('calendarMemos', currentMemos);
             if (!saveResult.success) {
                 alert('날짜 메모 저장 실패: ' + saveResult.message);
                 return;
@@ -6004,7 +6338,9 @@
             if (!selectedDate) return;
 
             const dateMemoList = document.getElementById('dateMemoList');
-            const dateMemos = memos.filter(memo => memo.date === selectedDate);
+            // localStorage에서 최신 메모를 가져와서 필터링
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const dateMemos = currentMemos.filter(memo => memo.date === selectedDate);
             
             if (dateMemos.length === 0) {
                 dateMemoList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">이 날짜에 저장된 메모가 없습니다</div>';
@@ -6033,9 +6369,53 @@
             updateCalendarDisplay();
         }
 
+        // 디버깅용 강제 달력 새로고침 함수
+        window.forceRefreshCalendar = function() {
+            console.log('🔨 강제 달력 새로고침 시작');
+            const grid = document.getElementById('daysGrid');
+            if (grid) {
+                grid.innerHTML = '';
+                console.log('🗑️ 달력 DOM 강제 제거');
+            }
+            
+            setTimeout(() => {
+                createCalendar();
+                console.log('✅ 강제 달력 새로고침 완료');
+            }, 100);
+        };
+
         // 달력 표시 업데이트 (메모가 있는 날짜 표시)
         function updateCalendarDisplay() {
-            createCalendar(); // 달력을 다시 그려서 메모 표시를 업데이트
+            console.log('🔄 달력 표시 강제 업데이트 시작');
+            console.log('📍 updateCalendarDisplay 호출 위치:', new Error().stack.split('\n')[1]?.trim());
+            
+            // DOM 요소 강제 초기화
+            const grid = document.getElementById('daysGrid');
+            if (grid) {
+                grid.innerHTML = ''; // 기존 달력 완전 제거
+                console.log('🗑️ 기존 달력 DOM 완전 제거');
+            }
+            
+            // localStorage 강제 새로고침 (브라우저 캐시 방지)
+            const currentTime = Date.now();
+            const tempKey = 'calendarMemos_refresh_' + currentTime;
+            const memos = localStorage.getItem('calendarMemos');
+            localStorage.setItem(tempKey, memos || '[]');
+            localStorage.removeItem(tempKey);
+            
+            // 더 긴 지연을 두어 모든 처리가 완료되도록 함
+            setTimeout(() => {
+                console.log('🔄 달력 다시 생성 시작');
+                createCalendar(); // 달력을 완전히 다시 그리기
+                console.log('📅 달력 표시 강제 업데이트 완료');
+                
+                // 추가 검증: 메모 데이터 상태 로그
+                const finalMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                console.log('📊 최종 메모 데이터:', finalMemos.length + '개');
+                finalMemos.forEach(memo => {
+                    console.log(`  - ${memo.date}: ${memo.title}`);
+                });
+            }, 100); // 100ms로 지연 시간 증가
         }
 
         // 기본 버튼 이벤트

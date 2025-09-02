@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(D:\\claude_CLI/**)",
+      "Bash(ls:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(start index.html)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
