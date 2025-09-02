@@ -26,6 +26,73 @@
         }
     };
     
+    // ========== 한국 공휴일 데이터 ==========
+    const koreanHolidays = {
+        2025: {
+            '1-1': '신정',
+            '1-28': '설날연휴',
+            '1-29': '설날',
+            '1-30': '설날연휴',
+            '3-1': '삼일절',
+            '5-5': '어린이날',
+            '6-6': '현충일',
+            '8-15': '광복절',
+            '9-6': '추석연휴',
+            '9-7': '추석연휴', 
+            '9-8': '추석',
+            '9-9': '추석연휴',
+            '10-3': '개천절',
+            '10-9': '한글날',
+            '12-25': '성탄절'
+        },
+        2024: {
+            '1-1': '신정',
+            '2-9': '설날연휴',
+            '2-10': '설날',
+            '2-11': '설날연휴',
+            '2-12': '설날연휴',
+            '3-1': '삼일절',
+            '4-10': '국회의원선거',
+            '5-5': '어린이날',
+            '5-6': '어린이날 대체휴일',
+            '5-15': '부처님오신날',
+            '6-6': '현충일',
+            '8-15': '광복절',
+            '9-16': '추석연휴',
+            '9-17': '추석',
+            '9-18': '추석연휴',
+            '10-3': '개천절',
+            '10-9': '한글날',
+            '12-25': '성탄절'
+        },
+        2026: {
+            '1-1': '신정',
+            '2-16': '설날연휴',
+            '2-17': '설날',
+            '2-18': '설날연휴',
+            '3-1': '삼일절',
+            '5-5': '어린이날',
+            '5-24': '부처님오신날',
+            '6-6': '현충일',
+            '8-15': '광복절',
+            '9-24': '추석연휴',
+            '9-25': '추석',
+            '9-26': '추석연휴',
+            '10-3': '개천절',
+            '10-9': '한글날',
+            '12-25': '성탄절'
+        }
+    };
+    
+    // 공휴일 확인 함수
+    function getHoliday(year, month, day) {
+        const yearHolidays = koreanHolidays[year];
+        if (!yearHolidays) return null;
+        
+        const key = `${month}-${day}`;
+        return yearHolidays[key] || null;
+    }
+    
     // ========== 달력 렌더링 ==========
     function renderCalendar() {
         const year = CalendarApp.currentDate.getFullYear();
@@ -64,8 +131,39 @@
                 dayDiv.classList.add('today');
             }
             
+            // 공휴일 확인
+            const holiday = getHoliday(year, month + 1, day);
+            if (holiday) {
+                dayDiv.classList.add('holiday');
+                dayDiv.style.cssText += `
+                    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+                    border: 2px solid #f44336;
+                    position: relative;
+                `;
+            }
+            
+            // 일요일 스타일링
+            const dayOfWeek = new Date(year, month, day).getDay();
+            if (dayOfWeek === 0) { // 일요일
+                dayDiv.classList.add('sunday');
+                dayDiv.style.color = '#f44336';
+            } else if (dayOfWeek === 6) { // 토요일
+                dayDiv.classList.add('saturday');
+                dayDiv.style.color = '#2196f3';
+            }
+            
             dayDiv.innerHTML = `
-                <div class="day-number">${day}</div>
+                <div class="day-number" style="font-weight: ${holiday ? 'bold' : 'normal'};">
+                    ${day}
+                    ${holiday ? `<div class="holiday-name" style="
+                        font-size: 10px;
+                        color: #d32f2f;
+                        font-weight: bold;
+                        margin-top: 2px;
+                        line-height: 1.2;
+                        text-align: center;
+                    ">${holiday}</div>` : ''}
+                </div>
                 <div class="day-content" id="day-${year}-${month + 1}-${day}"></div>
             `;
             
