@@ -55,6 +55,10 @@
             image-rendering: -webkit-optimize-contrast;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
+            
+            /* 스티커 메모가 전체 페이지에서 움직일 수 있도록 허용 */
+            overflow-x: auto;
+            overflow-y: auto;
         }
 
         body {
@@ -72,9 +76,11 @@
             justify-content: center;
             align-items: center;
             
-            /* 스티커 메모가 달력 밖에서도 보이도록 보장 */
+            /* 스티커 메모가 페이지 전체에서 자유롭게 움직일 수 있도록 보장 */
             overflow: visible;
             position: relative;
+            width: 100%;
+            height: auto;
             
             /* 텍스트 선명도 향상 */
             font-feature-settings: "liga", "kern";

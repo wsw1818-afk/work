@@ -173,20 +173,26 @@
             flexDirection: 'column',
             visibility: 'visible',
             opacity: '1',
-            position: 'fixed',
-            zIndex: '9999999',  // 최고 레벨 z-index로 달력 위에 완전히 분리
+            position: 'fixed',  // 완전히 독립적인 위치 - 부모 요소에 구애받지 않음
+            zIndex: '99999999',  // 최고 레벨 z-index로 모든 요소 위에 표시
             width: window.stickyMemoState.size.width + 'px',
             height: window.stickyMemoState.size.height + 'px',
             background: 'linear-gradient(135deg, #fff9c4 0%, #fff59d 100%)',
             borderRadius: '12px',
-            boxShadow: '0 15px 50px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2)',  // 더 강한 그림자로 독립성 강조
-            border: '2px solid rgba(255, 193, 7, 0.4)',  // 테두리 강화
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 8px 20px rgba(0,0,0,0.3)',  // 최강 그림자로 독립성 강조
+            border: '3px solid rgba(255, 193, 7, 0.6)',  // 테두리 강화로 독립성 강조
             minWidth: '300px',
             minHeight: '200px',
-            // 달력과 완전 분리를 위한 추가 속성
+            // 완전 독립을 위한 CSS 격리
             isolation: 'isolate',
             contain: 'layout style paint',
-            pointerEvents: 'auto'
+            pointerEvents: 'auto',
+            // 부모 컨테이너 제약에서 완전 탈출
+            transform: 'translateZ(0)',  // 하드웨어 가속으로 독립성 향상
+            willChange: 'transform, left, top',  // 최적화된 렌더링
+            // 최고 우선순위 표시
+            backdropFilter: 'none',  // 배경 필터 제거로 독립성 강화
+            WebkitBackdropFilter: 'none'
         });
         
         // 위치 설정 (달력과 분리된 위치 또는 저장된 위치)
@@ -195,16 +201,17 @@
             const offsetX = window.innerWidth - window.stickyMemoState.size.width - 50;
             const offsetY = 50;
             
-            // 화면 경계를 벗어나지 않도록 보정
-            const safeX = Math.max(50, Math.min(offsetX, window.innerWidth - window.stickyMemoState.size.width - 50));
-            const safeY = Math.max(50, Math.min(offsetY, window.innerHeight - window.stickyMemoState.size.height - 50));
+            // 화면 경계 제한 완전 제거 - 자유 배치
+            // 경계 제한 없이 원하는 위치에 직접 배치
+            const freeX = offsetX; // Math.max, Math.min 제한 제거
+            const freeY = offsetY; // Math.max, Math.min 제한 제거
             
-            sticky.style.left = safeX + 'px';
-            sticky.style.top = safeY + 'px';
+            sticky.style.left = freeX + 'px';
+            sticky.style.top = freeY + 'px';
             
-            window.stickyMemoState.position = { x: safeX, y: safeY };
+            window.stickyMemoState.position = { x: freeX, y: freeY };
             
-            console.log('✅ 스티커 메모를 달력과 분리된 독립 위치에 배치:', { x: safeX, y: safeY });
+            console.log('✅ 스티커 메모를 완전 자유 위치에 배치 (경계 제한 없음):', { x: freeX, y: freeY, viewport: { width: window.innerWidth, height: window.innerHeight } });
         }
         
         window.stickyMemoState.isOpen = true;
@@ -329,20 +336,29 @@
         const sticky = window.stickyMemoState.element;
         if (!sticky) return;
         
+        // 마우스 위치에서 드래그 오프셋을 빼서 스티커의 새 위치 계산
         const newX = e.clientX - window.stickyMemoState.dragOffset.x;
         const newY = e.clientY - window.stickyMemoState.dragOffset.y;
         
-        // 화면 경계 체크 (더 관대하게)
-        const maxX = window.innerWidth - 100; // 최소 100px만 보이면 됨
-        const maxY = window.innerHeight - 50; // 최소 50px만 보이면 됨
+        // 완전 자유 이동 - 모든 경계 제한 완전 제거
+        // 화면 밖으로도 나갈 수 있게 하여 웹페이지 전체 영역에서 자유롭게 움직임
+        // 음수 좌표도 허용하여 화면 왼쪽/위쪽으로도 이동 가능
+        sticky.style.left = newX + 'px';
+        sticky.style.top = newY + 'px';
         
-        const finalX = Math.max(-sticky.offsetWidth + 100, Math.min(newX, maxX));
-        const finalY = Math.max(0, Math.min(newY, maxY));
+        // position fixed로 설정하여 스크롤에 영향받지 않는 절대 위치
+        sticky.style.position = 'fixed';
         
-        sticky.style.left = finalX + 'px';
-        sticky.style.top = finalY + 'px';
+        // 상태 저장
+        window.stickyMemoState.position = { x: newX, y: newY };
         
-        window.stickyMemoState.position = { x: finalX, y: finalY };
+        console.log('🎯 스티커 완전 자유 이동:', { 
+            x: newX, 
+            y: newY, 
+            mousePos: { x: e.clientX, y: e.clientY },
+            viewport: { width: window.innerWidth, height: window.innerHeight },
+            boundaryFree: true
+        });
     }
     
     function stopDrag() {
