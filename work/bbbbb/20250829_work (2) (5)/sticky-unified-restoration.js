@@ -17,7 +17,7 @@
         isMaximized: false,
         savedContent: '',
         position: { x: null, y: null },
-        size: { width: 350, height: 400 },
+        size: { width: 450, height: 500 },
         dragOffset: { x: 0, y: 0 }
     };
     
@@ -25,6 +25,8 @@
      * 스티커 메모 HTML 생성
      */
     function createStickyHTML() {
+        const today = new Date().toISOString().split('T')[0];
+        
         return `
             <div id="stickyMemoHeader" class="sticky-memo-header">
                 <div class="sticky-memo-title">
@@ -56,7 +58,10 @@
                     ☑
                 </button>
                 <span class="toolbar-separator">|</span>
-                <button class="toolbar-btn" data-action="save" title="저장">
+                <button class="toolbar-btn" data-action="save-to-date" title="날짜별 메모 저장">
+                    📅
+                </button>
+                <button class="toolbar-btn" data-action="save" title="일반 저장">
                     💾
                 </button>
                 <button class="toolbar-btn" data-action="clear" title="지우기">
@@ -64,9 +69,15 @@
                 </button>
             </div>
             
+            <div class="sticky-date-selector" style="padding: 8px 15px; background: rgba(255, 193, 7, 0.05); border-bottom: 1px solid rgba(255, 193, 7, 0.2);">
+                <label style="font-size: 12px; color: #666;">저장할 날짜:</label>
+                <input type="date" id="stickyDatePicker" value="${today}" 
+                    style="margin-left: 8px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+            </div>
+            
             <div class="sticky-memo-content">
                 <textarea id="stickyTextarea" class="sticky-memo-textarea" 
-                    placeholder="메모를 입력하세요..."></textarea>
+                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;📅 버튼을 클릭하면 선택한 날짜에 메모가 저장됩니다."></textarea>
             </div>
             
             <div class="sticky-memo-footer">
@@ -123,6 +134,17 @@
                     window.stickyMemoState.position = pos;
                 } catch (e) {
                     console.error('위치 복원 실패:', e);
+                }
+            }
+            
+            // 저장된 크기 복원
+            const savedSize = localStorage.getItem('stickyMemoSize');
+            if (savedSize) {
+                try {
+                    const size = JSON.parse(savedSize);
+                    window.stickyMemoState.size = size;
+                } catch (e) {
+                    console.error('크기 복원 실패:', e);
                 }
             }
         }
@@ -413,6 +435,9 @@
             case 'check':
                 insertText(textarea, '\n☐ ');
                 break;
+            case 'save-to-date':
+                saveToDateMemo();
+                break;
             case 'save':
                 saveMemo();
                 break;
@@ -456,6 +481,84 @@
         textarea.focus();
     }
     
+    /**
+     * 날짜별 메모 저장
+     */
+    function saveToDateMemo() {
+        const textarea = document.querySelector('#stickyTextarea');
+        const datePicker = document.querySelector('#stickyDatePicker');
+        
+        if (!textarea || !datePicker) return;
+        
+        const content = textarea.value.trim();
+        if (!content) {
+            alert('저장할 내용을 입력해주세요.');
+            return;
+        }
+        
+        const selectedDate = datePicker.value;
+        if (!selectedDate) {
+            alert('날짜를 선택해주세요.');
+            return;
+        }
+        
+        // 첫째 줄과 둘째 줄 분리
+        const lines = content.split('\n');
+        const title = lines[0]?.trim() || '제목 없음';
+        const memoContent = lines.slice(1).join('\n').trim() || content;
+        
+        // 날짜 형식 변환 (YYYY-MM-DD to YYYYMMDD)
+        const dateKey = selectedDate.replace(/-/g, '');
+        
+        // 메모 데이터 구조
+        const newMemo = {
+            id: Date.now(),
+            title: title,
+            content: memoContent,
+            time: new Date().toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }),
+            type: 'sticky-date',
+            originalContent: content
+        };
+        
+        // 해당 날짜의 메모 가져오기
+        let dateMemos = JSON.parse(localStorage.getItem(`memos_${dateKey}`) || '[]');
+        dateMemos.push(newMemo);
+        
+        // 날짜별 메모 저장
+        localStorage.setItem(`memos_${dateKey}`, JSON.stringify(dateMemos));
+        
+        // 전체 메모 목록에도 추가 (호환성)
+        let allMemos = JSON.parse(localStorage.getItem('memos') || '[]');
+        allMemos.unshift({
+            ...newMemo,
+            date: selectedDate,
+            dateKey: dateKey
+        });
+        localStorage.setItem('memos', JSON.stringify(allMemos));
+        
+        updateSaveStatus(`${selectedDate}에 저장됨!`);
+        
+        // 성공 메시지
+        setTimeout(() => {
+            if (confirm(`"${title}"이(가) ${selectedDate}에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
+                textarea.value = '';
+                localStorage.removeItem('stickyMemoContent');
+                updateSaveStatus('저장 후 지워짐');
+            }
+        }, 500);
+        
+        console.log('📅 날짜별 메모 저장됨:', {
+            date: selectedDate,
+            title: title,
+            content: memoContent,
+            memo: newMemo
+        });
+    }
+
     /**
      * 메모 저장
      */
