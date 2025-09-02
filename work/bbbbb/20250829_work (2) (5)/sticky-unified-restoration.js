@@ -167,34 +167,44 @@
     function showStickyMemo() {
         const sticky = getOrCreateStickyMemo();
         
-        // 기본 스타일 설정
+        // 기본 스타일 설정 (달력 밖에서도 완전히 독립적으로 보이도록)
         Object.assign(sticky.style, {
             display: 'flex',
             flexDirection: 'column',
             visibility: 'visible',
             opacity: '1',
             position: 'fixed',
-            zIndex: '2147483647',
+            zIndex: '9999999',  // 최고 레벨 z-index로 달력 위에 완전히 분리
             width: window.stickyMemoState.size.width + 'px',
             height: window.stickyMemoState.size.height + 'px',
             background: 'linear-gradient(135deg, #fff9c4 0%, #fff59d 100%)',
             borderRadius: '12px',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-            border: '1px solid rgba(255, 193, 7, 0.3)',
-            minWidth: '300px', // 최소 크기만 설정
-            minHeight: '200px'
-            // 최대 크기 제한 완전 제거
+            boxShadow: '0 15px 50px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2)',  // 더 강한 그림자로 독립성 강조
+            border: '2px solid rgba(255, 193, 7, 0.4)',  // 테두리 강화
+            minWidth: '300px',
+            minHeight: '200px',
+            // 달력과 완전 분리를 위한 추가 속성
+            isolation: 'isolate',
+            contain: 'layout style paint',
+            pointerEvents: 'auto'
         });
         
-        // 위치 설정 (중앙 또는 저장된 위치)
+        // 위치 설정 (달력과 분리된 위치 또는 저장된 위치)
         if (!window.stickyMemoState.position.x) {
-            const centerX = (window.innerWidth - window.stickyMemoState.size.width) / 2;
-            const centerY = (window.innerHeight - window.stickyMemoState.size.height) / 2;
+            // 달력 밖의 오른쪽 상단에 배치하여 독립성 강조
+            const offsetX = window.innerWidth - window.stickyMemoState.size.width - 50;
+            const offsetY = 50;
             
-            sticky.style.left = centerX + 'px';
-            sticky.style.top = centerY + 'px';
+            // 화면 경계를 벗어나지 않도록 보정
+            const safeX = Math.max(50, Math.min(offsetX, window.innerWidth - window.stickyMemoState.size.width - 50));
+            const safeY = Math.max(50, Math.min(offsetY, window.innerHeight - window.stickyMemoState.size.height - 50));
             
-            window.stickyMemoState.position = { x: centerX, y: centerY };
+            sticky.style.left = safeX + 'px';
+            sticky.style.top = safeY + 'px';
+            
+            window.stickyMemoState.position = { x: safeX, y: safeY };
+            
+            console.log('✅ 스티커 메모를 달력과 분리된 독립 위치에 배치:', { x: safeX, y: safeY });
         }
         
         window.stickyMemoState.isOpen = true;
