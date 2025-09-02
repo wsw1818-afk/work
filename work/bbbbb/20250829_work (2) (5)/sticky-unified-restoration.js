@@ -22,7 +22,7 @@
         isMaximized: false,
         savedContent: '',
         position: { x: null, y: null },
-        size: { width: 450, height: 500 },
+        size: { width: 600, height: 650 },
         dragOffset: { x: 0, y: 0 },
         currentTextColor: '#000000',
         currentBgColor: '#ffffff'
@@ -56,10 +56,6 @@
                     <u>U</u>
                 </button>
                 <span class="toolbar-separator">|</span>
-                <button class="toolbar-btn" data-action="list" title="목록">
-                    ☰
-                </button>
-                <span class="toolbar-separator">|</span>
                 <div class="color-controls">
                     <label class="color-control" title="글자색">
                         <span class="color-label">A</span>
@@ -77,7 +73,8 @@
             
             <div class="sticky-memo-content">
                 <textarea id="stickyTextarea" class="sticky-memo-textarea" 
-                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;저장하면 오늘 날짜에 메모가 저장됩니다."></textarea>
+                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;저장하면 오늘 날짜에 메모가 저장됩니다."
+                    style="min-width: 500px; min-height: 400px; max-width: none; max-height: none;"></textarea>
             </div>
             
             <div class="sticky-memo-footer">
@@ -369,8 +366,8 @@
         if (!sticky) return;
         
         const rect = sticky.getBoundingClientRect();
-        const newWidth = Math.max(300, e.clientX - rect.left); // 최소 크기만 설정
-        const newHeight = Math.max(200, e.clientY - rect.top); // 최소 크기만 설정
+        const newWidth = Math.max(500, e.clientX - rect.left); // 더 큰 최소 크기
+        const newHeight = Math.max(400, e.clientY - rect.top); // 더 큰 최소 크기
         
         // 최대 크기 제한 완전 제거 - 화면 크기도 무시
         sticky.style.width = newWidth + 'px';
@@ -467,9 +464,6 @@
             case 'underline':
                 wrapText(textarea, '<u>', '</u>');
                 break;
-            case 'list':
-                insertText(textarea, '\n• ');
-                break;
             case 'resetColors':
                 resetColors();
                 break;
@@ -491,7 +485,10 @@
      */
     function applySelectedColor() {
         const textarea = document.querySelector('#stickyTextarea');
-        if (!textarea) return;
+        if (!textarea) {
+            console.error('❌ 텍스트 영역을 찾을 수 없습니다');
+            return;
+        }
         
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
@@ -499,19 +496,33 @@
         
         if (selectedText) {
             const coloredText = `<span style="color: ${window.stickyMemoState.currentTextColor};">${selectedText}</span>`;
-            textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
             
-            // 커서 위치 조정
-            const newPos = start + coloredText.length;
-            textarea.selectionStart = newPos;
-            textarea.selectionEnd = newPos;
-            textarea.focus();
+            try {
+                textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
+                
+                // 커서 위치 조정
+                const newPos = start + coloredText.length;
+                textarea.selectionStart = newPos;
+                textarea.selectionEnd = newPos;
+                textarea.focus();
+                
+                console.log('✅ 글자색 적용 완료:', window.stickyMemoState.currentTextColor);
+                updateSaveStatus('색상 적용됨');
+            } catch (error) {
+                console.error('❌ 글자색 적용 중 오류:', error);
+                updateSaveStatus('색상 적용 실패');
+            }
+        } else {
+            alert('색상을 적용할 텍스트를 선택해주세요.');
         }
     }
     
     function applySelectedBackgroundColor() {
         const textarea = document.querySelector('#stickyTextarea');
-        if (!textarea) return;
+        if (!textarea) {
+            console.error('❌ 텍스트 영역을 찾을 수 없습니다');
+            return;
+        }
         
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
@@ -519,13 +530,30 @@
         
         if (selectedText) {
             const backgroundText = `<span style="background-color: ${window.stickyMemoState.currentBgColor};">${selectedText}</span>`;
-            textarea.value = textarea.value.substring(0, start) + backgroundText + textarea.value.substring(end);
             
-            // 커서 위치 조정
-            const newPos = start + backgroundText.length;
-            textarea.selectionStart = newPos;
-            textarea.selectionEnd = newPos;
-            textarea.focus();
+            try {
+                textarea.value = textarea.value.substring(0, start) + backgroundText + textarea.value.substring(end);
+                
+                // 커서 위치 조정
+                const newPos = start + backgroundText.length;
+                textarea.selectionStart = newPos;
+                textarea.selectionEnd = newPos;
+                textarea.focus();
+                
+                console.log('✅ 배경색 적용 완료:', window.stickyMemoState.currentBgColor);
+                updateSaveStatus('배경색 적용 완료');
+                
+                // 자동 저장 시도
+                setTimeout(() => {
+                    saveToDateMemo();
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ 배경색 적용 중 오류:', error);
+                updateSaveStatus('배경색 적용 실패');
+            }
+        } else {
+            alert('배경색을 적용할 텍스트를 선택해주세요.');
         }
     }
     
