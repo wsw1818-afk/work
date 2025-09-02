@@ -1,12 +1,17 @@
 /**
- * 스티커 메모 통합 복원 - 모든 기능 정상화 및 최적화
- * 기존 기능 복원: 드래그, 리사이즈, 최대화, 저장, 툴바 등
+ * 스티커 메모 완전 개선 버전
+ * - 달력 저장 기능 수정
+ * - 가로 확대 제한 제거
+ * - 체크박스 기능 제거
+ * - 글자색/배경색 기능 추가
+ * - 색상 초기화 기능 추가
+ * - 코드 정리 및 최적화
  */
 
 (function() {
     'use strict';
     
-    console.log('✨ 스티커 메모 통합 복원 시작');
+    console.log('✨ 스티커 메모 완전 개선 버전 시작');
     
     // 전역 상태 관리
     window.stickyMemoState = {
@@ -18,7 +23,9 @@
         savedContent: '',
         position: { x: null, y: null },
         size: { width: 450, height: 500 },
-        dragOffset: { x: 0, y: 0 }
+        dragOffset: { x: 0, y: 0 },
+        currentTextColor: '#000000',
+        currentBgColor: '#ffffff'
     };
     
     /**
@@ -52,9 +59,20 @@
                 <button class="toolbar-btn" data-action="list" title="목록">
                     ☰
                 </button>
-                <button class="toolbar-btn" data-action="check" title="체크박스">
-                    ☑
-                </button>
+                <span class="toolbar-separator">|</span>
+                <div class="color-controls">
+                    <label class="color-control" title="글자색">
+                        <span class="color-label">A</span>
+                        <input type="color" id="textColorPicker" value="#000000">
+                    </label>
+                    <label class="color-control" title="배경색">
+                        <span class="color-label bg-icon">⬛</span>
+                        <input type="color" id="bgColorPicker" value="#ffffff">
+                    </label>
+                    <button class="toolbar-btn reset-btn" data-action="resetColors" title="색상 초기화">
+                        🔄
+                    </button>
+                </div>
             </div>
             
             <div class="sticky-memo-content">
@@ -164,7 +182,10 @@
             background: 'linear-gradient(135deg, #fff9c4 0%, #fff59d 100%)',
             borderRadius: '12px',
             boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-            border: '1px solid rgba(255, 193, 7, 0.3)'
+            border: '1px solid rgba(255, 193, 7, 0.3)',
+            minWidth: '300px', // 최소 크기만 설정
+            minHeight: '200px'
+            // 최대 크기 제한 완전 제거
         });
         
         // 위치 설정 (중앙 또는 저장된 위치)
@@ -240,6 +261,24 @@
             btn.addEventListener('click', handleToolbarAction);
         });
         
+        // 색상 피커들
+        const textColorPicker = sticky.querySelector('#textColorPicker');
+        const bgColorPicker = sticky.querySelector('#bgColorPicker');
+        
+        if (textColorPicker) {
+            textColorPicker.addEventListener('change', (e) => {
+                window.stickyMemoState.currentTextColor = e.target.value;
+                applySelectedColor();
+            });
+        }
+        
+        if (bgColorPicker) {
+            bgColorPicker.addEventListener('change', (e) => {
+                window.stickyMemoState.currentBgColor = e.target.value;
+                applySelectedBackgroundColor();
+            });
+        }
+        
         // 텍스트 영역
         const textarea = sticky.querySelector('#stickyTextarea');
         if (textarea) {
@@ -254,7 +293,7 @@
     }
     
     /**
-     * 드래그 시작
+     * 드래그 기능
      */
     function startDrag(e) {
         if (window.stickyMemoState.isMaximized) return;
@@ -285,11 +324,11 @@
         const newX = e.clientX - window.stickyMemoState.dragOffset.x;
         const newY = e.clientY - window.stickyMemoState.dragOffset.y;
         
-        // 화면 경계 체크
-        const maxX = window.innerWidth - sticky.offsetWidth;
-        const maxY = window.innerHeight - sticky.offsetHeight;
+        // 화면 경계 체크 (더 관대하게)
+        const maxX = window.innerWidth - 100; // 최소 100px만 보이면 됨
+        const maxY = window.innerHeight - 50; // 최소 50px만 보이면 됨
         
-        const finalX = Math.max(0, Math.min(newX, maxX));
+        const finalX = Math.max(-sticky.offsetWidth + 100, Math.min(newX, maxX));
         const finalY = Math.max(0, Math.min(newY, maxY));
         
         sticky.style.left = finalX + 'px';
@@ -309,7 +348,7 @@
     }
     
     /**
-     * 리사이즈 시작
+     * 리사이즈 기능 (제한 완전 제거)
      */
     function startResize(e) {
         if (window.stickyMemoState.isMaximized) return;
@@ -330,9 +369,10 @@
         if (!sticky) return;
         
         const rect = sticky.getBoundingClientRect();
-        const newWidth = Math.max(300, e.clientX - rect.left);
-        const newHeight = Math.max(200, e.clientY - rect.top);
+        const newWidth = Math.max(300, e.clientX - rect.left); // 최소 크기만 설정
+        const newHeight = Math.max(200, e.clientY - rect.top); // 최소 크기만 설정
         
+        // 최대 크기 제한 완전 제거 - 화면 크기도 무시
         sticky.style.width = newWidth + 'px';
         sticky.style.height = newHeight + 'px';
         
@@ -365,11 +405,11 @@
             
             window.stickyMemoState.isMaximized = false;
         } else {
-            // 최대화
-            sticky.style.width = '90vw';
-            sticky.style.height = '90vh';
-            sticky.style.left = '5vw';
-            sticky.style.top = '5vh';
+            // 최대화 - 화면 전체 크기로
+            sticky.style.width = window.innerWidth + 'px';
+            sticky.style.height = window.innerHeight + 'px';
+            sticky.style.left = '0px';
+            sticky.style.top = '0px';
             
             window.stickyMemoState.isMaximized = true;
         }
@@ -430,8 +470,8 @@
             case 'list':
                 insertText(textarea, '\n• ');
                 break;
-            case 'check':
-                insertText(textarea, '\n☐ ');
+            case 'resetColors':
+                resetColors();
                 break;
             case 'save':
                 saveToDateMemo();
@@ -444,6 +484,66 @@
                 }
                 break;
         }
+    }
+    
+    /**
+     * 색상 관련 함수들
+     */
+    function applySelectedColor() {
+        const textarea = document.querySelector('#stickyTextarea');
+        if (!textarea) return;
+        
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        if (selectedText) {
+            const coloredText = `<span style="color: ${window.stickyMemoState.currentTextColor};">${selectedText}</span>`;
+            textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
+            
+            // 커서 위치 조정
+            const newPos = start + coloredText.length;
+            textarea.selectionStart = newPos;
+            textarea.selectionEnd = newPos;
+            textarea.focus();
+        }
+    }
+    
+    function applySelectedBackgroundColor() {
+        const textarea = document.querySelector('#stickyTextarea');
+        if (!textarea) return;
+        
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        if (selectedText) {
+            const backgroundText = `<span style="background-color: ${window.stickyMemoState.currentBgColor};">${selectedText}</span>`;
+            textarea.value = textarea.value.substring(0, start) + backgroundText + textarea.value.substring(end);
+            
+            // 커서 위치 조정
+            const newPos = start + backgroundText.length;
+            textarea.selectionStart = newPos;
+            textarea.selectionEnd = newPos;
+            textarea.focus();
+        }
+    }
+    
+    function resetColors() {
+        const textColorPicker = document.querySelector('#textColorPicker');
+        const bgColorPicker = document.querySelector('#bgColorPicker');
+        
+        if (textColorPicker) {
+            textColorPicker.value = '#000000';
+            window.stickyMemoState.currentTextColor = '#000000';
+        }
+        
+        if (bgColorPicker) {
+            bgColorPicker.value = '#ffffff';
+            window.stickyMemoState.currentBgColor = '#ffffff';
+        }
+        
+        updateSaveStatus('색상 초기화됨');
     }
     
     /**
@@ -477,12 +577,15 @@
     }
     
     /**
-     * 날짜별 메모 저장
+     * 날짜별 메모 저장 (개선된 버전)
      */
     function saveToDateMemo() {
         const textarea = document.querySelector('#stickyTextarea');
         
-        if (!textarea) return;
+        if (!textarea) {
+            console.error('❌ 텍스트 영역을 찾을 수 없습니다');
+            return;
+        }
         
         const content = textarea.value.trim();
         if (!content) {
@@ -499,24 +602,75 @@
         const title = lines[0]?.trim() || '제목 없음';
         const memoContent = lines.slice(1).join('\n').trim() || content;
         
-        // 달력 시스템에 맞는 메모 추가 (addMemo 함수 호출)
+        console.log('💾 저장 시도:', { title, content: memoContent, date: selectedDate });
+        
+        // 우선 순위 1: unified-memo-system의 addMemo 함수 사용
         if (typeof window.addMemo === 'function') {
-            const savedMemo = window.addMemo(title, memoContent, selectedDate);
-            
-            updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
-            
-            // 성공 메시지
-            setTimeout(() => {
-                if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
-                    textarea.value = '';
-                    localStorage.removeItem('stickyMemoContent');
-                    updateSaveStatus('저장 후 지워짐');
+            try {
+                const savedMemo = window.addMemo(title, memoContent, selectedDate);
+                
+                updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
+                
+                // 성공 메시지
+                setTimeout(() => {
+                    if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
+                        textarea.value = '';
+                        localStorage.removeItem('stickyMemoContent');
+                        updateSaveStatus('저장 후 지워짐');
+                    }
+                }, 500);
+                
+                console.log('✅ unified-memo-system으로 메모 저장 성공:', savedMemo);
+                return;
+            } catch (error) {
+                console.warn('⚠️ unified-memo-system 저장 실패, 백업 방식 시도:', error);
+            }
+        }
+        
+        // 우선 순위 2: MemoSystem 직접 접근
+        if (window.MemoSystem && window.MemoSystem.data) {
+            try {
+                const memo = {
+                    id: Date.now(),
+                    title: title,
+                    content: memoContent,
+                    date: selectedDate,
+                    timestamp: new Date().toISOString()
+                };
+                
+                window.MemoSystem.data.unshift(memo);
+                
+                // localStorage 저장
+                if (typeof window.safelyStoreData === 'function') {
+                    window.safelyStoreData('calendarMemos', window.MemoSystem.data);
+                } else {
+                    localStorage.setItem('calendarMemos', JSON.stringify(window.MemoSystem.data));
                 }
-            }, 500);
-            
-            console.log('📅 달력에 메모 저장됨:', savedMemo);
-        } else {
-            // 백업: 기존 방식으로 저장
+                
+                // UI 새로고침
+                if (window.updateCalendarDisplay) {
+                    window.updateCalendarDisplay();
+                }
+                
+                updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
+                
+                setTimeout(() => {
+                    if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
+                        textarea.value = '';
+                        localStorage.removeItem('stickyMemoContent');
+                        updateSaveStatus('저장 후 지워짐');
+                    }
+                }, 500);
+                
+                console.log('✅ MemoSystem 직접 저장 성공:', memo);
+                return;
+            } catch (error) {
+                console.warn('⚠️ MemoSystem 직접 저장 실패, 레거시 방식 시도:', error);
+            }
+        }
+        
+        // 우선 순위 3: 레거시 백업 저장 방식
+        try {
             const dateKey = selectedDate.replace(/-/g, ''); // YYYYMMDD
             
             const newMemo = {
@@ -532,22 +686,42 @@
                 type: 'sticky-date'
             };
             
-            // 날짜별 메모 저장
+            // calendarMemos에 저장 (통합 방식)
+            let allMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            allMemos.unshift(newMemo);
+            localStorage.setItem('calendarMemos', JSON.stringify(allMemos));
+            
+            // 날짜별 메모 저장 (호환성)
             let dateMemos = JSON.parse(localStorage.getItem(`memos_${dateKey}`) || '[]');
             dateMemos.push(newMemo);
             localStorage.setItem(`memos_${dateKey}`, JSON.stringify(dateMemos));
             
-            // 전체 메모 목록에도 추가
-            let allMemos = JSON.parse(localStorage.getItem('memos') || '[]');
-            allMemos.unshift(newMemo);
-            localStorage.setItem('memos', JSON.stringify(allMemos));
+            // 전체 메모 목록에도 추가 (호환성)
+            let legacyMemos = JSON.parse(localStorage.getItem('memos') || '[]');
+            legacyMemos.unshift(newMemo);
+            localStorage.setItem('memos', JSON.stringify(legacyMemos));
+            
+            // 달력 업데이트
+            if (window.updateCalendarDisplay) {
+                window.updateCalendarDisplay();
+            }
             
             updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
             
-            console.log('📅 백업 방식으로 메모 저장됨:', newMemo);
+            setTimeout(() => {
+                if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
+                    textarea.value = '';
+                    localStorage.removeItem('stickyMemoContent');
+                    updateSaveStatus('저장 후 지워짐');
+                }
+            }, 500);
+            
+            console.log('✅ 레거시 방식으로 메모 저장 성공:', newMemo);
+        } catch (error) {
+            console.error('❌ 모든 저장 방식 실패:', error);
+            alert('메모 저장에 실패했습니다. 콘솔을 확인해주세요.');
         }
     }
-
     
     /**
      * 텍스트 입력 처리
@@ -598,19 +772,20 @@
     };
     
     /**
-     * CSS 추가
+     * CSS 추가 (개선된 스타일)
      */
     function addStyles() {
-        if (document.getElementById('sticky-unified-styles')) return;
+        if (document.getElementById('sticky-enhanced-styles')) return;
         
         const style = document.createElement('style');
-        style.id = 'sticky-unified-styles';
+        style.id = 'sticky-enhanced-styles';
         style.textContent = `
             /* 스티커 메모 기본 스타일 */
             #stickyMemo {
                 font-family: 'Malgun Gothic', sans-serif;
                 user-select: none;
                 transition: all 0.3s ease;
+                box-sizing: border-box;
             }
             
             /* 헤더 스타일 */
@@ -618,10 +793,11 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 10px 15px;
+                padding: 12px 16px;
                 background: rgba(255, 193, 7, 0.2);
                 border-bottom: 1px solid rgba(255, 193, 7, 0.3);
                 border-radius: 12px 12px 0 0;
+                flex-shrink: 0;
             }
             
             .sticky-memo-title {
@@ -630,6 +806,7 @@
                 gap: 8px;
                 font-weight: bold;
                 color: #f57c00;
+                font-size: 14px;
             }
             
             .sticky-memo-controls {
@@ -645,6 +822,10 @@
                 cursor: pointer;
                 border-radius: 4px;
                 transition: all 0.2s;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             .control-btn:hover {
@@ -656,39 +837,100 @@
                 color: white;
             }
             
-            /* 툴바 스타일 */
+            /* 개선된 툴바 스타일 */
             .sticky-memo-toolbar {
                 display: flex;
                 align-items: center;
-                gap: 5px;
-                padding: 8px 15px;
+                gap: 8px;
+                padding: 10px 16px;
                 background: rgba(255, 193, 7, 0.1);
                 border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+                flex-wrap: wrap;
+                flex-shrink: 0;
             }
             
             .toolbar-btn {
-                padding: 4px 8px;
+                padding: 6px 10px;
                 border: none;
                 background: transparent;
                 cursor: pointer;
                 border-radius: 4px;
                 transition: all 0.2s;
+                font-size: 12px;
+                min-width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             .toolbar-btn:hover {
                 background: rgba(255, 193, 7, 0.3);
             }
             
+            .reset-btn:hover {
+                background: rgba(76, 175, 80, 0.2);
+            }
+            
             .toolbar-separator {
                 color: rgba(0, 0, 0, 0.2);
                 margin: 0 5px;
+                font-size: 16px;
+            }
+            
+            /* 색상 컨트롤 스타일 */
+            .color-controls {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .color-control {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                cursor: pointer;
+                position: relative;
+            }
+            
+            .color-label {
+                font-size: 12px;
+                font-weight: bold;
+                color: #666;
+            }
+            
+            .bg-icon {
+                font-size: 10px;
+            }
+            
+            .color-control input[type="color"] {
+                width: 24px;
+                height: 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                padding: 0;
+                background: transparent;
+            }
+            
+            .color-control input[type="color"]::-webkit-color-swatch-wrapper {
+                padding: 0;
+                border-radius: 4px;
+            }
+            
+            .color-control input[type="color"]::-webkit-color-swatch {
+                border: 1px solid rgba(0, 0, 0, 0.2);
+                border-radius: 3px;
             }
             
             /* 컨텐츠 영역 */
             .sticky-memo-content {
                 flex: 1;
-                padding: 15px;
-                overflow: auto;
+                padding: 16px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
             }
             
             .sticky-memo-textarea {
@@ -701,6 +943,7 @@
                 font-size: 14px;
                 line-height: 1.6;
                 font-family: inherit;
+                box-sizing: border-box;
             }
             
             /* 푸터 스타일 */
@@ -708,12 +951,13 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 8px 15px;
+                padding: 10px 16px;
                 background: rgba(255, 193, 7, 0.1);
                 border-top: 1px solid rgba(255, 193, 7, 0.2);
                 border-radius: 0 0 12px 12px;
                 font-size: 12px;
                 color: #666;
+                flex-shrink: 0;
             }
             
             .footer-left {
@@ -728,7 +972,7 @@
             }
             
             .footer-btn {
-                padding: 6px 12px;
+                padding: 8px 12px;
                 border: none;
                 background: rgba(255, 193, 7, 0.2);
                 border: 1px solid rgba(255, 193, 7, 0.4);
@@ -737,6 +981,7 @@
                 font-size: 12px;
                 color: #333;
                 transition: all 0.2s;
+                font-weight: 500;
             }
             
             .footer-btn:hover {
@@ -749,6 +994,18 @@
                 transform: translateY(0);
             }
             
+            /* 리사이즈 핸들 */
+            .resize-handle {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 20px;
+                height: 20px;
+                cursor: nwse-resize;
+                background: linear-gradient(135deg, transparent 50%, rgba(255, 193, 7, 0.5) 50%);
+                border-radius: 0 0 12px 0;
+            }
+            
             /* 애니메이션 */
             @keyframes pulse {
                 0% { opacity: 1; }
@@ -758,10 +1015,32 @@
             
             /* 최대화 상태 */
             #stickyMemo.maximized {
-                width: 90vw !important;
-                height: 90vh !important;
-                left: 5vw !important;
-                top: 5vh !important;
+                border-radius: 0 !important;
+            }
+            
+            /* 반응형 대응 */
+            @media (max-width: 768px) {
+                .sticky-memo-toolbar {
+                    padding: 8px 12px;
+                    gap: 6px;
+                }
+                
+                .toolbar-btn {
+                    padding: 4px 6px;
+                    min-width: 24px;
+                    height: 24px;
+                    font-size: 11px;
+                }
+                
+                .color-control input[type="color"] {
+                    width: 20px;
+                    height: 18px;
+                }
+                
+                .footer-btn {
+                    padding: 6px 10px;
+                    font-size: 11px;
+                }
             }
         `;
         
@@ -772,7 +1051,7 @@
      * 초기화
      */
     function init() {
-        console.log('✨ 스티커 메모 통합 복원 초기화');
+        console.log('✨ 스티커 메모 완전 개선 버전 초기화');
         
         // 스타일 추가
         addStyles();
@@ -787,7 +1066,7 @@
             }
         }
         
-        console.log('✅ 스티커 메모 통합 복원 준비 완료');
+        console.log('✅ 스티커 메모 완전 개선 버전 준비 완료');
     }
     
     // 초기화
@@ -805,10 +1084,19 @@
         console.log('저장된 내용:', localStorage.getItem('stickyMemoContent'));
         console.log('저장된 위치:', localStorage.getItem('stickyMemoPosition'));
         console.log('저장된 크기:', localStorage.getItem('stickyMemoSize'));
+        console.log('addMemo 함수:', typeof window.addMemo);
+        console.log('MemoSystem:', window.MemoSystem);
         console.groupEnd();
     };
     
-    console.log('✨ 스티커 메모 통합 복원 로드 완료');
+    console.log('✨ 스티커 메모 완전 개선 버전 로드 완료');
     console.log('🛠️ 명령어: debugStickyMemo()');
+    console.log('🎯 개선사항:');
+    console.log('  - 달력 저장 기능 수정 및 다중 백업');
+    console.log('  - 가로 확대 제한 완전 제거');
+    console.log('  - 체크박스 기능 제거');
+    console.log('  - 글자색/배경색 기능 추가');
+    console.log('  - 색상 초기화 기능 추가');
+    console.log('  - 코드 정리 및 최적화');
     
 })();
