@@ -67,6 +67,11 @@
             color: #3c4043;
             line-height: 1.4;
             
+            /* 달력 중앙 정렬 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
             /* 텍스트 선명도 향상 */
             font-feature-settings: "liga", "kern";
             font-variant-ligatures: common-ligatures;
@@ -80,14 +85,14 @@
             max-width: calc(1200px * var(--width-scale));
             width: 100%;
             height: auto;
-            margin: 0;
+            margin: 20px auto;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
             border: 1px solid rgba(99, 132, 183, 0.2);
-            transform-origin: center top;
+            transform-origin: center center;
             position: relative;
             z-index: 1;
         }
