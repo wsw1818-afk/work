@@ -2999,6 +2999,7 @@
             }
             
             const scheduleId = Date.now();
+            const now = new Date();
             const schedule = {
                 id: scheduleId,
                 title: title,
@@ -3014,7 +3015,32 @@
                         ? parseInt(document.getElementById('alarmRepeat').value) : 0
                 } : { enabled: false },
                 attachments: [...scheduleAttachments], // 첨부파일 추가
-                timestamp: new Date().toISOString()
+                timestamp: now.toISOString(),
+                // 상세 시간 정보 추가
+                createdAt: {
+                    year: now.getFullYear(),
+                    month: now.getMonth() + 1,
+                    date: now.getDate(),
+                    hour: now.getHours(),
+                    minute: now.getMinutes(),
+                    second: now.getSeconds(),
+                    displayTime: now.toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit', 
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    }),
+                    shortTime: now.toLocaleString('ko-KR', {
+                        month: '2-digit',
+                        day: '2-digit', 
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    })
+                }
             };
             
             // IndexedDB에 저장된 파일들의 scheduleId 업데이트

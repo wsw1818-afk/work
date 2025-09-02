@@ -575,10 +575,7 @@
                 console.log('✅ 선택된 텍스트에 배경색 적용 완료:', window.stickyMemoState.currentBgColor);
                 updateSaveStatus('선택 텍스트에 배경색 적용됨');
                 
-                // 자동 저장 시도
-                setTimeout(() => {
-                    saveToDateMemo();
-                }, 500);
+                // 색상 적용은 자동 저장하지 않음 - 사용자가 직접 저장 버튼 클릭해야 함
             } else {
                 // 선택된 텍스트가 없는 경우 - 커서 위치에 배경색 모드 활성화
                 const span = document.createElement('span');

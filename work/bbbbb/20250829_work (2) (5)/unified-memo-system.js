@@ -77,19 +77,45 @@
     
     // 메모 추가
     function addMemo(title, content, date = null) {
+        const now = new Date();
         const memo = {
             id: Date.now(),
             title: title,
             content: content,
-            date: date || new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
-            timestamp: new Date().toISOString()
+            date: date || now.toISOString().split('T')[0], // YYYY-MM-DD 형식
+            timestamp: now.toISOString(),
+            // 상세 시간 정보 추가
+            createdAt: {
+                year: now.getFullYear(),
+                month: now.getMonth() + 1,
+                date: now.getDate(),
+                hour: now.getHours(),
+                minute: now.getMinutes(),
+                second: now.getSeconds(),
+                displayTime: now.toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit', 
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }),
+                shortTime: now.toLocaleString('ko-KR', {
+                    month: '2-digit',
+                    day: '2-digit', 
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                })
+            }
         };
         
         MemoSystem.data.unshift(memo);
         saveMemosToStorage();
         refreshAllUI();
         
-        console.log('📝 메모 추가됨:', memo);
+        console.log('📝 메모 추가됨 (상세 시간 포함):', memo);
         return memo;
     }
 
@@ -255,11 +281,18 @@
                 ? `<div class="memo-attachment-indicator">📎 ${memo.attachments.length}</div>` 
                 : '';
             
+            // 시간 정보 생성
+            const timeInfo = memo.createdAt ? memo.createdAt.shortTime : 
+                            (memo.timestamp ? new Date(memo.timestamp).toLocaleString('ko-KR', {
+                                month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+                            }) : '시간 정보 없음');
+                            
             return `
                 <div class="memo-item ${isUnlocked ? 'unlocked' : ''}" data-memo-id="${memo.id}">
                     <div class="memo-item-title">${memo.title || '제목 없음'}</div>
                     <div class="memo-item-content">${contentWithEllipsis}</div>
                     <div class="memo-item-date">${memo.date || '날짜 없음'}</div>
+                    <div class="memo-item-time">⏰ ${timeInfo}</div>
                     ${attachmentIndicator}
                     <div class="memo-item-preview">클릭하여 보기</div>
                     ${isUnlocked ? `<button class="memo-item-delete visible" data-memo-id="${memo.id}">✕</button>` : ''}
