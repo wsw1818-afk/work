@@ -25,8 +25,6 @@
      * 스티커 메모 HTML 생성
      */
     function createStickyHTML() {
-        const today = new Date().toISOString().split('T')[0];
-        
         return `
             <div id="stickyMemoHeader" class="sticky-memo-header">
                 <div class="sticky-memo-title">
@@ -58,7 +56,7 @@
                     ☑
                 </button>
                 <span class="toolbar-separator">|</span>
-                <button class="toolbar-btn" data-action="save-to-date" title="날짜별 메모 저장">
+                <button class="toolbar-btn" data-action="save-to-date" title="오늘 날짜로 메모 저장">
                     📅
                 </button>
                 <button class="toolbar-btn" data-action="save" title="일반 저장">
@@ -69,15 +67,9 @@
                 </button>
             </div>
             
-            <div class="sticky-date-selector" style="padding: 8px 15px; background: rgba(255, 193, 7, 0.05); border-bottom: 1px solid rgba(255, 193, 7, 0.2);">
-                <label style="font-size: 12px; color: #666;">저장할 날짜:</label>
-                <input type="date" id="stickyDatePicker" value="${today}" 
-                    style="margin-left: 8px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
-            </div>
-            
             <div class="sticky-memo-content">
                 <textarea id="stickyTextarea" class="sticky-memo-textarea" 
-                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;📅 버튼을 클릭하면 선택한 날짜에 메모가 저장됩니다."></textarea>
+                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;📅 버튼을 클릭하면 오늘 날짜에 메모가 저장됩니다."></textarea>
             </div>
             
             <div class="sticky-memo-footer">
@@ -486,9 +478,8 @@
      */
     function saveToDateMemo() {
         const textarea = document.querySelector('#stickyTextarea');
-        const datePicker = document.querySelector('#stickyDatePicker');
         
-        if (!textarea || !datePicker) return;
+        if (!textarea) return;
         
         const content = textarea.value.trim();
         if (!content) {
@@ -496,26 +487,22 @@
             return;
         }
         
-        const selectedDate = datePicker.value;
-        if (!selectedDate) {
-            alert('날짜를 선택해주세요.');
-            return;
-        }
+        // 현재 날짜 자동 설정
+        const now = new Date();
+        const selectedDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dateKey = selectedDate.replace(/-/g, ''); // YYYYMMDD
         
         // 첫째 줄과 둘째 줄 분리
         const lines = content.split('\n');
         const title = lines[0]?.trim() || '제목 없음';
         const memoContent = lines.slice(1).join('\n').trim() || content;
         
-        // 날짜 형식 변환 (YYYY-MM-DD to YYYYMMDD)
-        const dateKey = selectedDate.replace(/-/g, '');
-        
         // 메모 데이터 구조
         const newMemo = {
             id: Date.now(),
             title: title,
             content: memoContent,
-            time: new Date().toLocaleTimeString('ko-KR', {
+            time: now.toLocaleTimeString('ko-KR', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false
@@ -540,11 +527,11 @@
         });
         localStorage.setItem('memos', JSON.stringify(allMemos));
         
-        updateSaveStatus(`${selectedDate}에 저장됨!`);
+        updateSaveStatus(`오늘(${selectedDate})에 저장됨!`);
         
         // 성공 메시지
         setTimeout(() => {
-            if (confirm(`"${title}"이(가) ${selectedDate}에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
+            if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
                 textarea.value = '';
                 localStorage.removeItem('stickyMemoContent');
                 updateSaveStatus('저장 후 지워짐');
