@@ -48,7 +48,8 @@
       "Bash(robocopy:*)",
       "Bash(where python)",
       "Bash(/c/Users/wsw18/AppData/Local/Microsoft/WindowsApps/python \"D:\\claude_CLI\\delete_nul.py\")",
-      "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)"
+      "Read(C:\\Users\\wsw18\\AppData\\Roaming\\Claude/**)",
+      "Bash(start chrome --new-window http://localhost:8082)"
     ],
     "deny": [],
     "ask": []
