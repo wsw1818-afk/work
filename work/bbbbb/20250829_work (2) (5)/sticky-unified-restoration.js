@@ -492,16 +492,12 @@
         }
         
         const selection = window.getSelection();
-        if (!selection.toString()) {
-            alert('색상을 적용할 텍스트를 선택해주세요.');
-            return;
-        }
+        const selectedText = selection.toString();
         
         try {
-            const range = selection.getRangeAt(0);
-            const selectedText = range.toString();
-            
             if (selectedText) {
+                // 선택된 텍스트가 있는 경우 - 선택된 텍스트에 색상 적용
+                const range = selection.getRangeAt(0);
                 const span = document.createElement('span');
                 span.style.color = window.stickyMemoState.currentTextColor;
                 span.textContent = selectedText;
@@ -513,8 +509,37 @@
                 selection.removeAllRanges();
                 textarea.focus();
                 
-                console.log('✅ 글자색 적용 완료:', window.stickyMemoState.currentTextColor);
-                updateSaveStatus('색상 적용됨');
+                console.log('✅ 선택된 텍스트에 글자색 적용 완료:', window.stickyMemoState.currentTextColor);
+                updateSaveStatus('선택 텍스트에 색상 적용됨');
+            } else {
+                // 선택된 텍스트가 없는 경우 - 커서 위치에 색상 모드 활성화
+                const span = document.createElement('span');
+                span.style.color = window.stickyMemoState.currentTextColor;
+                span.className = 'color-input-mode';
+                span.contentEditable = true;
+                span.textContent = '색상 텍스트를 입력하세요';
+                
+                // 커서 위치에 삽입
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    range.insertNode(span);
+                    
+                    // 텍스트 선택하여 바로 입력 가능하게 만들기
+                    const newRange = document.createRange();
+                    newRange.selectNodeContents(span);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                } else {
+                    textarea.appendChild(span);
+                    const newRange = document.createRange();
+                    newRange.selectNodeContents(span);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                }
+                
+                textarea.focus();
+                console.log('✅ 색상 입력 모드 활성화:', window.stickyMemoState.currentTextColor);
+                updateSaveStatus('색상 입력 모드 활성화');
             }
         } catch (error) {
             console.error('❌ 글자색 적용 중 오류:', error);
@@ -530,16 +555,12 @@
         }
         
         const selection = window.getSelection();
-        if (!selection.toString()) {
-            alert('배경색을 적용할 텍스트를 선택해주세요.');
-            return;
-        }
+        const selectedText = selection.toString();
         
         try {
-            const range = selection.getRangeAt(0);
-            const selectedText = range.toString();
-            
             if (selectedText) {
+                // 선택된 텍스트가 있는 경우 - 선택된 텍스트에 배경색 적용
+                const range = selection.getRangeAt(0);
                 const span = document.createElement('span');
                 span.style.backgroundColor = window.stickyMemoState.currentBgColor;
                 span.textContent = selectedText;
@@ -551,13 +572,42 @@
                 selection.removeAllRanges();
                 textarea.focus();
                 
-                console.log('✅ 배경색 적용 완료:', window.stickyMemoState.currentBgColor);
-                updateSaveStatus('배경색 적용 완료');
+                console.log('✅ 선택된 텍스트에 배경색 적용 완료:', window.stickyMemoState.currentBgColor);
+                updateSaveStatus('선택 텍스트에 배경색 적용됨');
                 
                 // 자동 저장 시도
                 setTimeout(() => {
                     saveToDateMemo();
                 }, 500);
+            } else {
+                // 선택된 텍스트가 없는 경우 - 커서 위치에 배경색 모드 활성화
+                const span = document.createElement('span');
+                span.style.backgroundColor = window.stickyMemoState.currentBgColor;
+                span.className = 'bg-color-input-mode';
+                span.contentEditable = true;
+                span.textContent = '배경색 텍스트를 입력하세요';
+                
+                // 커서 위치에 삽입
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    range.insertNode(span);
+                    
+                    // 텍스트 선택하여 바로 입력 가능하게 만들기
+                    const newRange = document.createRange();
+                    newRange.selectNodeContents(span);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                } else {
+                    textarea.appendChild(span);
+                    const newRange = document.createRange();
+                    newRange.selectNodeContents(span);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                }
+                
+                textarea.focus();
+                console.log('✅ 배경색 입력 모드 활성화:', window.stickyMemoState.currentBgColor);
+                updateSaveStatus('배경색 입력 모드 활성화');
             }
         } catch (error) {
             console.error('❌ 배경색 적용 중 오류:', error);
@@ -993,6 +1043,33 @@
             
             .sticky-memo-textarea:focus:empty::before {
                 content: '';
+            }
+            
+            /* 색상 입력 모드 스타일 */
+            .color-input-mode {
+                border: 2px dashed rgba(255, 193, 7, 0.5);
+                padding: 2px 4px;
+                border-radius: 3px;
+                background: rgba(255, 255, 255, 0.1);
+                animation: colorModeGlow 2s infinite;
+            }
+            
+            .bg-color-input-mode {
+                border: 2px dashed rgba(255, 193, 7, 0.5);
+                padding: 2px 4px;
+                border-radius: 3px;
+                animation: colorModeGlow 2s infinite;
+            }
+            
+            @keyframes colorModeGlow {
+                0%, 100% { 
+                    border-color: rgba(255, 193, 7, 0.5);
+                    box-shadow: 0 0 5px rgba(255, 193, 7, 0.3);
+                }
+                50% { 
+                    border-color: rgba(255, 193, 7, 0.8);
+                    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+                }
             }
             
             /* 푸터 스타일 */
