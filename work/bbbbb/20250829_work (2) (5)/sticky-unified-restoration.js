@@ -72,9 +72,10 @@
             </div>
             
             <div class="sticky-memo-content">
-                <textarea id="stickyTextarea" class="sticky-memo-textarea" 
-                    placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;저장하면 오늘 날짜에 메모가 저장됩니다."
-                    style="min-width: 500px; min-height: 400px; max-width: none; max-height: none;"></textarea>
+                <div id="stickyTextarea" class="sticky-memo-textarea" 
+                    contenteditable="true"
+                    data-placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;저장하면 오늘 날짜에 메모가 저장됩니다."
+                    style="min-width: 500px; min-height: 400px; max-width: none; max-height: none;"></div>
             </div>
             
             <div class="sticky-memo-footer">
@@ -126,7 +127,7 @@
             if (savedContent) {
                 const textarea = sticky.querySelector('#stickyTextarea');
                 if (textarea) {
-                    textarea.value = savedContent;
+                    textarea.innerHTML = savedContent;
                     window.stickyMemoState.savedContent = savedContent;
                 }
             }
@@ -283,7 +284,7 @@
             
             // 자동 저장
             textarea.addEventListener('input', debounce(() => {
-                localStorage.setItem('stickyMemoContent', textarea.value);
+                localStorage.setItem('stickyMemoContent', textarea.innerHTML);
                 updateSaveStatus('자동 저장됨');
             }, 1000));
         }
@@ -472,7 +473,7 @@
                 break;
             case 'clear':
                 if (confirm('메모를 모두 지우시겠습니까?')) {
-                    textarea.value = '';
+                    textarea.innerHTML = '';
                     localStorage.removeItem('stickyMemoContent');
                     updateSaveStatus('지워짐');
                 }
@@ -490,30 +491,34 @@
             return;
         }
         
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const selectedText = textarea.value.substring(start, end);
+        const selection = window.getSelection();
+        if (!selection.toString()) {
+            alert('색상을 적용할 텍스트를 선택해주세요.');
+            return;
+        }
         
-        if (selectedText) {
-            const coloredText = `<span style="color: ${window.stickyMemoState.currentTextColor};">${selectedText}</span>`;
+        try {
+            const range = selection.getRangeAt(0);
+            const selectedText = range.toString();
             
-            try {
-                textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
+            if (selectedText) {
+                const span = document.createElement('span');
+                span.style.color = window.stickyMemoState.currentTextColor;
+                span.textContent = selectedText;
                 
-                // 커서 위치 조정
-                const newPos = start + coloredText.length;
-                textarea.selectionStart = newPos;
-                textarea.selectionEnd = newPos;
+                range.deleteContents();
+                range.insertNode(span);
+                
+                // 선택 해제
+                selection.removeAllRanges();
                 textarea.focus();
                 
                 console.log('✅ 글자색 적용 완료:', window.stickyMemoState.currentTextColor);
                 updateSaveStatus('색상 적용됨');
-            } catch (error) {
-                console.error('❌ 글자색 적용 중 오류:', error);
-                updateSaveStatus('색상 적용 실패');
             }
-        } else {
-            alert('색상을 적용할 텍스트를 선택해주세요.');
+        } catch (error) {
+            console.error('❌ 글자색 적용 중 오류:', error);
+            updateSaveStatus('색상 적용 실패');
         }
     }
     
@@ -524,20 +529,26 @@
             return;
         }
         
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const selectedText = textarea.value.substring(start, end);
+        const selection = window.getSelection();
+        if (!selection.toString()) {
+            alert('배경색을 적용할 텍스트를 선택해주세요.');
+            return;
+        }
         
-        if (selectedText) {
-            const backgroundText = `<span style="background-color: ${window.stickyMemoState.currentBgColor};">${selectedText}</span>`;
+        try {
+            const range = selection.getRangeAt(0);
+            const selectedText = range.toString();
             
-            try {
-                textarea.value = textarea.value.substring(0, start) + backgroundText + textarea.value.substring(end);
+            if (selectedText) {
+                const span = document.createElement('span');
+                span.style.backgroundColor = window.stickyMemoState.currentBgColor;
+                span.textContent = selectedText;
                 
-                // 커서 위치 조정
-                const newPos = start + backgroundText.length;
-                textarea.selectionStart = newPos;
-                textarea.selectionEnd = newPos;
+                range.deleteContents();
+                range.insertNode(span);
+                
+                // 선택 해제
+                selection.removeAllRanges();
                 textarea.focus();
                 
                 console.log('✅ 배경색 적용 완료:', window.stickyMemoState.currentBgColor);
@@ -547,13 +558,10 @@
                 setTimeout(() => {
                     saveToDateMemo();
                 }, 500);
-                
-            } catch (error) {
-                console.error('❌ 배경색 적용 중 오류:', error);
-                updateSaveStatus('배경색 적용 실패');
             }
-        } else {
-            alert('배경색을 적용할 텍스트를 선택해주세요.');
+        } catch (error) {
+            console.error('❌ 배경색 적용 중 오류:', error);
+            updateSaveStatus('배경색 적용 실패');
         }
     }
     
@@ -615,7 +623,7 @@
             return;
         }
         
-        const content = textarea.value.trim();
+        const content = textarea.textContent.trim();
         if (!content) {
             alert('저장할 내용을 입력해주세요.');
             return;
@@ -642,7 +650,7 @@
                 // 성공 메시지
                 setTimeout(() => {
                     if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
-                        textarea.value = '';
+                        textarea.innerHTML = '';
                         localStorage.removeItem('stickyMemoContent');
                         updateSaveStatus('저장 후 지워짐');
                     }
@@ -684,7 +692,7 @@
                 
                 setTimeout(() => {
                     if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
-                        textarea.value = '';
+                        textarea.innerHTML = '';
                         localStorage.removeItem('stickyMemoContent');
                         updateSaveStatus('저장 후 지워짐');
                     }
@@ -738,7 +746,7 @@
             
             setTimeout(() => {
                 if (confirm(`"${title}"이(가) 오늘(${selectedDate})에 저장되었습니다.\n\n스티커 메모를 지우시겠습니까?`)) {
-                    textarea.value = '';
+                    textarea.innerHTML = '';
                     localStorage.removeItem('stickyMemoContent');
                     updateSaveStatus('저장 후 지워짐');
                 }
@@ -756,7 +764,7 @@
      */
     function handleTextInput(e) {
         const textarea = e.target;
-        const charCount = textarea.value.length;
+        const charCount = textarea.textContent.length;
         
         // 글자 수 업데이트
         const countElement = document.querySelector('.char-count');
@@ -966,12 +974,25 @@
                 height: 100%;
                 border: none;
                 background: transparent;
-                resize: none;
                 outline: none;
                 font-size: 14px;
                 line-height: 1.6;
                 font-family: inherit;
                 box-sizing: border-box;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                padding: 8px;
+            }
+            
+            .sticky-memo-textarea:empty::before {
+                content: attr(data-placeholder);
+                color: #999;
+                white-space: pre-line;
+            }
+            
+            .sticky-memo-textarea:focus:empty::before {
+                content: '';
             }
             
             /* 푸터 스타일 */
