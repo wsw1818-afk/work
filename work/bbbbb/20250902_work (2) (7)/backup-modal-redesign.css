@@ -1,0 +1,329 @@
+/* 백업 모달 리디자인 - Backup Modal Redesign */
+
+/* 백업 모달 전체 스타일 */
+#backupModal .modal-content,
+.backup-modal .modal-content {
+    background: white !important;
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15) !important;
+    max-width: 580px !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+}
+
+/* 백업 모달 헤더 (이미 modal-header-enhancement.css에서 처리됨) */
+#backupModal .modal-header,
+.backup-modal .modal-header {
+    background: linear-gradient(135deg, #ff9a56 0%, #ffad56 100%) !important;
+    padding: 24px 28px !important;
+}
+
+#backupModal .modal-title::before,
+.backup-modal .modal-title::before {
+    content: '📦';
+    font-size: 24px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    margin-right: 12px !important;
+}
+
+/* 백업 모달 바디 */
+#backupModal .modal-body,
+.backup-modal .modal-body {
+    padding: 32px 28px !important;
+    background: #f8fafc !important;
+}
+
+/* 백업 섹션 구분 */
+.backup-section {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 24px !important;
+    margin-bottom: 20px !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.backup-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff9a56, #ffad56);
+}
+
+/* 섹션 제목 */
+.backup-section h3,
+.backup-section .section-title {
+    color: #1f2937 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    margin: 0 0 8px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.backup-section h3::before,
+.backup-section .section-title::before {
+    font-size: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: linear-gradient(135deg, #ff9a56, #ffad56) !important;
+    border-radius: 8px !important;
+    color: white !important;
+}
+
+/* 데이터 복원 섹션 아이콘 */
+.backup-section:first-child h3::before,
+.backup-section:first-child .section-title::before {
+    content: '📥';
+}
+
+/* 클라우드 자동 동기화 섹션 아이콘 */
+.backup-section:nth-child(2) h3::before,
+.backup-section:nth-child(2) .section-title::before {
+    content: '☁️';
+}
+
+/* 섹션 설명 */
+.backup-section p,
+.backup-section .section-description {
+    color: #6b7280 !important;
+    font-size: 14px !important;
+    margin: 0 0 20px 0 !important;
+    line-height: 1.5 !important;
+}
+
+/* 백업 버튼 통일 스타일 */
+.backup-btn,
+.backup-section button {
+    width: 100% !important;
+    padding: 14px 20px !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 백업 파일 선택 버튼 */
+.backup-file-select,
+#backupModal .modal-body button[style*="background: linear-gradient(135deg, #fbbf24, #f59e0b)"] {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+    color: white !important;
+}
+
+.backup-file-select:hover,
+#backupModal .modal-body button[style*="background: linear-gradient(135deg, #fbbf24, #f59e0b)"]:hover {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* 오프라인 버튼 */
+.offline-btn,
+#backupModal .modal-body button[style*="color: #9ca3af"] {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border: 2px solid #e5e7eb !important;
+}
+
+.offline-btn:hover,
+#backupModal .modal-body button[style*="color: #9ca3af"]:hover {
+    background: #e5e7eb !important;
+    color: #4b5563 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Google Drive 연결 버튼들 */
+.drive-connect-btn,
+#backupModal .modal-body button[style*="background: linear-gradient(135deg, #06b6d4, #0891b2)"] {
+    background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+    color: white !important;
+}
+
+.drive-connect-btn:hover,
+#backupModal .modal-body button[style*="background: linear-gradient(135deg, #06b6d4, #0891b2)"]:hover {
+    background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3) !important;
+}
+
+/* 비활성화된 Google Drive 버튼 */
+.drive-disabled-btn,
+#backupModal .modal-body button[style*="background: #9ca3af"] {
+    background: #9ca3af !important;
+    color: white !important;
+    cursor: not-allowed !important;
+}
+
+.drive-disabled-btn:hover,
+#backupModal .modal-body button[style*="background: #9ca3af"]:hover {
+    background: #9ca3af !important;
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 저장 위치 설정 버튼 */
+.storage-location-btn,
+#backupModal .modal-body button[style*="background: linear-gradient(135deg, #f97316, #ea580c)"] {
+    background: linear-gradient(135deg, #f97316, #ea580c) !important;
+    color: white !important;
+}
+
+.storage-location-btn:hover,
+#backupModal .modal-body button[style*="background: linear-gradient(135deg, #f97316, #ea580c)"]:hover {
+    background: linear-gradient(135deg, #ea580c, #c2410c) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* 버튼 아이콘 스타일 */
+.backup-btn::before {
+    font-size: 18px !important;
+    opacity: 0.9 !important;
+}
+
+/* 상태 표시 */
+.backup-status {
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    background: #f0f9ff !important;
+    border: 1px solid #0ea5e9 !important;
+    color: #0c4a6e !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    margin-bottom: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.backup-status::before {
+    content: 'ℹ️';
+    font-size: 14px !important;
+}
+
+/* 오류 상태 */
+.backup-error {
+    background: #fef2f2 !important;
+    border-color: #f87171 !important;
+    color: #991b1b !important;
+}
+
+.backup-error::before {
+    content: '⚠️';
+}
+
+/* 성공 상태 */
+.backup-success {
+    background: #f0fdf4 !important;
+    border-color: #4ade80 !important;
+    color: #166534 !important;
+}
+
+.backup-success::before {
+    content: '✅';
+}
+
+/* 로딩 스피너 */
+.backup-loading {
+    display: inline-block !important;
+    width: 16px !important;
+    height: 16px !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    border-top-color: white !important;
+    animation: backup-spin 1s ease-in-out infinite !important;
+    margin-right: 8px !important;
+}
+
+@keyframes backup-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 576px) {
+    #backupModal .modal-content,
+    .backup-modal .modal-content {
+        margin: 20px !important;
+        max-width: none !important;
+    }
+    
+    #backupModal .modal-body,
+    .backup-modal .modal-body {
+        padding: 24px 20px !important;
+    }
+    
+    .backup-section {
+        padding: 20px !important;
+        margin-bottom: 16px !important;
+    }
+    
+    .backup-section h3,
+    .backup-section .section-title {
+        font-size: 16px !important;
+    }
+    
+    .backup-btn,
+    .backup-section button {
+        font-size: 14px !important;
+        padding: 12px 16px !important;
+    }
+}
+
+/* 다크 모드 지원 */
+[data-theme="dark"] #backupModal .modal-body,
+[data-theme="dark"] .backup-modal .modal-body {
+    background: #1f2937 !important;
+}
+
+[data-theme="dark"] .backup-section {
+    background: #374151 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .backup-section h3,
+[data-theme="dark"] .backup-section .section-title {
+    color: white !important;
+}
+
+[data-theme="dark"] .backup-section p,
+[data-theme="dark"] .backup-section .section-description {
+    color: #d1d5db !important;
+}
+
+/* 기존 백업 시스템과의 호환성 */
+.backup-restore-section,
+.cloud-sync-section {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 24px !important;
+    margin-bottom: 20px !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
