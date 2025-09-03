@@ -2703,6 +2703,143 @@
         <div class="days-grid" id="daysGrid"></div>
     </div>
 
+    <!-- 저장소 관리 모달 -->
+    <div class="modal" id="storageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">저장소 관리</h2>
+                <button class="modal-close" onclick="closeModal('storageModal')"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 저장소 현황 섹션 -->
+                <div class="storage-section">
+                    <div class="section-title">
+                        <span class="section-icon">📊</span>
+                        <span>저장소 현황</span>
+                    </div>
+                    <div class="storage-overview">
+                        <div class="storage-stats">
+                            <div class="storage-item">
+                                <div class="storage-label">사용 중</div>
+                                <div class="storage-value" id="usedStorage">계산 중...</div>
+                                <div class="storage-bar">
+                                    <div class="storage-progress" id="storageProgress"></div>
+                                </div>
+                            </div>
+                            <div class="storage-item">
+                                <div class="storage-label">전체 용량</div>
+                                <div class="storage-value" id="totalStorage">계산 중...</div>
+                            </div>
+                            <div class="storage-item">
+                                <div class="storage-label">남은 공간</div>
+                                <div class="storage-value" id="availableStorage">계산 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 데이터 분석 섹션 -->
+                <div class="storage-section">
+                    <div class="section-title">
+                        <span class="section-icon">📈</span>
+                        <span>데이터 분석</span>
+                    </div>
+                    <div class="data-breakdown">
+                        <div class="data-item">
+                            <div class="data-icon">📝</div>
+                            <div class="data-info">
+                                <div class="data-name">메모 데이터</div>
+                                <div class="data-size" id="memoSize">0 KB</div>
+                            </div>
+                            <div class="data-count" id="memoCount">0개</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-icon">📎</div>
+                            <div class="data-info">
+                                <div class="data-name">첨부파일</div>
+                                <div class="data-size" id="attachmentSize">0 KB</div>
+                            </div>
+                            <div class="data-count" id="attachmentCount">0개</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-icon">⚙️</div>
+                            <div class="data-info">
+                                <div class="data-name">설정 데이터</div>
+                                <div class="data-size" id="settingsSize">0 KB</div>
+                            </div>
+                            <div class="data-count">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 백업 관리 섹션 -->
+                <div class="storage-section">
+                    <div class="section-title">
+                        <span class="section-icon">💾</span>
+                        <span>백업 관리</span>
+                    </div>
+                    <div class="backup-actions">
+                        <div class="backup-item">
+                            <div class="backup-info">
+                                <div class="backup-title">전체 데이터 백업</div>
+                                <div class="backup-desc">모든 메모, 설정, 첨부파일을 포함한 완전한 백업</div>
+                            </div>
+                            <button class="btn-backup" onclick="exportFullBackup()">📥 백업 생성</button>
+                        </div>
+                        <div class="backup-item">
+                            <div class="backup-info">
+                                <div class="backup-title">메모만 백업</div>
+                                <div class="backup-desc">메모 데이터만 가볍게 백업 (첨부파일 제외)</div>
+                            </div>
+                            <button class="btn-backup" onclick="exportMemosOnly()">📝 메모 백업</button>
+                        </div>
+                        <div class="backup-item">
+                            <div class="backup-info">
+                                <div class="backup-title">백업 복원</div>
+                                <div class="backup-desc">이전에 생성한 백업 파일을 불러와서 복원</div>
+                            </div>
+                            <label class="btn-backup restore-btn">
+                                📤 복원하기
+                                <input type="file" id="restoreFile" accept=".json,.zip" style="display: none;" onchange="importBackup(this)">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 정리 도구 섹션 -->
+                <div class="storage-section">
+                    <div class="section-title">
+                        <span class="section-icon">🧹</span>
+                        <span>정리 도구</span>
+                    </div>
+                    <div class="cleanup-actions">
+                        <div class="cleanup-group">
+                            <div class="cleanup-title">자동 정리</div>
+                            <div class="cleanup-buttons">
+                                <button class="btn-cleanup" onclick="cleanupLargeFiles()">🗑️ 큰 파일 정리</button>
+                                <button class="btn-cleanup" onclick="cleanupDuplicates()">🔄 중복 제거</button>
+                                <button class="btn-cleanup" onclick="cleanupEmptyMemos()">📝 빈 메모 정리</button>
+                            </div>
+                        </div>
+                        <div class="cleanup-group">
+                            <div class="cleanup-title">고급 정리</div>
+                            <div class="cleanup-buttons">
+                                <button class="btn-cleanup danger" onclick="clearAllData()">⚠️ 전체 삭제</button>
+                                <button class="btn-cleanup" onclick="resetSettings()">🔄 설정 초기화</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-info" onclick="refreshStorageInfo()">🔄 새로고침</button>
+                <div style="margin-left: auto; display: flex; gap: 12px;">
+                    <button class="btn-secondary" onclick="closeModal('storageModal')">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <button class="theme-toggle" id="themeToggle">🌙</button>
 
 
@@ -8527,6 +8664,9 @@
     <!-- 모달 헤더 향상 -->
     <link rel="stylesheet" href="modal-header-enhancement.css">
     
+    <!-- 저장소 모달 디자인 -->
+    <link rel="stylesheet" href="storage-modal-design.css">
+    
     <!-- 스티커 메모 색상 변경 기능 -->
     <link rel="stylesheet" href="sticky-memo-colors.css">
     <!-- force-show-memos.css 제거 - 레이아웃 깨짐 원인 -->
@@ -8576,6 +8716,9 @@
     
     <!-- 엑셀 모달 컨트롤러 -->
     <script src="excel-modal-controller.js"></script>
+    
+    <!-- 저장소 모달 컨트롤러 -->
+    <script src="storage-modal-controller.js"></script>
     
     <!-- force-modal-open.js 제거 - unified-memo-system.js와 충돌 -->
 </body>
