@@ -2792,41 +2792,65 @@
                 <button class="modal-close" onclick="closeModal('excelModal')">✕</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">📅 내보낼 기간</label>
+                <!-- 내보낼 기간 섹션 -->
+                <div class="export-section">
+                    <div class="section-title">
+                        <span class="section-icon">📅</span>
+                        <span>내보낼 기간</span>
+                    </div>
                     <select class="form-select" id="exportPeriod">
-                        <option value="current">현재 월 (2025년 8월)</option>
+                        <option value="current">현재 월 (2025년 9월)</option>
                         <option value="quarter">현재 분기 (2025년 3분기)</option>
                         <option value="half">현재 반기 (2025년 하반기)</option>
                         <option value="year">현재 년도 (2025년 전체)</option>
                         <option value="custom">사용자 지정 기간</option>
                     </select>
-                </div>
-
-                <div id="customPeriod" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">시작 날짜</label>
-                        <input type="date" class="form-input" id="startDate" value="2025-08-01">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">종료 날짜</label>
-                        <input type="date" class="form-input" id="endDate" value="2025-08-31">
+                    
+                    <div id="customPeriod" style="display: none;">
+                        <div class="date-range">
+                            <input type="date" id="startDate" value="2025-09-01">
+                            <span class="date-separator">~</span>
+                            <input type="date" id="endDate" value="2025-09-30">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">📋 포함할 항목</label>
-                    <div style="margin-left: 20px;">
-                        <label><input type="checkbox" id="includeHolidays" checked> 공휴일</label><br>
-                        <label><input type="checkbox" id="includeWeekends" checked> 주말 표시</label><br>
-                        <label><input type="checkbox" id="includeMemos" checked> 메모</label><br>
-                        <label><input type="checkbox" id="includeSchedules"> 일정</label><br>
-                        <label><input type="checkbox" id="includeWeekNumber"> 주차 번호</label>
+                <!-- 포함할 항목 섹션 -->
+                <div class="export-section">
+                    <div class="section-title">
+                        <span class="section-icon">📋</span>
+                        <span>포함할 항목</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="includeHolidays" checked>
+                            <label for="includeHolidays">공휴일</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="includeWeekends" checked>
+                            <label for="includeWeekends">주말 표시</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="includeMemos" checked>
+                            <label for="includeMemos">메모</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="includeSchedules">
+                            <label for="includeSchedules">일정</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="includeWeekNumber">
+                            <label for="includeWeekNumber">주차 번호</label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">📄 파일 형식</label>
+                <!-- 파일 형식 섹션 -->
+                <div class="export-section">
+                    <div class="section-title">
+                        <span class="section-icon">📄</span>
+                        <span>파일 형식</span>
+                    </div>
                     <select class="form-select" id="fileFormat">
                         <option value="csv">CSV (엑셀 호환)</option>
                         <option value="xlsx">XLSX (엑셀 2007+)</option>
@@ -2835,8 +2859,12 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">🌐 언어</label>
+                <!-- 언어 섹션 -->
+                <div class="export-section">
+                    <div class="section-title">
+                        <span class="section-icon">🌐</span>
+                        <span>언어</span>
+                    </div>
                     <select class="form-select" id="exportLanguage">
                         <option value="ko">한국어</option>
                         <option value="en">English</option>
@@ -2844,18 +2872,34 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">🎨 스타일 옵션</label>
-                    <div style="margin-left: 20px;">
-                        <label><input type="checkbox" id="colorCoding" checked> 색상 코딩 (주말/공휴일)</label><br>
-                        <label><input type="checkbox" id="includeSummary" checked> 월별 요약 포함</label><br>
-                        <label><input type="checkbox" id="includeHeader" checked> 헤더 포함</label>
+                <!-- 스타일 옵션 섹션 -->
+                <div class="export-section">
+                    <div class="section-title">
+                        <span class="section-icon">🎨</span>
+                        <span>스타일 옵션</span>
+                    </div>
+                    <div class="style-options">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="colorCoding" checked>
+                            <label for="colorCoding">색상 코딩 (주말/공휴일)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="includeSummary" checked>
+                            <label for="includeSummary">월별 요약 포함</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="includeHeader" checked>
+                            <label for="includeHeader">헤더 포함</label>
+                        </div>
                     </div>
                 </div>
-
-                <button class="btn-primary" onclick="processExcelExport()">📥 내보내기</button>
-                <button class="btn-secondary" onclick="previewExcelData()">👁️ 미리보기</button>
-                <button class="btn-secondary" onclick="closeModal('excelModal')">취소</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-info" onclick="previewExcelData()">👁️ 미리보기</button>
+                <div style="margin-left: auto; display: flex; gap: 12px;">
+                    <button class="btn-secondary" onclick="closeModal('excelModal')">취소</button>
+                    <button class="btn-primary" onclick="processExcelExport()">📥 내보내기</button>
+                </div>
             </div>
         </div>
     </div>
@@ -8477,6 +8521,9 @@
     <!-- 깔끔한 메뉴 UI 디자인 -->
     <link rel="stylesheet" href="clean-menu-ui.css">
     
+    <!-- 엑셀 모달 재디자인 -->
+    <link rel="stylesheet" href="excel-modal-redesign.css">
+    
     <!-- 스티커 메모 색상 변경 기능 -->
     <link rel="stylesheet" href="sticky-memo-colors.css">
     <!-- force-show-memos.css 제거 - 레이아웃 깨짐 원인 -->
@@ -8523,6 +8570,9 @@
     
     <!-- 깔끔한 메뉴 컨트롤러 -->
     <script src="clean-menu-controller.js"></script>
+    
+    <!-- 엑셀 모달 컨트롤러 -->
+    <script src="excel-modal-controller.js"></script>
     
     <!-- force-modal-open.js 제거 - unified-memo-system.js와 충돌 -->
 </body>
