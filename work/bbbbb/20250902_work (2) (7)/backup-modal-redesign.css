@@ -12,6 +12,25 @@
     overflow: hidden !important;
 }
 
+/* 백업 모달 상단 여백 제거 */
+#backupModal,
+.backup-modal {
+    padding-top: 0 !important;
+}
+
+#backupModal .modal-dialog,
+.backup-modal .modal-dialog {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 20px !important;
+}
+
+/* 모달 배경 오버레이 상단 공간 제거 */
+#backupModal.modal,
+.backup-modal.modal {
+    padding: 0 !important;
+}
+
 /* 백업 모달 헤더 (이미 modal-header-enhancement.css에서 처리됨) */
 #backupModal .modal-header,
 .backup-modal .modal-header {
