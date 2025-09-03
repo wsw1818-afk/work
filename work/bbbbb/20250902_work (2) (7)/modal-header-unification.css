@@ -1,0 +1,272 @@
+/* 모달 헤더 통일 및 X 버튼 영역 정렬 */
+
+/* 모든 모달의 상단 여백 통일 */
+.modal,
+.unified-modal,
+.backup-modal,
+.sync-modal,
+.drive-modal,
+.storage-modal {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* 모달 다이얼로그 위치 통일 */
+.modal-dialog,
+.modal .modal-dialog,
+.unified-modal .modal-dialog {
+    margin: 50px auto !important;
+    padding: 0 !important;
+}
+
+/* 모달 컨텐츠 상단 정렬 */
+.modal-content,
+.modal .modal-content {
+    margin-top: 0 !important;
+    border-radius: 16px !important;
+    overflow: visible !important;
+}
+
+/* 모든 모달 헤더 통일 */
+.modal-header,
+.modal .modal-header {
+    height: 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 24px !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: relative !important;
+}
+
+/* X 버튼 영역 통일 및 정렬 */
+.modal-close,
+.modal .modal-close,
+.modal-header .modal-close,
+.modal-header .close,
+.modal-header button.close,
+.modal-header button[aria-label="Close"],
+.btn-close {
+    position: absolute !important;
+    top: 50% !important;
+    right: 24px !important;
+    transform: translateY(-50%) !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    font-size: 20px !important;
+    font-weight: 300 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+    z-index: 10 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+}
+
+/* X 버튼 내용 통일 */
+.modal-close::before,
+.modal .modal-close::before,
+.modal-header .close::before,
+.modal-header button.close::before {
+    content: '×' !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    display: block !important;
+}
+
+/* 기존 X 표시 제거 (중복 방지) */
+.modal-close span,
+.modal .modal-close span,
+.modal-header .close span,
+.modal-header button.close span {
+    display: none !important;
+}
+
+/* X 버튼 호버 효과 통일 */
+.modal-close:hover,
+.modal .modal-close:hover,
+.modal-header .close:hover,
+.modal-header button.close:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    transform: translateY(-50%) rotate(90deg) !important;
+    color: white !important;
+}
+
+/* X 버튼 포커스 스타일 제거 */
+.modal-close:focus,
+.modal .modal-close:focus,
+.modal-header .close:focus,
+.modal-header button.close:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* 모달 제목 위치 조정 (X 버튼과 겹치지 않게) */
+.modal-title,
+.modal .modal-title,
+.modal-header .modal-title {
+    margin: 0 !important;
+    padding-right: 60px !important;
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* 특정 모달별 헤더 높이 보정 */
+#excelModal .modal-header,
+#settingsModal .modal-header,
+#storageModal .modal-header,
+#backupModal .modal-header,
+#unifiedCloudModal .modal-header,
+#cloudModal .modal-header,
+#memoModal .modal-header,
+#dateMemoModal .modal-header,
+#memoDetailModal .modal-header,
+#createModal .modal-header {
+    height: 64px !important;
+}
+
+/* 동적으로 생성되는 모달 스타일 */
+.unified-modal .modal-content,
+.drive-modal .modal-content,
+.sync-modal .modal-content {
+    position: relative !important;
+    background: white !important;
+    border-radius: 16px !important;
+    max-width: 680px !important;
+    width: 90% !important;
+    margin: 0 auto !important;
+}
+
+/* 동적 모달 헤더 */
+.unified-modal .modal-header,
+.drive-modal .modal-header,
+.sync-modal .modal-header {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%) !important;
+    color: white !important;
+    height: 64px !important;
+    padding: 0 24px !important;
+    border-radius: 16px 16px 0 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative !important;
+}
+
+/* 클라우드 버튼 클릭 문제 해결 */
+#unifiedCloudBtn {
+    z-index: 1 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+#unifiedCloudBtn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 클라우드 버튼 활성화 상태 */
+#unifiedCloudBtn:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 오버레이 z-index 조정 */
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+.modal {
+    z-index: 1050 !important;
+}
+
+.unified-modal,
+.drive-modal,
+.sync-modal {
+    z-index: 9999 !important;
+}
+
+/* 반응형 디자인 - 모바일 */
+@media (max-width: 576px) {
+    .modal-dialog,
+    .modal .modal-dialog {
+        margin: 20px auto !important;
+    }
+    
+    .modal-header,
+    .modal .modal-header {
+        height: 56px !important;
+        padding: 0 16px !important;
+    }
+    
+    .modal-close,
+    .modal .modal-close {
+        width: 32px !important;
+        height: 32px !important;
+        right: 16px !important;
+    }
+    
+    .modal-close::before,
+    .modal .modal-close::before {
+        font-size: 24px !important;
+    }
+    
+    .modal-title,
+    .modal .modal-title {
+        font-size: 16px !important;
+        padding-right: 48px !important;
+    }
+}
+
+/* 모달 오픈 애니메이션 */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal.show .modal-dialog {
+    animation: modalFadeIn 0.3s ease-out !important;
+}
+
+/* 백업 모달 특별 처리 */
+#backupModal .modal-content,
+.backup-modal .modal-content {
+    margin-top: 0 !important;
+    overflow: hidden !important;
+}
+
+/* 스크롤바 스타일링 */
+.modal-body::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 4px !important;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 4px !important;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+}
