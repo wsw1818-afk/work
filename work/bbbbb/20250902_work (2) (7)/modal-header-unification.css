@@ -44,7 +44,7 @@
     position: relative !important;
 }
 
-/* X 버튼 영역 통일 및 정렬 */
+/* X 버튼 영역 통일 및 정렬 - 가려짐 방지 */
 .modal-close,
 .modal .modal-close,
 .modal-header .modal-close,
@@ -54,15 +54,15 @@
 .btn-close {
     position: absolute !important;
     top: 50% !important;
-    right: 24px !important;
+    right: 16px !important;
     transform: translateY(-50%) !important;
-    width: 36px !important;
-    height: 36px !important;
+    width: 40px !important;
+    height: 40px !important;
     border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
     color: white !important;
-    font-size: 20px !important;
+    font-size: 22px !important;
     font-weight: 300 !important;
     line-height: 1 !important;
     cursor: pointer !important;
@@ -70,10 +70,13 @@
     align-items: center !important;
     justify-content: center !important;
     transition: all 0.3s ease !important;
-    z-index: 10 !important;
+    z-index: 999 !important;
     padding: 0 !important;
     margin: 0 !important;
     opacity: 1 !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    box-sizing: border-box !important;
 }
 
 /* X 버튼 내용 통일 */
@@ -120,11 +123,15 @@
 .modal .modal-title,
 .modal-header .modal-title {
     margin: 0 !important;
-    padding-right: 60px !important;
+    padding-right: 70px !important;
     flex: 1 !important;
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
+    max-width: calc(100% - 90px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
 /* 특정 모달별 헤더 높이 보정 */
@@ -177,12 +184,33 @@
     background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%) !important;
     color: white !important;
     height: 64px !important;
-    padding: 0 24px !important;
+    padding: 0 20px !important;
     border-radius: 16px 16px 0 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     position: relative !important;
+}
+
+/* 동적 모달 X 버튼 */
+.unified-modal .modal-close,
+.drive-modal .modal-close,
+.sync-modal .modal-close {
+    position: absolute !important;
+    top: 50% !important;
+    right: 16px !important;
+    transform: translateY(-50%) !important;
+    width: 40px !important;
+    height: 40px !important;
+    z-index: 999 !important;
+}
+
+/* 동적 모달 제목 여백 */
+.unified-modal .modal-title,
+.drive-modal .modal-title,
+.sync-modal .modal-title {
+    padding-right: 70px !important;
+    max-width: calc(100% - 90px) !important;
 }
 
 /* 클라우드 버튼 클릭 문제 해결 */
@@ -247,9 +275,11 @@
     
     .modal-close,
     .modal .modal-close {
-        width: 32px !important;
-        height: 32px !important;
-        right: 16px !important;
+        width: 36px !important;
+        height: 36px !important;
+        right: 12px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
     }
     
     .modal-close::before,
@@ -260,7 +290,8 @@
     .modal-title,
     .modal .modal-title {
         font-size: 16px !important;
-        padding-right: 48px !important;
+        padding-right: 60px !important;
+        max-width: calc(100% - 80px) !important;
     }
 }
 
