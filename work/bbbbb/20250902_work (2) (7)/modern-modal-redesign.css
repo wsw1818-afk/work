@@ -621,6 +621,44 @@ body:not(.modal-open) {
     padding-right: 0 !important;
 }
 
+/* 모든 액션 버튼 클릭 가능하도록 강화 */
+.action-btn,
+button.action-btn,
+#createBtn,
+#memoBtn,
+#excelBtn,
+#unifiedCloudBtn,
+#syncStatusBtn,
+#settingsBtn,
+#storageBtn,
+#themeToggle {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 100 !important;
+    position: relative !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.action-btn:hover,
+button.action-btn:hover {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 액션 바 영역도 클릭 가능하게 */
+.action-bar {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+.action-row {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 60 !important;
+}
+
 /* 애니메이션 비활성화 설정 존중 */
 @media (prefers-reduced-motion: reduce) {
     .modal,
