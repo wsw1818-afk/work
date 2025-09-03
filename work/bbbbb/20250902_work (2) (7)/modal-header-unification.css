@@ -11,12 +11,17 @@
     margin: 0 !important;
 }
 
-/* 모달 다이얼로그 위치 통일 */
+/* 모달 다이얼로그 위치 - 화면 중앙 정렬 */
 .modal-dialog,
 .modal .modal-dialog,
 .unified-modal .modal-dialog {
-    margin: 50px auto !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
     padding: 0 !important;
+    z-index: 1050 !important;
 }
 
 /* 모달 컨텐츠 상단 정렬 */
@@ -137,6 +142,21 @@
 }
 
 /* 동적으로 생성되는 모달 스타일 */
+.unified-modal,
+.drive-modal,
+.sync-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+}
+
 .unified-modal .modal-content,
 .drive-modal .modal-content,
 .sync-modal .modal-content {
@@ -145,7 +165,9 @@
     border-radius: 16px !important;
     max-width: 680px !important;
     width: 90% !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
 }
 
 /* 동적 모달 헤더 */
@@ -201,7 +223,20 @@
 @media (max-width: 576px) {
     .modal-dialog,
     .modal .modal-dialog {
-        margin: 20px auto !important;
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        width: 95% !important;
+        max-width: none !important;
+    }
+    
+    .unified-modal .modal-content,
+    .drive-modal .modal-content,
+    .sync-modal .modal-content {
+        width: 95% !important;
+        max-height: 85vh !important;
     }
     
     .modal-header,
