@@ -1,6 +1,6 @@
 /* 현대적 모달 완전 재디자인 - Modern Modal Complete Redesign */
 
-/* 전역 모달 컨테이너 */
+/* 전역 모달 컨테이너 - 기본적으로 숨김 */
 .modal,
 .unified-modal,
 .backup-modal,
@@ -15,13 +15,28 @@
     background: rgba(15, 23, 42, 0.75) !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
-    display: flex !important;
+    display: none !important;
     align-items: center !important;
     justify-content: center !important;
     z-index: 10000 !important;
     padding: 0 !important;
     margin: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
     animation: modalBackdropFade 0.3s ease-out !important;
+}
+
+/* 모달이 보여질 때만 활성화 */
+.modal.show,
+.modal:target,
+.unified-modal.show,
+.backup-modal.show,
+.sync-modal.show,
+.drive-modal.show,
+.storage-modal.show {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 @keyframes modalBackdropFade {
@@ -571,6 +586,39 @@
 .modal .modal-close:focus {
     outline: 2px solid #ffffff !important;
     outline-offset: 2px !important;
+}
+
+/* 모든 모달 강제 숨김 (페이지 로드 시 보이지 않게) */
+.modal:not(.show):not(:target),
+.modal-dialog:not(.show),
+#excelModal:not(.show),
+#settingsModal:not(.show),
+#storageModal:not(.show),
+#backupModal:not(.show),
+#unifiedCloudModal:not(.show),
+#cloudModal:not(.show),
+#memoModal:not(.show),
+#dateMemoModal:not(.show),
+#memoDetailModal:not(.show),
+#createModal:not(.show) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: -1 !important;
+}
+
+/* Bootstrap 모달 백드롭 숨김 */
+.modal-backdrop:not(.show),
+.modal-overlay:not(.show) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* body 스크롤 잠금 해제 */
+body:not(.modal-open) {
+    overflow: auto !important;
+    padding-right: 0 !important;
 }
 
 /* 애니메이션 비활성화 설정 존중 */
