@@ -12,9 +12,24 @@
       "Bash(\"미디어매니저_실행.bat\")",
       "Bash(curl:*)",
       "Bash(cmd /c:*)",
-      "Bash(start 미디어매니저_실행.bat)"
+      "Bash(start 미디어매니저_실행.bat)",
+      "Bash(start:*)",
+      "Bash(cat:*)",
+      "Read(/I:\\새 폴더 (2)/**)",
+      "Bash(xcopy:*)",
+      "Bash(robocopy:*)",
+      "Bash(copy:*)",
+      "Read(I:\\/**)",
+      "Read(/I:\\aa/**)",
+      "Read(/I:\\aa/**)",
+      "Read(/I:\\aa/**)",
+      "Bash(claude mcp add:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "I:\\새 폴더 (2)",
+      "I:\\bb"
+    ]
   }
 }
