@@ -1,0 +1,530 @@
+/* 모든 메뉴창 텍스트 이격 거리 최대 극대화 - 모든 창의 답답함 완전 해소 */
+
+/* 기본 모달 구조 - 최대 가능한 넓은 모달로 완전 극대 이격 */
+.modal-content {
+    background: rgba(255, 255, 255, 0.98);
+    margin: 1% auto;
+    padding: 0;
+    border-radius: 28px; /* 더 둥근 모서리로 부드러움 */
+    width: 95%; /* 화면의 최대한 활용 */
+    max-width: 1000px; /* 최대 가능 폭으로 극대 여유 */
+    max-height: 94vh; /* 더 높은 화면 활용 */
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(99, 132, 183, 0.2);
+    backdrop-filter: blur(15px);
+    position: relative;
+    z-index: 1000;
+}
+
+/* 모달 헤더 - 메뉴 이름과 닫기 X 완전 같은 행 정렬 */
+.modal-header {
+    padding: 24px 32px; /* 더 작은 패딩으로 조정 */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.95) 100%);
+    border-bottom: 1px solid rgba(99, 132, 183, 0.15);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 60px; /* 더 작은 높이 */
+    max-height: 60px; /* 높이 고정 */
+    position: relative;
+    flex-wrap: nowrap !important;
+    box-sizing: border-box;
+}
+
+/* 모달 제목 - 닫기 X와 완전히 같은 행 정렬 */
+.modal-title {
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    font-size: 18px; /* 크기 조정 */
+    font-weight: 500;
+    color: #202124;
+    margin: 0 !important; /* 마진 완전 제거 */
+    padding: 0 !important; /* 패딩 완전 제거 */
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px;
+    line-height: 1.2 !important; /* 라인 높이 최소화 */
+    height: 100%; /* 헤더 높이에 맞춤 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+/* 닫기 버튼 - 제목과 완전히 같은 행에 정렬 */
+.modal-close {
+    background: transparent;
+    border: none;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50%;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #5f6368;
+    font-size: 18px;
+    position: relative !important; /* flexbox 정렬 유지 */
+    flex-shrink: 0 !important;
+    margin: 0 !important; /* 마진 완전 제거 */
+    padding: 0 !important; /* 패딩 완전 제거 */
+    vertical-align: middle;
+}
+
+.modal-close:hover {
+    background: rgba(95, 99, 104, 0.1);
+    transform: scale(1.1);
+}
+
+/* 모달 바디 - 충분한 여백으로 열 공백 최적화 */
+.modal-body {
+    padding: 48px; /* 적정한 패딩으로 열 공백 최적화 */
+    max-height: calc(94vh - 144px); /* 헤더 높이에 맞게 조정 */
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.98);
+    line-height: 1.8; /* 적정한 줄 간격 */
+}
+
+/* 폼 그룹 - 적정한 간격으로 열 공백 최적화 */
+.form-group {
+    margin-bottom: 32px; /* 적정한 그룹 간 간격 */
+    position: relative;
+    padding: 0 8px; /* 최소한의 좌우 여백 */
+}
+
+.form-group:last-child {
+    margin-bottom: 16px;
+}
+
+/* 폼 라벨 - 창 경계에서 극대 이격 */
+.form-label {
+    font-family: 'Roboto', sans-serif;
+    font-size: 17px; /* 폰트 크기 더욱 확대 */
+    font-weight: 500;
+    color: #5f6368;
+    margin-bottom: 20px; /* 라벨과 입력 필드 간격 극대 확대 */
+    display: block;
+    letter-spacing: 0.4px;
+    line-height: 1.8;
+    padding: 0 15px; /* 좌우 추가 패딩 증가 */
+}
+
+/* 입력 필드 - 열 공백 최적화된 이격 */
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%; /* 전체 너비 사용으로 열 공백 최적화 */
+    margin: 0; /* 마진 제거 */
+    padding: 16px 20px; /* 적정한 내부 패딩 */
+    border: 2px solid rgba(99, 132, 183, 0.2);
+    border-radius: 12px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px; /* 적정한 폰트 크기 */
+    color: #202124;
+    background: rgba(255, 255, 255, 0.95);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    min-height: 48px; /* 적정한 높이 */
+    line-height: 1.6;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+}
+
+/* 텍스트 영역 높이 확대 */
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* 체크박스와 라디오 그룹 - 충분한 이격 */
+.checkbox-group,
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 항목 간 간격 확대 */
+    margin-top: 24px;
+    margin-bottom: 24px;
+    padding: 24px; /* 그룹 내부 패딩 확대 */
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 16px;
+    border: 1px solid rgba(99, 132, 183, 0.1);
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.checkbox-item,
+.radio-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px; /* 체크박스와 라벨 간격 확대 */
+    padding: 16px 20px; /* 각 항목 패딩 확대 */
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    min-height: 32px;
+}
+
+.checkbox-item:hover,
+.radio-item:hover {
+    background: rgba(26, 115, 232, 0.05);
+    transform: translateX(4px);
+}
+
+.checkbox-item input,
+.radio-item input {
+    width: 20px; /* 체크박스 크기 확대 */
+    height: 20px;
+    margin: 0;
+    margin-top: 4px;
+    cursor: pointer;
+    accent-color: #1a73e8;
+    flex-shrink: 0;
+}
+
+.checkbox-item label,
+.radio-item label {
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px; /* 라벨 폰트 크기 확대 */
+    color: #202124;
+    cursor: pointer;
+    flex: 1;
+    line-height: 1.6;
+    margin: 0;
+    padding: 2px 0;
+}
+
+/* 버튼 그룹 - 창 경계에서 충분히 떨어짐 */
+.button-group {
+    display: flex;
+    gap: 24px; /* 버튼 간 간격 확대 */
+    margin-top: 50px; /* 상단 여백 대폭 확대 */
+    margin-bottom: 20px;
+    padding: 30px 20px 0; /* 패딩 확대 */
+    border-top: 1px solid rgba(99, 132, 183, 0.1);
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* 버튼 - 더 큰 크기와 충분한 패딩 */
+.btn-primary,
+.btn-secondary {
+    padding: 16px 32px; /* 버튼 패딩 확대 */
+    border: none;
+    border-radius: 12px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    font-size: 16px; /* 버튼 폰트 크기 확대 */
+    font-weight: 500;
+    min-height: 52px; /* 버튼 높이 확대 */
+    min-width: 140px; /* 버튼 너비 확대 */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+    position: relative;
+    margin: 8px; /* 버튼 주변 추가 여백 */
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1557b0 0%, #0d47a1 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(26, 115, 232, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a73e8;
+    border: 2px solid rgba(26, 115, 232, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(26, 115, 232, 0.05);
+    border-color: #1a73e8;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15);
+}
+
+/* 알림 메시지 - 충분한 이격 */
+.alert {
+    padding: 20px 28px; /* 알림 내부 패딩 확대 */
+    border-radius: 12px;
+    margin: 24px 8px; /* 상하좌우 여백 확대 */
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: rgba(19, 115, 51, 0.08);
+    color: #137333;
+    border-left-color: #137333;
+}
+
+.alert-error {
+    background: rgba(217, 48, 37, 0.08);
+    color: #d93025;
+    border-left-color: #d93025;
+}
+
+.alert-warning {
+    background: rgba(234, 134, 0, 0.08);
+    color: #ea8600;
+    border-left-color: #ea8600;
+}
+
+.alert-info {
+    background: rgba(26, 115, 232, 0.08);
+    color: #1a73e8;
+    border-left-color: #1a73e8;
+}
+
+/* 탭 메뉴 - 충분한 이격과 간격 */
+.tab-menu {
+    display: flex;
+    border-bottom: 2px solid rgba(99, 132, 183, 0.1);
+    margin: 24px 8px 40px; /* 상하좌우 여백 확대 */
+    overflow-x: auto;
+    padding: 0 16px; /* 좌우 패딩 추가 */
+}
+
+.tab-item {
+    padding: 20px 32px; /* 탭 패딩 확대 */
+    font-family: 'Google Sans', sans-serif;
+    font-size: 16px; /* 탭 폰트 크기 확대 */
+    font-weight: 500;
+    color: #5f6368;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    position: relative;
+    letter-spacing: 0.3px;
+    margin: 0 8px; /* 탭 간 추가 간격 */
+}
+
+.tab-item:hover {
+    background: rgba(26, 115, 232, 0.05);
+    color: #1a73e8;
+    transform: translateY(-2px);
+}
+
+.tab-item.active {
+    color: #1a73e8;
+    border-bottom-color: #1a73e8;
+    background: rgba(26, 115, 232, 0.05);
+}
+
+/* 스크롤바 스타일링 */
+.modal-body::-webkit-scrollbar {
+    width: 12px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(248, 249, 250, 0.5);
+    border-radius: 6px;
+    margin: 8px; /* 트랙 여백 */
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(95, 99, 104, 0.3);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(95, 99, 104, 0.5);
+    background-clip: padding-box;
+}
+
+/* 반응형 디자인 - 모바일에서도 충분한 이격 유지 */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 3% auto;
+        border-radius: 16px;
+    }
+    
+    .modal-header {
+        padding: 32px 40px; /* 모바일에서도 충분한 패딩 */
+        min-height: 80px;
+    }
+    
+    .modal-title {
+        font-size: 22px;
+        padding-right: 50px;
+        max-width: calc(100% - 100px);
+        gap: 16px;
+        margin: 16px 0;
+    }
+    
+    .modal-close {
+        right: 32px;
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+    
+    .modal-body {
+        padding: 40px; /* 모바일에서도 넉넉한 패딩 */
+        max-height: calc(95vh - 160px);
+    }
+    
+    .form-group {
+        margin-bottom: 32px;
+        padding: 0 8px;
+    }
+    
+    .form-label {
+        font-size: 15px;
+        margin-bottom: 12px;
+        padding: 0 4px;
+    }
+    
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: calc(100% - 8px);
+        margin: 0 4px;
+        padding: 16px 20px;
+        font-size: 15px;
+        min-height: 52px;
+    }
+    
+    .checkbox-group,
+    .radio-group {
+        gap: 16px;
+        padding: 20px;
+        margin: 20px 4px;
+    }
+    
+    .checkbox-item,
+    .radio-item {
+        gap: 16px;
+        padding: 12px 16px;
+    }
+    
+    .checkbox-item label,
+    .radio-item label {
+        font-size: 15px;
+    }
+    
+    .button-group {
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 40px;
+        padding: 24px 16px 0;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: calc(100% - 16px);
+        margin: 4px 8px;
+        justify-content: center;
+        padding: 14px 28px;
+        min-height: 48px;
+        font-size: 15px;
+    }
+    
+    .tab-menu {
+        margin: 20px 4px 32px;
+        padding: 0 12px;
+    }
+    
+    .tab-item {
+        padding: 16px 24px;
+        font-size: 15px;
+        margin: 0 4px;
+    }
+    
+    .alert {
+        margin: 20px 4px;
+        padding: 16px 20px;
+        font-size: 14px;
+    }
+}
+
+/* 다크 테마에서도 충분한 이격 유지 */
+[data-theme="dark"] .modal-content {
+    background: rgba(31, 31, 31, 0.98);
+    border-color: #444746;
+}
+
+[data-theme="dark"] .modal-header {
+    background: linear-gradient(135deg, rgba(31, 31, 31, 0.95) 0%, rgba(45, 45, 45, 0.95) 100%);
+    border-bottom-color: #444746;
+}
+
+[data-theme="dark"] .modal-title,
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-textarea,
+[data-theme="dark"] .checkbox-item label,
+[data-theme="dark"] .radio-item label {
+    color: #e8eaed;
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-textarea {
+    background: rgba(31, 31, 31, 0.95);
+    border-color: #444746;
+}
+
+[data-theme="dark"] .checkbox-group,
+[data-theme="dark"] .radio-group {
+    background: rgba(45, 45, 45, 0.8);
+    border-color: #444746;
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: rgba(45, 45, 45, 0.95);
+    border-color: #444746;
+    color: #63b3ed;
+}
+
+/* 접근성 개선 */
+.form-input:focus-visible,
+.form-select:focus-visible,
+.form-textarea:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+    outline: 3px solid rgba(26, 115, 232, 0.5);
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .modal-content {
+        border: 3px solid #000;
+    }
+    
+    .form-input,
+    .form-select,
+    .form-textarea {
+        border: 3px solid #000;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        border: 3px solid #000;
+    }
+}

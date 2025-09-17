@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스티커 메모 안정성 테스트</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .control-panel h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .status-item {
+            margin: 8px 0;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .status-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .status-value {
+            color: #333;
+        }
+        
+        .status-ok {
+            color: #4caf50;
+        }
+        
+        .status-error {
+            color: #f44336;
+        }
+        
+        /* 스티커 메모 스타일 */
+        #stickyMemo {
+            position: fixed;
+            width: 350px;
+            height: 400px;
+            background: linear-gradient(135deg, #ffeb3b 0%, #fff59d 100%);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #stickyMemoHeader {
+            background: rgba(255,193,7,0.3);
+            padding: 15px;
+            cursor: move;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sticky-memo-title {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .sticky-memo-controls {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .sticky-control-btn {
+            background: rgba(255,255,255,0.8);
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .sticky-control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        
+        .sticky-memo-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sticky-memo-content textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        
+        .test-pass {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+        
+        .test-fail {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <h2>🔬 스티커 메모 안정성 테스트</h2>
+        
+        <div>
+            <button class="btn" onclick="createSticky()">📝 스티커 메모 생성</button>
+            <button class="btn" onclick="testDrag()">🖱️ 드래그 테스트</button>
+            <button class="btn" onclick="testResize()">📐 리사이즈 테스트</button>
+            <button class="btn" onclick="testBoundary()">🔲 경계 테스트</button>
+            <button class="btn" onclick="testPosition()">📍 위치 저장/복원</button>
+            <button class="btn" onclick="resetSticky()">🔄 초기화</button>
+            <button class="btn" onclick="runAllTests()">▶️ 전체 테스트</button>
+        </div>
+        
+        <div class="status">
+            <div class="status-item">
+                <span class="status-label">상태:</span>
+                <span class="status-value" id="status">대기중</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">위치:</span>
+                <span class="status-value" id="position">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">크기:</span>
+                <span class="status-value" id="size">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">드래그 이벤트:</span>
+                <span class="status-value" id="dragEvents">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">오류:</span>
+                <span class="status-value" id="errors">없음</span>
+            </div>
+        </div>
+        
+        <div id="testResults"></div>
+    </div>
+    
+    <!-- 스티커 메모 -->
+    <div id="stickyMemo" style="display: none;">
+        <div id="stickyMemoHeader">
+            <span class="sticky-memo-title">📌 스티커 메모</span>
+            <div class="sticky-memo-controls">
+                <button class="sticky-control-btn" onclick="minimizeSticky()">−</button>
+                <button class="sticky-control-btn" onclick="maximizeSticky()">□</button>
+                <button class="sticky-control-btn" onclick="closeSticky()">✕</button>
+            </div>
+        </div>
+        <div class="sticky-memo-content">
+            <textarea placeholder="메모를 입력하세요...">안정성 테스트용 스티커 메모입니다.
+
+문제점:
+1. 이상한 위치로 튀는 현상
+2. UI 깨짐 현상
+3. 여러 스크립트 충돌
+
+해결방안:
+- 단일 안정화 버전 사용
+- 이벤트 리스너 중복 제거
+- transform 초기화
+- 경계 체크 강화</textarea>
+        </div>
+    </div>
+    
+    <!-- 안정화 스크립트 -->
+    <script src="sticky-memo-stable.js"></script>
+    
+    <script>
+        let dragEventCount = 0;
+        let testResults = [];
+        
+        // 상태 모니터링
+        setInterval(updateStatus, 100);
+        
+        function updateStatus() {
+            const sticky = document.getElementById('stickyMemo');
+            if (sticky && sticky.style.display !== 'none') {
+                const rect = sticky.getBoundingClientRect();
+                document.getElementById('position').textContent = 
+                    `(${Math.round(rect.left)}, ${Math.round(rect.top)})`;
+                document.getElementById('size').textContent = 
+                    `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
+                
+                // 위치 이상 감지
+                if (rect.left < -1000 || rect.top < -1000 || 
+                    rect.left > window.innerWidth + 1000 || 
+                    rect.top > window.innerHeight + 1000) {
+                    document.getElementById('errors').textContent = '위치 이상 감지!';
+                    document.getElementById('errors').className = 'status-error';
+                }
+            }
+        }
+        
+        // 스티커 생성
+        function createSticky() {
+            const sticky = document.getElementById('stickyMemo');
+            sticky.style.display = 'flex';
+            
+            // 안정화 버전 초기화
+            if (window.StickyMemoStable) {
+                window.StickyMemoStable.init();
+                updateTestResult('생성', true, '스티커 메모 생성 성공');
+            } else {
+                updateTestResult('생성', false, '안정화 스크립트 로드 실패');
+            }
+            
+            document.getElementById('status').textContent = '활성';
+            document.getElementById('status').className = 'status-ok';
+        }
+        
+        // 드래그 테스트
+        function testDrag() {
+            const sticky = document.getElementById('stickyMemo');
+            if (!sticky || sticky.style.display === 'none') {
+                updateTestResult('드래그', false, '스티커 메모가 없습니다');
+                return;
+            }
+            
+            // 시뮬레이션
+            const startPos = window.StickyMemoStable.getPosition();
+            
+            // 여러 위치로 이동
+            const positions = [
+                { x: 100, y: 100 },
+                { x: 300, y: 200 },
+                { x: 500, y: 300 },
+                { x: 200, y: 150 }
+            ];
+            
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index >= positions.length) {
+                    clearInterval(interval);
+                    updateTestResult('드래그', true, '드래그 테스트 완료');
+                    return;
+                }
+                
+                window.StickyMemoStable.setPosition(positions[index].x, positions[index].y);
+                dragEventCount++;
+                document.getElementById('dragEvents').textContent = dragEventCount;
+                index++;
+            }, 500);
+        }
+        
+        // 리사이즈 테스트
+        function testResize() {
+            const sticky = document.getElementById('stickyMemo');
+            if (!sticky || sticky.style.display === 'none') {
+                updateTestResult('리사이즈', false, '스티커 메모가 없습니다');
+                return;
+            }
+            
+            // 크기 변경 테스트
+            const sizes = [
+                { w: 400, h: 450 },
+                { w: 300, h: 350 },
+                { w: 500, h: 400 },
+                { w: 350, h: 400 }
+            ];
+            
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index >= sizes.length) {
+                    clearInterval(interval);
+                    updateTestResult('리사이즈', true, '리사이즈 테스트 완료');
+                    return;
+                }
+                
+                sticky.style.width = sizes[index].w + 'px';
+                sticky.style.height = sizes[index].h + 'px';
+                index++;
+            }, 500);
+        }
+        
+        // 경계 테스트
+        function testBoundary() {
+            const sticky = document.getElementById('stickyMemo');
+            if (!sticky || sticky.style.display === 'none') {
+                updateTestResult('경계', false, '스티커 메모가 없습니다');
+                return;
+            }
+            
+            // 극단적인 위치 테스트
+            const extremePositions = [
+                { x: -100, y: 100 },  // 왼쪽 밖
+                { x: window.innerWidth - 100, y: 100 },  // 오른쪽
+                { x: 100, y: -50 },  // 위쪽
+                { x: 100, y: window.innerHeight - 100 }  // 아래쪽
+            ];
+            
+            let index = 0;
+            let allValid = true;
+            
+            const interval = setInterval(() => {
+                if (index >= extremePositions.length) {
+                    clearInterval(interval);
+                    updateTestResult('경계', allValid, 
+                        allValid ? '경계 테스트 통과' : '경계 체크 실패');
+                    return;
+                }
+                
+                window.StickyMemoStable.setPosition(
+                    extremePositions[index].x, 
+                    extremePositions[index].y
+                );
+                
+                // 위치 검증
+                const pos = window.StickyMemoStable.getPosition();
+                if (pos.left < -1000 || pos.top < -1000) {
+                    allValid = false;
+                }
+                
+                index++;
+            }, 500);
+        }
+        
+        // 위치 저장/복원 테스트
+        function testPosition() {
+            const sticky = document.getElementById('stickyMemo');
+            if (!sticky || sticky.style.display === 'none') {
+                updateTestResult('저장/복원', false, '스티커 메모가 없습니다');
+                return;
+            }
+            
+            // 현재 위치 저장
+            const currentPos = window.StickyMemoStable.getPosition();
+            
+            // 다른 위치로 이동
+            window.StickyMemoStable.setPosition(450, 250);
+            
+            // 페이지 새로고침 시뮬레이션
+            setTimeout(() => {
+                // localStorage에서 복원
+                const saved = localStorage.getItem('stickyMemoPosition');
+                if (saved) {
+                    updateTestResult('저장/복원', true, '위치 저장/복원 성공');
+                } else {
+                    updateTestResult('저장/복원', false, '위치 저장 실패');
+                }
+            }, 1000);
+        }
+        
+        // 초기화
+        function resetSticky() {
+            if (window.StickyMemoStable) {
+                window.StickyMemoStable.reset();
+                document.getElementById('errors').textContent = '없음';
+                document.getElementById('errors').className = '';
+                dragEventCount = 0;
+                document.getElementById('dragEvents').textContent = '0';
+                updateTestResult('초기화', true, '초기화 완료');
+            }
+        }
+        
+        // 닫기
+        function closeSticky() {
+            const sticky = document.getElementById('stickyMemo');
+            sticky.style.display = 'none';
+            document.getElementById('status').textContent = '비활성';
+            document.getElementById('status').className = '';
+        }
+        
+        // 최소화
+        function minimizeSticky() {
+            const sticky = document.getElementById('stickyMemo');
+            if (sticky.style.height === '40px') {
+                sticky.style.height = '400px';
+            } else {
+                sticky.style.height = '40px';
+            }
+        }
+        
+        // 최대화
+        function maximizeSticky() {
+            const sticky = document.getElementById('stickyMemo');
+            if (sticky.style.width === '80vw') {
+                sticky.style.width = '350px';
+                sticky.style.height = '400px';
+            } else {
+                sticky.style.width = '80vw';
+                sticky.style.height = '80vh';
+            }
+        }
+        
+        // 전체 테스트
+        async function runAllTests() {
+            testResults = [];
+            document.getElementById('testResults').innerHTML = '';
+            
+            // 순차적으로 테스트 실행
+            createSticky();
+            await sleep(1000);
+            
+            testDrag();
+            await sleep(3000);
+            
+            testResize();
+            await sleep(3000);
+            
+            testBoundary();
+            await sleep(3000);
+            
+            testPosition();
+            await sleep(2000);
+            
+            // 결과 요약
+            const passCount = testResults.filter(r => r.success).length;
+            const totalCount = testResults.length;
+            
+            updateTestResult('전체 테스트', passCount === totalCount, 
+                `${passCount}/${totalCount} 테스트 통과`);
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // 테스트 결과 업데이트
+        function updateTestResult(testName, success, message) {
+            const result = { name: testName, success, message };
+            testResults.push(result);
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${success ? 'test-pass' : 'test-fail'}`;
+            resultDiv.textContent = `${success ? '✅' : '❌'} ${testName}: ${message}`;
+            
+            document.getElementById('testResults').appendChild(resultDiv);
+        }
+        
+        // 초기 생성
+        createSticky();
+    </script>
+</body>
+</html>

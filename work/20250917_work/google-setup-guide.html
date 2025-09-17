@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive API 설정 가이드</title>
+    <style>
+        body { 
+            font-family: 'Malgun Gothic', sans-serif; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        h1, h2 { color: #333; }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Google Drive API 설정 가이드</h1>
+
+    <div class="warning">
+        <strong>⚠️ 현재 오류:</strong> <code>redirect_uri_mismatch</code><br>
+        Google Cloud Console에서 올바른 리다이렉트 URI를 설정해야 합니다.
+    </div>
+
+    <div class="step">
+        <h2>📋 1단계: 현재 접속 URL 확인</h2>
+        <p>현재 접속 중인 URL:</p>
+        <div class="code" id="currentUrl">JavaScript가 로드되지 않았습니다.</div>
+        <p>위 URL을 Google Cloud Console에 추가해야 합니다.</p>
+    </div>
+
+    <div class="step">
+        <h2>🌐 2단계: Google Cloud Console 접속</h2>
+        <p>
+            <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="btn">
+                Google Cloud Console 열기
+            </a>
+        </p>
+        <p>Google Cloud Console > APIs & Services > Credentials로 이동합니다.</p>
+    </div>
+
+    <div class="step">
+        <h2>🔑 3단계: OAuth 2.0 클라이언트 ID 설정</h2>
+        <ol>
+            <li>기존 OAuth 2.0 클라이언트 ID를 클릭하거나 새로 생성</li>
+            <li><strong>"승인된 JavaScript 원본"</strong> 섹션에서 <strong>"URI 추가"</strong> 클릭</li>
+            <li>다음 URL 추가: <code id="jsOrigin">http://localhost:8082</code></li>
+            <li><strong>⚠️ 중요:</strong> <strong>"승인된 리다이렉트 URI"</strong> 섹션에는 <strong>아무것도 추가하지 마세요!</strong></li>
+            <li>JavaScript 인증 방식은 리다이렉트 URI가 필요하지 않습니다</li>
+            <li><strong>"저장"</strong> 버튼 클릭</li>
+        </ol>
+        
+        <div class="warning">
+            <strong>⚠️ 중요:</strong> 현재 사용하는 JavaScript 인증 방식(Google Identity Services)은 <strong>리다이렉트 URI가 필요하지 않습니다!</strong>
+            오직 <strong>"승인된 JavaScript 원본"</strong>에만 현재 서버 주소를 추가하면 됩니다.
+        </div>
+        
+        <div class="error-fix">
+            <strong>🚨 현재 오류:</strong> <code>redirect_uri_mismatch</code><br>
+            <strong>🔧 완전한 해결 방법:</strong>
+            <ol>
+                <li><strong>1단계:</strong> Google Cloud Console → APIs & Services → Credentials</li>
+                <li><strong>2단계:</strong> 기존 OAuth 2.0 클라이언트 ID 삭제</li>
+                <li><strong>3단계:</strong> 새로운 OAuth 2.0 클라이언트 ID 생성</li>
+                <li><strong>4단계:</strong> 애플리케이션 유형: <strong>"웹 애플리케이션"</strong> 선택</li>
+                <li><strong>5단계:</strong> <strong>"승인된 JavaScript 원본"</strong>에만 <code>http://localhost:8082</code> 추가</li>
+                <li><strong>6단계:</strong> <strong>"승인된 리다이렉트 URI"</strong> 섹션은 <strong>완전히 비워두기</strong></li>
+                <li><strong>7단계:</strong> 생성 후 새로운 클라이언트 ID를 앱에 적용</li>
+                <li><strong>8단계:</strong> 브라우저 캐시/쿠키 완전 삭제 후 테스트</li>
+            </ol>
+            <br>
+            <div class="warning">
+                <strong>💡 핵심:</strong> 기존 OAuth 클라이언트를 수정하는 것보다 <strong>새로 생성</strong>하는 것이 확실합니다!
+            </div>
+        </div>
+    </div>
+
+    <div class="step">
+        <h2>📝 4단계: API 키 및 클라이언트 ID 복사</h2>
+        <ol>
+            <li><strong>클라이언트 ID</strong>를 복사 (형식: xxxxxxxxx.apps.googleusercontent.com)</li>
+            <li><strong>API 키</strong>를 복사</li>
+            <li>달력 앱에서 "☁️ 구글 드라이브 설정" 버튼 클릭</li>
+            <li>복사한 정보를 입력</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h2>🔄 5단계: 설정 적용</h2>
+        <p>설정을 저장한 후 몇 분 기다린 다음:</p>
+        <ol>
+            <li>브라우저 새로고침 (Ctrl + F5)</li>
+            <li>"☁️ 구글 드라이브 설정" 버튼으로 인증 시도</li>
+        </ol>
+    </div>
+
+    <div class="success">
+        <strong>✅ 성공하면:</strong> "🎉 Google Drive 인증 완료!" 메시지가 표시됩니다.
+    </div>
+
+    <div class="step">
+        <h2>🏠 설정 완료 후</h2>
+        <a href="." class="btn">달력 앱으로 돌아가기</a>
+        <button onclick="window.location.reload()" class="btn">🔄 페이지 새로고침</button>
+    </div>
+
+    <script>
+        // 현재 URL 정보를 동적으로 표시
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentOrigin = window.location.origin;
+            const currentUrl = window.location.href;
+            
+            document.getElementById('currentUrl').textContent = currentUrl;
+            document.getElementById('jsOrigin').textContent = currentOrigin;
+            document.getElementById('redirectUri').textContent = currentOrigin;
+            
+            console.log('📋 Google Cloud Console에 추가할 URL:');
+            console.log('   승인된 JavaScript 원본:', currentOrigin);
+            console.log('   승인된 리다이렉트 URI:', currentOrigin);
+        });
+    </script>
+</body>
+</html>

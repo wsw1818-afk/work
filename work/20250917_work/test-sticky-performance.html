@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스티커 메모 성능 테스트</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .test-controls h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .test-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .performance-metrics {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .metric {
+            margin: 5px 0;
+            padding: 5px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        
+        .metric-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .metric-value {
+            color: #333;
+        }
+        
+        #stickyMemoTest {
+            position: fixed;
+            width: 350px;
+            height: 400px;
+            background: linear-gradient(135deg, #ffeb3b 0%, #fff59d 100%);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .sticky-header {
+            background: rgba(255,193,7,0.3);
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            cursor: move;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sticky-title {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .sticky-controls {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .sticky-btn {
+            background: rgba(255,255,255,0.8);
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .sticky-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        
+        .sticky-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sticky-content textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 20px;
+            height: 20px;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.2) 50%);
+            border-radius: 0 0 15px 0;
+        }
+        
+        .fps-counter {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-controls">
+        <h2>🧪 스티커 메모 성능 테스트</h2>
+        
+        <div>
+            <button class="test-btn" onclick="showStickyMemo()">📝 스티커 메모 표시</button>
+            <button class="test-btn" onclick="hideStickyMemo()">🚫 스티커 메모 숨기기</button>
+            <button class="test-btn" onclick="resetPosition()">🎯 위치 초기화</button>
+            <button class="test-btn" onclick="startStressTest()">⚡ 스트레스 테스트</button>
+            <button class="test-btn" onclick="toggleFPS()">📊 FPS 카운터</button>
+        </div>
+        
+        <div class="performance-metrics" id="metrics">
+            <div class="metric">
+                <span class="metric-label">드래그 성능:</span>
+                <span class="metric-value" id="dragPerf">대기중...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">리사이즈 성능:</span>
+                <span class="metric-value" id="resizePerf">대기중...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">렌더링 시간:</span>
+                <span class="metric-value" id="renderTime">대기중...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">메모리 사용량:</span>
+                <span class="metric-value" id="memoryUsage">대기중...</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 테스트용 스티커 메모 -->
+    <div id="stickyMemoTest" style="display: none;">
+        <div class="sticky-header" id="stickyHeader">
+            <span class="sticky-title">📌 스티커 메모</span>
+            <div class="sticky-controls">
+                <button class="sticky-btn" onclick="minimizeSticky()">−</button>
+                <button class="sticky-btn" onclick="maximizeSticky()">□</button>
+                <button class="sticky-btn" onclick="hideStickyMemo()">✕</button>
+            </div>
+        </div>
+        <div class="sticky-content">
+            <textarea placeholder="메모를 입력하세요...">테스트용 스티커 메모입니다.
+드래그하여 이동하고, 우측 하단을 드래그하여 크기를 조절할 수 있습니다.
+
+성능 최적화 사항:
+- RequestAnimationFrame 사용
+- GPU 가속 (transform 활용)
+- 이벤트 throttling
+- DOM 캐싱</textarea>
+        </div>
+        <div class="resize-handle" id="resizeHandle"></div>
+    </div>
+    
+    <!-- FPS 카운터 -->
+    <div class="fps-counter" id="fpsCounter" style="display: none;">
+        FPS: <span id="fps">60</span>
+    </div>
+    
+    <script>
+        // 성능 측정 변수
+        let dragStartTime = 0;
+        let resizeStartTime = 0;
+        let frameCount = 0;
+        let lastFrameTime = performance.now();
+        let fpsInterval = null;
+        
+        // 드래그 상태
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        
+        // 리사이즈 상태
+        let isResizing = false;
+        let resizeStart = { x: 0, y: 0, width: 0, height: 0 };
+        
+        // DOM 요소
+        const stickyMemo = document.getElementById('stickyMemoTest');
+        const header = document.getElementById('stickyHeader');
+        const resizeHandle = document.getElementById('resizeHandle');
+        
+        // 스티커 메모 표시
+        function showStickyMemo() {
+            stickyMemo.style.display = 'flex';
+            updateMetric('dragPerf', '준비됨');
+            updateMetric('resizePerf', '준비됨');
+        }
+        
+        // 스티커 메모 숨기기
+        function hideStickyMemo() {
+            stickyMemo.style.display = 'none';
+        }
+        
+        // 위치 초기화
+        function resetPosition() {
+            stickyMemo.style.left = '50%';
+            stickyMemo.style.top = '50%';
+            stickyMemo.style.transform = 'translate(-50%, -50%)';
+            stickyMemo.style.width = '350px';
+            stickyMemo.style.height = '400px';
+        }
+        
+        // 최소화
+        function minimizeSticky() {
+            if (stickyMemo.style.height === '40px') {
+                stickyMemo.style.height = '400px';
+            } else {
+                stickyMemo.style.height = '40px';
+            }
+        }
+        
+        // 최대화
+        function maximizeSticky() {
+            if (stickyMemo.style.width === '80vw') {
+                stickyMemo.style.width = '350px';
+                stickyMemo.style.height = '400px';
+            } else {
+                stickyMemo.style.width = '80vw';
+                stickyMemo.style.height = '80vh';
+            }
+        }
+        
+        // 드래그 이벤트
+        header.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+        
+        function startDrag(e) {
+            isDragging = true;
+            dragStartTime = performance.now();
+            
+            const rect = stickyMemo.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            
+            stickyMemo.style.transition = 'none';
+            header.style.cursor = 'grabbing';
+        }
+        
+        function drag(e) {
+            if (!isDragging) return;
+            
+            requestAnimationFrame(() => {
+                const x = e.clientX - dragOffset.x;
+                const y = e.clientY - dragOffset.y;
+                
+                stickyMemo.style.left = x + 'px';
+                stickyMemo.style.top = y + 'px';
+                stickyMemo.style.transform = 'none';
+            });
+        }
+        
+        function endDrag() {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            const dragTime = performance.now() - dragStartTime;
+            updateMetric('dragPerf', `${dragTime.toFixed(2)}ms`);
+            
+            header.style.cursor = 'move';
+            stickyMemo.style.transition = '';
+        }
+        
+        // 리사이즈 이벤트
+        resizeHandle.addEventListener('mousedown', startResize);
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', endResize);
+        
+        function startResize(e) {
+            e.stopPropagation();
+            isResizing = true;
+            resizeStartTime = performance.now();
+            
+            resizeStart.x = e.clientX;
+            resizeStart.y = e.clientY;
+            resizeStart.width = stickyMemo.offsetWidth;
+            resizeStart.height = stickyMemo.offsetHeight;
+            
+            stickyMemo.style.transition = 'none';
+            document.body.style.cursor = 'nwse-resize';
+        }
+        
+        function resize(e) {
+            if (!isResizing) return;
+            
+            requestAnimationFrame(() => {
+                const deltaX = e.clientX - resizeStart.x;
+                const deltaY = e.clientY - resizeStart.y;
+                
+                const newWidth = Math.max(250, resizeStart.width + deltaX);
+                const newHeight = Math.max(200, resizeStart.height + deltaY);
+                
+                stickyMemo.style.width = newWidth + 'px';
+                stickyMemo.style.height = newHeight + 'px';
+            });
+        }
+        
+        function endResize() {
+            if (!isResizing) return;
+            
+            isResizing = false;
+            const resizeTime = performance.now() - resizeStartTime;
+            updateMetric('resizePerf', `${resizeTime.toFixed(2)}ms`);
+            
+            document.body.style.cursor = '';
+            stickyMemo.style.transition = '';
+        }
+        
+        // 메트릭 업데이트
+        function updateMetric(id, value) {
+            document.getElementById(id).textContent = value;
+        }
+        
+        // FPS 카운터
+        function toggleFPS() {
+            const counter = document.getElementById('fpsCounter');
+            
+            if (counter.style.display === 'none') {
+                counter.style.display = 'block';
+                startFPSCounter();
+            } else {
+                counter.style.display = 'none';
+                stopFPSCounter();
+            }
+        }
+        
+        function startFPSCounter() {
+            fpsInterval = setInterval(() => {
+                const now = performance.now();
+                const delta = now - lastFrameTime;
+                const fps = Math.round(1000 / delta);
+                
+                document.getElementById('fps').textContent = fps;
+                lastFrameTime = now;
+                
+                // 렌더링 시간 업데이트
+                updateMetric('renderTime', `${delta.toFixed(2)}ms`);
+            }, 100);
+        }
+        
+        function stopFPSCounter() {
+            if (fpsInterval) {
+                clearInterval(fpsInterval);
+                fpsInterval = null;
+            }
+        }
+        
+        // 스트레스 테스트
+        function startStressTest() {
+            console.log('🚀 스트레스 테스트 시작');
+            
+            let moveCount = 0;
+            const startTime = performance.now();
+            
+            const testInterval = setInterval(() => {
+                // 랜덤 이동
+                const x = Math.random() * (window.innerWidth - 350);
+                const y = Math.random() * (window.innerHeight - 400);
+                
+                stickyMemo.style.left = x + 'px';
+                stickyMemo.style.top = y + 'px';
+                
+                moveCount++;
+                
+                if (moveCount >= 100) {
+                    clearInterval(testInterval);
+                    const totalTime = performance.now() - startTime;
+                    const avgTime = totalTime / moveCount;
+                    
+                    alert(`스트레스 테스트 완료!\n총 ${moveCount}회 이동\n총 시간: ${totalTime.toFixed(2)}ms\n평균 시간: ${avgTime.toFixed(2)}ms`);
+                    
+                    resetPosition();
+                }
+            }, 50);
+        }
+        
+        // 메모리 사용량 모니터링
+        if (performance.memory) {
+            setInterval(() => {
+                const used = (performance.memory.usedJSHeapSize / 1048576).toFixed(2);
+                const total = (performance.memory.totalJSHeapSize / 1048576).toFixed(2);
+                updateMetric('memoryUsage', `${used}MB / ${total}MB`);
+            }, 1000);
+        } else {
+            updateMetric('memoryUsage', 'N/A (Chrome only)');
+        }
+        
+        // 초기 상태 설정
+        showStickyMemo();
+        resetPosition();
+    </script>
+</body>
+</html>

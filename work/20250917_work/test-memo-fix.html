@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메모 삭제 버그 수정 테스트</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #5a67d8;
+        }
+        .delete-button {
+            background: #dc3545;
+        }
+        .delete-button:hover {
+            background: #c82333;
+        }
+        .memo-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .memo-title {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .memo-content {
+            color: #666;
+            margin-top: 5px;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>📝 메모 삭제 버그 수정 테스트</h1>
+    
+    <div class="test-container">
+        <h2>🧪 테스트 시나리오</h2>
+        <p>1. 메모 추가 → 2. 메모 삭제 → 3. 새 메모 추가 → 4. 삭제된 메모가 복원되지 않는지 확인</p>
+        
+        <button class="button" onclick="addTestMemo()">테스트 메모 추가</button>
+        <button class="button" onclick="showAllMemos()">모든 메모 표시</button>
+        <button class="button" onclick="clearAllData()">모든 데이터 지우기</button>
+        <button class="button" onclick="runFullTest()">전체 테스트 실행</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📅 2025-9-1 메모 목록</h2>
+        <div id="memoList"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>📋 테스트 로그</h2>
+        <div id="testLog" class="log"></div>
+    </div>
+
+    <script>
+        const testDate = '2025-9-1';
+        
+        function log(message) {
+            const logDiv = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function addTestMemo() {
+            const allMemos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+            if (!allMemos[testDate]) {
+                allMemos[testDate] = [];
+            }
+            
+            const memoId = Date.now();
+            const memo = {
+                id: memoId,
+                title: `테스트 메모 ${memoId}`,
+                content: `이것은 ${new Date().toLocaleTimeString()}에 생성된 테스트 메모입니다.`,
+                timestamp: new Date().toISOString()
+            };
+            
+            allMemos[testDate].push(memo);
+            localStorage.setItem('calendarMemos', JSON.stringify(allMemos));
+            
+            log(`✅ 메모 추가: ID=${memoId}, 제목="${memo.title}"`);
+            showAllMemos();
+        }
+        
+        function deleteMemo(index) {
+            const allMemos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+            if (allMemos[testDate] && allMemos[testDate][index]) {
+                const deletedMemo = allMemos[testDate][index];
+                allMemos[testDate].splice(index, 1);
+                
+                if (allMemos[testDate].length === 0) {
+                    delete allMemos[testDate];
+                }
+                
+                localStorage.setItem('calendarMemos', JSON.stringify(allMemos));
+                log(`🗑️ 메모 삭제: ID=${deletedMemo.id}, 제목="${deletedMemo.title}"`);
+                showAllMemos();
+            }
+        }
+        
+        function showAllMemos() {
+            const allMemos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+            const memos = allMemos[testDate] || [];
+            const listDiv = document.getElementById('memoList');
+            
+            if (memos.length === 0) {
+                listDiv.innerHTML = '<p>메모가 없습니다.</p>';
+                log(`📋 메모 표시: ${testDate}에 메모 없음`);
+            } else {
+                listDiv.innerHTML = memos.map((memo, index) => `
+                    <div class="memo-item">
+                        <div class="memo-title">${memo.title || '제목 없음'}</div>
+                        <div class="memo-content">${memo.content}</div>
+                        <div style="margin-top: 10px;">
+                            <small>ID: ${memo.id} | ${new Date(memo.timestamp).toLocaleString()}</small>
+                            <button class="button delete-button" onclick="deleteMemo(${index})">삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+                log(`📋 메모 표시: ${memos.length}개 메모 발견`);
+            }
+        }
+        
+        function clearAllData() {
+            localStorage.removeItem('calendarMemos');
+            
+            // 이전 형식도 정리
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('memos_')) {
+                    localStorage.removeItem(key);
+                }
+            }
+            
+            log('🧹 모든 메모 데이터 삭제');
+            showAllMemos();
+        }
+        
+        function runFullTest() {
+            log('🚀 전체 테스트 시작');
+            clearAllData();
+            
+            // 1단계: 메모 3개 추가
+            setTimeout(() => {
+                addTestMemo();
+                log('1️⃣ 첫 번째 메모 추가');
+            }, 100);
+            
+            setTimeout(() => {
+                addTestMemo();
+                log('2️⃣ 두 번째 메모 추가');
+            }, 200);
+            
+            setTimeout(() => {
+                addTestMemo();
+                log('3️⃣ 세 번째 메모 추가');
+            }, 300);
+            
+            // 2단계: 두 번째 메모 삭제
+            setTimeout(() => {
+                log('🗑️ 두 번째 메모 삭제 시도');
+                deleteMemo(1);
+            }, 500);
+            
+            // 3단계: 새 메모 추가
+            setTimeout(() => {
+                log('➕ 새로운 메모 추가');
+                addTestMemo();
+            }, 700);
+            
+            // 4단계: 최종 확인
+            setTimeout(() => {
+                const allMemos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
+                const memos = allMemos[testDate] || [];
+                log(`✅ 최종 결과: ${memos.length}개 메모 (삭제된 메모가 복원되지 않았으면 3개여야 함)`);
+                
+                if (memos.length === 3) {
+                    log('🎉 테스트 통과! 삭제된 메모가 복원되지 않았습니다.');
+                } else {
+                    log('❌ 테스트 실패! 예상과 다른 메모 개수입니다.');
+                }
+            }, 900);
+        }
+        
+        // 페이지 로드 시 초기 표시
+        document.addEventListener('DOMContentLoaded', () => {
+            log('📱 테스트 페이지 로드 완료');
+            showAllMemos();
+        });
+    </script>
+</body>
+</html>

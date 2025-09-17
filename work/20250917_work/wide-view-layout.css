@@ -1,0 +1,370 @@
+/* 와이드 뷰 레이아웃 CSS */
+
+/* 모달 CSS 충돌 해결 */
+.modal[style*="block"] {
+    opacity: 1;
+    visibility: visible;
+    /* 달력 레이아웃에 영향을 주지 않도록 고립 */
+    contain: layout style;
+}
+
+.modal {
+    /* 모달이 달력에 영향을 주지 않도록 격리 */
+    isolation: isolate;
+    /* 달력 컨테이너에 영향을 주지 않도록 position 개선 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.modal-content {
+    /* 모달 내용이 달력에 영향을 주지 않도록 격리 */
+    position: relative;
+    z-index: 10000;
+    /* 달력 스타일에 영향을 주지 않도록 독립적인 스타일 컨텍스트 */
+    contain: layout style;
+}
+
+/* 와이드 뷰 모드 기본 설정 - 완전 전체 화면 모드 */
+.wide-view-mode {
+    /* 컨테이너를 완전한 전체 뷰포트에 맞춤 */
+    max-width: none !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 999 !important;
+    background: var(--page-bg, linear-gradient(135deg, #667eea 0%, #764ba2 100%)) !important;
+    overflow: hidden !important; /* 스크롤 완전 제거 */
+    box-sizing: border-box !important;
+}
+
+/* 와이드 뷰 모드 활성화 시 body 설정 */
+body.wide-view-mode,
+body:has(.wide-view-mode) {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important; /* body 스크롤 제거 */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.wide-view-mode .calendar {
+    /* 달력을 화면 전체에 완벽하게 맞춤 - 스크롤 없음 */
+    width: 100vw !important;
+    max-width: none !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.wide-view-mode .days {
+    /* 그리드를 화면에 완벽하게 맞춤 - 스크롤 없음 */
+    gap: 2px !important;
+    height: calc(100vh - 140px) !important; /* 헤더와 요일 헤더 공간 확보 */
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    grid-template-rows: repeat(6, 1fr) !important;
+    padding: 3px !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.wide-view-mode .day {
+    /* 각 날짜 셀을 화면에 완벽하게 맞춤 */
+    min-height: calc((100vh - 140px) / 6 - 4px) !important;
+    max-height: calc((100vh - 140px) / 6 - 4px) !important;
+    width: 100% !important;
+    padding: 6px 4px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 4px !important;
+    background: #fafafa !important;
+    font-size: 13px !important;
+}
+
+.wide-view-mode .weekday {
+    /* 요일 헤더를 화면에 맞게 조정 */
+    padding: 15px 8px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    background: #f8f9fa !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+    height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 와이드 뷰 전용 스타일 */
+.wide-view-mode .schedule-add-bar {
+    /* 스케줄 바를 전체 화면에 맞춤 */
+    width: calc(100vw - 20px) !important;
+    max-width: none !important;
+    margin: 0 10px !important;
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 8px !important;
+    padding: 10px 15px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+}
+
+.wide-view-mode .calendar-header {
+    /* 헤더를 전체 화면에 맞춤 */
+    width: calc(100vw - 20px) !important;
+    max-width: none !important;
+    margin: 10px !important;
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 8px !important;
+    padding: 15px 20px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+}
+
+/* 와이드 뷰 모드에서 weekdays 그리드 */
+.wide-view-mode .weekdays {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 3px !important;
+    margin: 5px !important;
+    padding: 0 !important;
+}
+
+/* 와이드 뷰 닫기 버튼 추가 */
+.wide-view-mode::before {
+    content: "× 와이드 뷰 종료";
+    position: fixed !important;
+    top: 15px !important;
+    right: 20px !important;
+    background: rgba(220, 53, 69, 0.9) !important;
+    color: white !important;
+    padding: 8px 15px !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    z-index: 1001 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.wide-view-mode::before:hover {
+    background: rgba(220, 53, 69, 1) !important;
+    transform: scale(1.05) !important;
+}
+
+/* 와이드 뷰 토글 버튼 */
+.wide-view-toggle {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.wide-view-toggle:hover {
+    background: #5a67d8;
+    transform: translateY(-1px);
+}
+
+.wide-view-toggle.active {
+    background: #4caf50;
+}
+
+.wide-view-toggle.active:hover {
+    background: #45a049;
+}
+
+/* 와이드 뷰 상태 표시 */
+.wide-view-indicator {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.wide-view-mode .wide-view-indicator {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* 반응형 와이드 뷰 - 모든 해상도 지원 */
+@media (max-width: 1200px) {
+    .wide-view-mode .day {
+        min-height: calc((100vh - 220px) / 6 - 5px) !important;
+        max-height: calc((100vh - 220px) / 6 - 5px) !important;
+        padding: 6px 4px !important;
+        font-size: 13px !important;
+    }
+    
+    .wide-view-mode .weekday {
+        height: 40px !important;
+        font-size: 14px !important;
+        padding: 10px 6px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .wide-view-mode .calendar {
+        width: calc(100vw - 10px) !important;
+        height: calc(100vh - 100px) !important;
+        margin: 5px !important;
+    }
+    
+    .wide-view-mode .days {
+        height: calc(100vh - 180px) !important;
+    }
+    
+    .wide-view-mode .day {
+        min-height: calc((100vh - 180px) / 6 - 3px) !important;
+        max-height: calc((100vh - 180px) / 6 - 3px) !important;
+        padding: 4px 2px !important;
+        font-size: 12px !important;
+    }
+    
+    .wide-view-mode .weekday {
+        height: 35px !important;
+        font-size: 12px !important;
+        padding: 8px 4px !important;
+    }
+    
+    .wide-view-mode .calendar-header {
+        padding: 10px 15px !important;
+        margin: 5px !important;
+        width: calc(100vw - 10px) !important;
+    }
+    
+    .wide-view-mode .schedule-add-bar {
+        padding: 8px 12px !important;
+        margin: 0 5px !important;
+        width: calc(100vw - 10px) !important;
+    }
+}
+
+/* 초대형 화면용 와이드 뷰 최적화 (1920px 이상) */
+@media (min-width: 1920px) {
+    .wide-view-mode .day {
+        min-height: calc((100vh - 200px) / 6 - 5px) !important;
+        max-height: calc((100vh - 200px) / 6 - 5px) !important;
+        padding: 12px 10px !important;
+        font-size: 15px !important;
+    }
+    
+    .wide-view-mode .weekday {
+        height: 60px !important;
+        font-size: 18px !important;
+        padding: 20px 12px !important;
+    }
+}
+
+/* 울트라 와이드 모니터 (2560px 이상) */
+@media (min-width: 2560px) {
+    .wide-view-mode .day {
+        min-height: calc((100vh - 220px) / 6 - 8px) !important;
+        max-height: calc((100vh - 220px) / 6 - 8px) !important;
+        padding: 15px 12px !important;
+        font-size: 16px !important;
+    }
+    
+    .wide-view-mode .weekday {
+        height: 70px !important;
+        font-size: 20px !important;
+        padding: 25px 15px !important;
+    }
+    
+    .wide-view-mode .days {
+        gap: 5px !important;
+        padding: 8px !important;
+    }
+}
+
+/* 4K 해상도 최적화 (3840px 이상) */
+@media (min-width: 3840px) {
+    .wide-view-mode .day {
+        min-height: calc((100vh - 250px) / 6 - 10px) !important;
+        max-height: calc((100vh - 250px) / 6 - 10px) !important;
+        padding: 20px 15px !important;
+        font-size: 18px !important;
+    }
+    
+    .wide-view-mode .weekday {
+        height: 80px !important;
+        font-size: 22px !important;
+        padding: 30px 18px !important;
+    }
+}
+
+/* 와이드 뷰에서 메모 텍스트 최적화 */
+.wide-view-mode .day .memo-preview {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    max-height: 40px !important;
+    overflow: hidden !important;
+}
+
+/* 와이드 뷰에서 일정 표시 최적화 */
+.wide-view-mode .day .schedule-item {
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+    margin-bottom: 2px !important;
+    border-radius: 3px !important;
+}
+
+/* 메모 모달 문제 해결을 위한 추가 스타일 */
+body.modal-open {
+    /* 모달이 열렸을 때 body의 레이아웃 변경 방지 */
+    overflow: hidden;
+    /* 달력 레이아웃 보호 */
+    position: relative;
+}
+
+body.modal-open .container {
+    /* 모달이 열렸을 때 컨테이너 레이아웃 고정 */
+    position: static;
+    transform: none;
+}
+
+/* 모달이 닫힌 후 달력 레이아웃 복원 */
+body:not(.modal-open) .container {
+    /* 정상 상태로 복원 */
+    position: relative;
+    transform: none;
+}

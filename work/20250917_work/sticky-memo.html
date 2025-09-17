@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스티커 메모</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sticky-memo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 193, 7, 0.2);
+            border-bottom: 2px solid rgba(255, 193, 7, 0.3);
+            cursor: move;
+            user-select: none;
+        }
+        
+        .sticky-memo-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #f57c00;
+        }
+        
+        .sticky-memo-icon {
+            font-size: 20px;
+        }
+        
+        .sticky-memo-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .control-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .close-btn:hover {
+            background: #ff5252;
+            color: white;
+        }
+        
+        .sticky-memo-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        
+        .toolbar-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toolbar-btn {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .toolbar-btn:hover {
+            background: #f5f5f5;
+            border-color: #bbb;
+        }
+        
+        .toolbar-separator {
+            width: 1px;
+            height: 20px;
+            background: #ddd;
+        }
+        
+        .font-select, .size-select {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 12px;
+            min-width: 80px;
+        }
+        
+        .font-select {
+            min-width: 100px;
+        }
+        
+        .size-select {
+            min-width: 60px;
+        }
+        
+        .font-select:hover, .size-select:hover {
+            border-color: #bbb;
+        }
+        
+        .font-select:focus, .size-select:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
+        
+        .color-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        
+        .color-control {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        
+        .color-control input[type="color"] {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .color-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .reset-btn {
+            padding: 6px 12px;
+            font-size: 16px;
+        }
+        
+        .sticky-memo-content {
+            flex: 1;
+            padding: 16px;
+            background: white;
+            overflow: auto;
+        }
+        
+        .sticky-memo-textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 12px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            background: transparent;
+        }
+        
+        .sticky-memo-textarea:empty:before {
+            content: attr(data-placeholder);
+            color: #999;
+            pointer-events: none;
+        }
+        
+        .sticky-memo-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .footer-left, .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .footer-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+        
+        .footer-btn:hover {
+            background: #f5f5f5;
+            border-color: #bbb;
+        }
+        
+        .char-count, .save-status {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .save-status {
+            color: #4caf50;
+        }
+        
+        /* 리사이즈 핸들 - 4방향 */
+        .resize-handles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            background: rgba(255, 193, 7, 0.8);
+            border: 2px solid rgba(255, 193, 7, 1);
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            z-index: 101;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            pointer-events: all;
+            transition: all 0.2s;
+        }
+        
+        .resize-handle.nw {
+            top: -7px;
+            left: -7px;
+            cursor: nw-resize;
+        }
+        
+        .resize-handle.ne {
+            top: -7px;
+            right: -7px;
+            cursor: ne-resize;
+        }
+        
+        .resize-handle.sw {
+            bottom: -7px;
+            left: -7px;
+            cursor: sw-resize;
+        }
+        
+        .resize-handle.se {
+            bottom: -7px;
+            right: -7px;
+            cursor: se-resize;
+        }
+        
+        .resize-handle.n {
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: n-resize;
+        }
+        
+        .resize-handle.s {
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: s-resize;
+        }
+        
+        .resize-handle.w {
+            left: -7px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: w-resize;
+        }
+        
+        .resize-handle.e {
+            right: -7px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: e-resize;
+        }
+        
+        .resize-handle:hover {
+            background: rgba(255, 193, 7, 1);
+            transform: scale(1.3);
+        }
+        
+        .resize-handle.n:hover,
+        .resize-handle.s:hover {
+            transform: translateX(-50%) scale(1.3);
+        }
+        
+        .resize-handle.w:hover,
+        .resize-handle.e:hover {
+            transform: translateY(-50%) scale(1.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="sticky-memo-header">
+        <div class="sticky-memo-title">
+            <span class="sticky-memo-icon">📝</span>
+            <span>스티커 메모</span>
+        </div>
+        <div class="sticky-memo-controls">
+            <button class="control-btn" onclick="minimizeWindow()" title="최소화">_</button>
+            <button class="control-btn" onclick="toggleMaximize()" title="최대화">□</button>
+            <button class="control-btn close-btn" onclick="window.close()" title="닫기">✕</button>
+        </div>
+    </div>
+    
+    <div class="sticky-memo-toolbar">
+        <div class="toolbar-section">
+            <button class="toolbar-btn" data-action="bold" title="굵게">
+                <b>B</b>
+            </button>
+            <button class="toolbar-btn" data-action="italic" title="기울임">
+                <i>I</i>
+            </button>
+            <button class="toolbar-btn" data-action="underline" title="밑줄">
+                <u>U</u>
+            </button>
+        </div>
+        
+        <div class="toolbar-section">
+            <select id="fontFamily" class="font-select" title="글꼴">
+                <option value="Malgun Gothic">맑은 고딕</option>
+                <option value="Arial">Arial</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+                <option value="나눔고딕">나눔고딕</option>
+                <option value="돋움">돋움</option>
+            </select>
+            
+            <select id="fontSize" class="size-select" title="글자 크기">
+                <option value="10px">10px</option>
+                <option value="12px">12px</option>
+                <option value="14px" selected>14px</option>
+                <option value="16px">16px</option>
+                <option value="18px">18px</option>
+                <option value="20px">20px</option>
+                <option value="24px">24px</option>
+                <option value="28px">28px</option>
+                <option value="32px">32px</option>
+            </select>
+        </div>
+        
+        <div class="toolbar-section">
+            <div class="color-controls">
+                <label class="color-control" title="글자색">
+                    <span class="color-label">A</span>
+                    <input type="color" id="textColorPicker" value="#000000">
+                </label>
+                <label class="color-control" title="배경색">
+                    <span class="color-label bg-icon">⬛</span>
+                    <input type="color" id="bgColorPicker" value="#ffffff">
+                </label>
+                <button class="toolbar-btn reset-btn" data-action="resetColors" title="색상 초기화">
+                    🔄
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="sticky-memo-content">
+        <div id="stickyTextarea" class="sticky-memo-textarea" 
+            contenteditable="true"
+            data-placeholder="첫 줄: 제목&#10;둘째 줄: 내용&#10;&#10;저장하면 오늘 날짜에 메모가 저장됩니다."></div>
+    </div>
+    
+    <div class="sticky-memo-footer">
+        <div class="footer-left">
+            <span class="char-count">0 글자</span>
+            <span class="save-status">자동 저장됨</span>
+        </div>
+        <div class="footer-right">
+            <button class="footer-btn" onclick="saveMemo()" title="저장">
+                💾 저장
+            </button>
+            <button class="footer-btn" onclick="clearMemo()" title="지우기">
+                🗑️ 지우기
+            </button>
+        </div>
+    </div>
+    
+    <!-- 8방향 리사이즈 핸들 -->
+    <div class="resize-handles">
+        <div class="resize-handle nw" data-direction="nw"></div>
+        <div class="resize-handle ne" data-direction="ne"></div>
+        <div class="resize-handle sw" data-direction="sw"></div>
+        <div class="resize-handle se" data-direction="se"></div>
+        <div class="resize-handle n" data-direction="n"></div>
+        <div class="resize-handle s" data-direction="s"></div>
+        <div class="resize-handle w" data-direction="w"></div>
+        <div class="resize-handle e" data-direction="e"></div>
+    </div>
+    
+    <script>
+        // 상태 관리
+        let isMaximized = false;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let isResizing = false;
+        let startSize = { width: 0, height: 0 };
+        let startPos = { x: 0, y: 0 };
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContent();
+            setupEventListeners();
+            updateCharCount();
+            
+            // 저장된 창 크기 복원
+            const savedSize = localStorage.getItem('stickyMemoSize');
+            if (savedSize) {
+                try {
+                    const size = JSON.parse(savedSize);
+                    if (size.width && size.height) {
+                        window.resizeTo(size.width, size.height);
+                    }
+                } catch (e) {
+                    console.error('창 크기 복원 실패:', e);
+                }
+            }
+            
+            // 자동 저장
+            const textarea = document.getElementById('stickyTextarea');
+            let saveTimeout;
+            textarea.addEventListener('input', function() {
+                updateCharCount();
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    saveToLocalStorage();
+                    updateSaveStatus('자동 저장됨');
+                }, 1000);
+            });
+            
+            // 메인 창과 통신
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'stickyMemoContent') {
+                    loadContent();
+                }
+            });
+        });
+        
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 툴바 버튼
+            document.querySelectorAll('.toolbar-btn').forEach(btn => {
+                btn.addEventListener('click', handleToolbarAction);
+            });
+            
+            // 색상 피커
+            document.getElementById('textColorPicker').addEventListener('change', applyTextColor);
+            document.getElementById('bgColorPicker').addEventListener('change', applyBgColor);
+            
+            // 글꼴과 크기 변경
+            document.getElementById('fontFamily').addEventListener('change', changeFontFamily);
+            document.getElementById('fontSize').addEventListener('change', changeFontSize);
+        }
+        
+        // 툴바 액션 처리
+        function handleToolbarAction(e) {
+            const action = e.currentTarget.dataset.action;
+            
+            switch(action) {
+                case 'bold':
+                    document.execCommand('bold', false, null);
+                    break;
+                case 'italic':
+                    document.execCommand('italic', false, null);
+                    break;
+                case 'underline':
+                    document.execCommand('underline', false, null);
+                    break;
+                case 'resetColors':
+                    resetColors();
+                    break;
+            }
+        }
+        
+        // 색상 적용
+        function applyTextColor(e) {
+            document.execCommand('foreColor', false, e.target.value);
+        }
+        
+        function applyBgColor(e) {
+            document.execCommand('backColor', false, e.target.value);
+        }
+        
+        // 색상 초기화
+        function resetColors() {
+            document.getElementById('textColorPicker').value = '#000000';
+            document.getElementById('bgColorPicker').value = '#ffffff';
+            document.execCommand('foreColor', false, '#000000');
+            document.execCommand('backColor', false, 'transparent');
+        }
+        
+        // 글꼴 변경
+        function changeFontFamily(e) {
+            const fontFamily = e.target.value;
+            const selection = window.getSelection();
+            
+            if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                // 선택된 텍스트가 있으면 해당 부분만 변경
+                document.execCommand('fontName', false, fontFamily);
+            } else {
+                // 선택된 텍스트가 없으면 전체 textarea의 글꼴 변경
+                const textarea = document.getElementById('stickyTextarea');
+                textarea.style.fontFamily = fontFamily;
+            }
+            
+            saveToLocalStorage();
+        }
+        
+        // 글자 크기 변경
+        function changeFontSize(e) {
+            const fontSize = e.target.value;
+            const selection = window.getSelection();
+            
+            if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                // 선택된 텍스트가 있으면 해당 부분만 변경
+                const sizeValue = parseInt(fontSize);
+                document.execCommand('fontSize', false, '7'); // 임시로 7로 설정
+                
+                // span 요소를 찾아서 실제 크기로 변경
+                const spans = document.querySelectorAll('span[style*="font-size"]');
+                spans.forEach(span => {
+                    if (span.style.fontSize === 'xxx-large') {
+                        span.style.fontSize = fontSize;
+                    }
+                });
+            } else {
+                // 선택된 텍스트가 없으면 전체 textarea의 글자 크기 변경
+                const textarea = document.getElementById('stickyTextarea');
+                textarea.style.fontSize = fontSize;
+            }
+            
+            saveToLocalStorage();
+        }
+        
+        // 글자 수 업데이트
+        function updateCharCount() {
+            const textarea = document.getElementById('stickyTextarea');
+            const count = textarea.textContent.length;
+            document.querySelector('.char-count').textContent = `${count} 글자`;
+        }
+        
+        // 저장 상태 업데이트
+        function updateSaveStatus(message) {
+            const status = document.querySelector('.save-status');
+            status.textContent = message;
+            setTimeout(() => {
+                status.textContent = '자동 저장됨';
+            }, 2000);
+        }
+        
+        // localStorage에 저장
+        function saveToLocalStorage() {
+            const textarea = document.getElementById('stickyTextarea');
+            localStorage.setItem('stickyMemoContent', textarea.innerHTML);
+            
+            // 메인 창에 알림
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({ 
+                    type: 'stickyMemoUpdate', 
+                    content: textarea.innerHTML 
+                }, '*');
+            }
+        }
+        
+        // 내용 불러오기
+        function loadContent() {
+            const savedContent = localStorage.getItem('stickyMemoContent');
+            if (savedContent) {
+                document.getElementById('stickyTextarea').innerHTML = savedContent;
+                updateCharCount();
+            }
+        }
+        
+        // 메모 저장
+        function saveMemo() {
+            saveToLocalStorage();
+            
+            // 오늘 날짜로 달력에 저장
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            const textarea = document.getElementById('stickyTextarea');
+            const content = textarea.textContent.trim();
+            
+            if (content) {
+                // 메인 창에 메모 저장 요청
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({ 
+                        type: 'saveStickyMemo', 
+                        date: dateStr,
+                        content: content 
+                    }, '*');
+                }
+                
+                updateSaveStatus('달력에 저장됨');
+            }
+        }
+        
+        // 메모 지우기
+        function clearMemo() {
+            if (confirm('메모를 지우시겠습니까?')) {
+                document.getElementById('stickyTextarea').innerHTML = '';
+                updateCharCount();
+                saveToLocalStorage();
+                updateSaveStatus('지워짐');
+            }
+        }
+        
+        // 창 최소화
+        function minimizeWindow() {
+            // 브라우저에서는 실제 최소화 불가능, 대신 크기 축소
+            window.resizeTo(300, 100);
+        }
+        
+        // 최대화 토글
+        function toggleMaximize() {
+            if (!isMaximized) {
+                window.moveTo(0, 0);
+                window.resizeTo(screen.width, screen.height);
+                isMaximized = true;
+            } else {
+                window.resizeTo(600, 650);
+                window.moveTo((screen.width - 600) / 2, (screen.height - 650) / 2);
+                isMaximized = false;
+            }
+        }
+        
+        // 리사이즈 초기화
+        function initResize() {
+            const handles = document.querySelectorAll('.resize-handle');
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', startResize);
+            });
+        }
+        
+        // 리사이즈 시작
+        function startResize(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const direction = e.currentTarget.dataset.direction;
+            isResizing = true;
+            
+            const rect = {
+                width: window.outerWidth,
+                height: window.outerHeight,
+                x: window.screenX,
+                y: window.screenY
+            };
+            
+            startPos = {
+                x: e.screenX,
+                y: e.screenY
+            };
+            
+            startSize = {
+                width: rect.width,
+                height: rect.height,
+                x: rect.x,
+                y: rect.y
+            };
+            
+            // 리사이즈 방향 저장
+            window.resizeDirection = direction;
+            
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', stopResize);
+            
+            // 커서 변경
+            document.body.style.cursor = e.currentTarget.style.cursor;
+        }
+        
+        function handleResize(e) {
+            if (!isResizing) return;
+            
+            const direction = window.resizeDirection;
+            const deltaX = e.screenX - startPos.x;
+            const deltaY = e.screenY - startPos.y;
+            
+            let newWidth = startSize.width;
+            let newHeight = startSize.height;
+            let newX = startSize.x;
+            let newY = startSize.y;
+            
+            // 방향에 따른 리사이즈 처리 (제한 해제)
+            if (direction.includes('e')) {
+                newWidth = Math.max(100, startSize.width + deltaX);
+            }
+            if (direction.includes('w')) {
+                newWidth = Math.max(100, startSize.width - deltaX);
+                newX = startSize.x + deltaX;
+                if (newWidth <= 100) {
+                    newX = startSize.x + startSize.width - 100;
+                }
+            }
+            if (direction.includes('s')) {
+                newHeight = Math.max(80, startSize.height + deltaY);
+            }
+            if (direction.includes('n')) {
+                newHeight = Math.max(80, startSize.height - deltaY);
+                newY = startSize.y + deltaY;
+                if (newHeight <= 80) {
+                    newY = startSize.y + startSize.height - 80;
+                }
+            }
+            
+            // 창 크기와 위치 업데이트
+            if (direction.includes('n') || direction.includes('w')) {
+                window.moveTo(newX, newY);
+            }
+            window.resizeTo(newWidth, newHeight);
+        }
+        
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', handleResize);
+            document.removeEventListener('mouseup', stopResize);
+            document.body.style.cursor = 'default';
+            
+            // 크기 저장
+            localStorage.setItem('stickyMemoSize', JSON.stringify({
+                width: window.outerWidth,
+                height: window.outerHeight
+            }));
+        }
+        
+        // 메인 창에서 오는 응답 메시지 처리
+        window.addEventListener('message', function(event) {
+            console.log('🔔 스티커 메모 - 응답 수신:', event.data);
+            
+            if (event.data && event.data.type === 'saveStickyMemoResponse') {
+                const { success, message } = event.data;
+                if (success) {
+                    updateSaveStatus('✅ ' + message);
+                } else {
+                    updateSaveStatus('❌ ' + message);
+                }
+                console.log(success ? '✅ 달력 저장 성공' : '❌ 달력 저장 실패', message);
+            }
+        });
+
+        // 페이지 로드 시 리사이즈 초기화
+        window.addEventListener('load', initResize);
+    </script>
+</body>
+</html>

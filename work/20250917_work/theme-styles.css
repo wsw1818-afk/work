@@ -1,0 +1,81 @@
+/* 테마 설정 모달 스타일 */
+.theme-content {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.theme-group {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #667eea;
+}
+
+.theme-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #333;
+    font-size: 14px;
+}
+
+.color-options {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    max-width: 320px;
+}
+
+.color-grid-large {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 400px;
+}
+
+.color-grid-medium {
+    grid-template-columns: repeat(6, 1fr);
+    max-width: 360px;
+}
+
+.color-btn, .today-color-btn, .memo-color-btn, .page-bg-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.color-btn:hover, .today-color-btn:hover, .memo-color-btn:hover, .page-bg-btn:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.color-btn.selected, .today-color-btn.selected, .memo-color-btn.selected, .page-bg-btn.selected {
+    border-color: #667eea;
+    border-width: 3px;
+    transform: scale(1.05);
+}
+
+.color-btn.selected::after, .today-color-btn.selected::after, .memo-color-btn.selected::after, .page-bg-btn.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #333;
+    font-weight: bold;
+    font-size: 16px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.theme-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
