@@ -8772,9 +8772,21 @@
         // 페이지 로드 완료 후 추가 체크
         window.addEventListener('load', function() {
             console.log('페이지 완전 로드 완료');
-            
+
+            // 모든 메모 모달 강제 숨김 (페이지 로드 완료 후에도 재확인)
+            const memoModals = ['dateMemoModal', 'memoDetailModal', 'stickyMemo'];
+            memoModals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                    modal.classList.remove('has-positioned-content', 'opening', 'closing');
+                    console.log(`🔒 ${modalId} 강제 숨김 완료`);
+                }
+            });
+
             // 스티키 메모는 아직 생성되지 않음
-            
+
             // 버튼들이 제대로 바인딩되었는지 재확인
             const buttons = document.querySelectorAll('.action-btn');
             console.log('찾은 액션 버튼 개수:', buttons.length);
