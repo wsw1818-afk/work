@@ -7543,6 +7543,7 @@
             }
             
             selectedDate = targetDate;
+            window.selectedDate = targetDate;
             document.getElementById('dateMemoTitle').textContent = `📅 ${selectedDate} 메모`;
             
             // 날짜별 메모 모달만 열기 (스티키 메모는 열지 않음)
