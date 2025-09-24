@@ -62,7 +62,8 @@
       "mcp__playwright__browser_drag",
       "Bash(del nul)",
       "Bash(git remote add:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(claude mcp:*)"
     ],
     "deny": [],
     "ask": [],
