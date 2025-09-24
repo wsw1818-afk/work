@@ -7755,13 +7755,13 @@
 
         async function saveDateMemo() {
             const startTime = Date.now();
-            console.log('💾 saveDateMemo 함수 시작', { selectedDate });
+            console.log('💾 saveDateMemo 함수 시작', { selectedDate: window.selectedDate });
 
             if (window.DiagnosticSystem) {
                 window.DiagnosticSystem.trackInteraction('SAVE_DATE_MEMO', 'saveDateMemo', true, 0);
             }
 
-            if (!selectedDate) {
+            if (!window.selectedDate) {
                 console.warn('⚠️ selectedDate가 없어 메모를 저장할 수 없습니다.');
                 if (window.DiagnosticSystem) {
                     window.DiagnosticSystem.detectIssue('SAVE_ERROR', 'selectedDate 미설정', { severity: 'error' });
