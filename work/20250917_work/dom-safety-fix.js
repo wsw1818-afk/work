@@ -197,7 +197,8 @@
                             <div class="memo-item-content">${(memo.content || '').substring(0, 100)}${(memo.content || '').length > 100 ? '...' : ''}</div>
                             <div class="memo-item-date">${memo.date || '날짜 없음'}</div>
                             <div class="memo-item-preview">클릭하여 보기</div>
-                            <button class="memo-item-delete ${isDateMemosUnlocked ? 'visible' : ''}" onclick="event.stopPropagation(); deleteMemoFromList(${memo.id})">✕</button>
+                            <button class="memo-item-edit ${isDateMemosUnlocked ? 'visible' : ''}" onclick="event.stopPropagation(); editDateMemo(${memo.id})" title="편집">✏️</button>
+                            <button class="memo-item-delete ${isDateMemosUnlocked ? 'visible' : ''}" onclick="event.stopPropagation(); deleteMemoFromList(${memo.id})" title="삭제">✕</button>
                         </div>
                     `;
                 }).filter(html => html).join('');
@@ -212,6 +213,52 @@
         };
 
         console.log('✅ 안전한 displayDateMemos 함수로 교체 완료');
+    }
+
+    // editDateMemo 함수 추가
+    function createEditDateMemoFunction() {
+        window.editDateMemo = function(memoId) {
+            console.log('✏️ 날짜 메모 편집 시작:', memoId);
+
+            try {
+                // 로컬 스토리지에서 메모 데이터 가져오기 (올바른 키 사용)
+                const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                const memo = memos.find(m => m.id == memoId);
+
+                if (!memo) {
+                    console.error('❌ 편집할 메모를 찾을 수 없음:', memoId);
+                    return;
+                }
+
+                console.log('📝 편집할 메모 정보:', memo);
+
+                // 날짜 메모 입력 필드에 기존 내용 채우기 (올바른 ID 사용)
+                const titleInput = document.getElementById('dateMemoTitleInput');
+                const contentInput = document.getElementById('dateMemoContentInput');
+
+                if (titleInput && contentInput) {
+                    titleInput.value = memo.title || '';
+                    contentInput.value = memo.content || '';
+
+                    // 편집 모드 표시를 위한 속성 추가
+                    titleInput.setAttribute('data-edit-memo-id', memoId);
+                    contentInput.setAttribute('data-edit-memo-id', memoId);
+
+                    // 입력 필드에 포커스
+                    titleInput.focus();
+                    titleInput.select();
+
+                    console.log('✅ 편집 모드 활성화 완료, 메모 ID:', memoId);
+                } else {
+                    console.error('❌ 날짜 메모 입력 필드를 찾을 수 없음');
+                }
+
+            } catch (error) {
+                console.error('❌ 날짜 메모 편집 중 오류:', error);
+            }
+        };
+
+        console.log('✅ editDateMemo 함수 생성 완료');
     }
 
     // deleteMemo 함수를 안전하게 교체
@@ -326,7 +373,15 @@
                 element.id = id;
                 element.className = className;
                 element.innerHTML = ''; // 로딩 메시지 제거
-                
+
+                // 메모 리스트 요소는 숨김 처리 (달력 하단에 나타나지 않도록)
+                if (id === 'memoList' || id === 'stickyMemoList') {
+                    element.style.display = 'none';
+                    element.style.visibility = 'hidden';
+                    element.style.height = '0';
+                    element.style.overflow = 'hidden';
+                }
+
                 // 적절한 위치에 추가 (body의 끝에 임시로)
                 document.body.appendChild(element);
                 
@@ -407,6 +462,7 @@
         createSafeLoadMemos();
         createSafeDisplayStickyMemos();
         createSafeDisplayDateMemos();
+        createEditDateMemoFunction();
         createSafeDeleteMemo();
         
         // 오류 처리 강화

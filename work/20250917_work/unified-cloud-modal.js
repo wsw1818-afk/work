@@ -942,7 +942,7 @@
                 showTestResult(message, 'success', 'syncTestResult');
                 
                 console.log('✅ 통합 설정 저장 완료:', savedSettings);
-                
+
                 // 설정이 API 관련이라면 새로고침 제안
                 const needsReload = savedSettings.some(setting => setting.includes('API'));
                 if (needsReload) {
@@ -951,6 +951,11 @@
                             location.reload();
                         }
                     }, 2000);
+                } else {
+                    // API 설정이 아닌 일반 설정만 변경된 경우 모달 닫기
+                    setTimeout(() => {
+                        closeUnifiedModal();
+                    }, 1500);
                 }
                 
             } else {
@@ -958,6 +963,11 @@
                 showTestResult(message, 'info', 'apiTestResult');
                 showTestResult(message, 'info', 'syncTestResult');
                 console.log('💡 변경된 설정 없음');
+
+                // 변경된 설정이 없는 경우에도 모달 닫기
+                setTimeout(() => {
+                    closeUnifiedModal();
+                }, 1000);
             }
             
         } catch (error) {

@@ -20,7 +20,17 @@
             return;
         }
 
-        const actualMemoIds = new Set(actualMemos.map(m => String(m.id)));
+        // ID를 문자열과 숫자 모두로 저장하여 매칭 문제 방지
+        const actualMemoIds = new Set();
+        actualMemos.forEach(memo => {
+            if (memo.id !== undefined && memo.id !== null) {
+                actualMemoIds.add(String(memo.id));
+                actualMemoIds.add(memo.id.toString());
+                if (typeof memo.id === 'number') {
+                    actualMemoIds.add(memo.id);
+                }
+            }
+        });
         console.log('📋 실제 메모 ID들:', Array.from(actualMemoIds));
 
         // 모든 메모 리스트에서 유령 메모 정리
@@ -51,15 +61,24 @@
             // onclick 속성에서 메모 ID 추출
             const onclickAttr = item.getAttribute('onclick');
             if (onclickAttr) {
-                const match = onclickAttr.match(/openMemoDetail\((\d+)\)/);
+                const match = onclickAttr.match(/openMemoDetail\(([^)]+)\)/);
                 if (match) {
                     const memoId = match[1];
-                    
+                    // 따옴표 제거 (문자열 ID인 경우)
+                    const cleanId = memoId.replace(/['"]/g, '');
+
+                    // 숫자와 문자열 모두 확인
+                    const hasNumericId = actualMemoIds.has(cleanId);
+                    const hasStringId = actualMemoIds.has(String(cleanId));
+
                     // 실제 메모에 없으면 유령 메모이므로 제거
-                    if (!actualMemoIds.has(memoId)) {
-                        console.log(`👻 유령 메모 발견 및 제거: ${listId} - ID ${memoId}`);
+                    if (!hasNumericId && !hasStringId) {
+                        console.log(`👻 유령 메모 발견 및 제거: ${listId} - ID ${cleanId}`);
+                        console.log(`   실제 메모 ID들:`, Array.from(actualMemoIds));
                         item.remove();
                         removedCount++;
+                    } else {
+                        console.log(`✅ 유효한 메모 확인: ${listId} - ID ${cleanId}`);
                     }
                 }
             }
@@ -160,44 +179,12 @@
         }, 300);
     }
 
-    // DOM 변경 감지 및 자동 정리
+    // DOM 변경 감지 및 자동 정리 (비활성화됨)
     function setupAutoCleanup() {
-        const observer = new MutationObserver((mutations) => {
-            let shouldCleanup = false;
-            
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList') {
-                    // 메모 관련 요소가 추가되었는지 확인
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1 && (
-                            node.classList?.contains('memo-item') || 
-                            node.querySelector?.('.memo-item')
-                        )) {
-                            shouldCleanup = true;
-                        }
-                    });
-                }
-            });
-            
-            if (shouldCleanup) {
-                // 지연 실행으로 DOM 변경이 완료된 후 정리
-                setTimeout(() => {
-                    cleanupGhostMemos();
-                }, 500);
-            }
-        });
-
-        // 모든 메모 리스트 감시
-        ['memoList', 'stickyMemoList', 'dateMemoList'].forEach(listId => {
-            const element = document.getElementById(listId);
-            if (element) {
-                observer.observe(element, {
-                    childList: true,
-                    subtree: true
-                });
-                console.log(`👁️ ${listId} 자동 정리 감시 시작`);
-            }
-        });
+        console.log('🚫 자동 정리 시스템이 비활성화되었습니다 - 메모 삭제 문제 방지');
+        // 자동 정리 시스템을 완전히 비활성화
+        // 이 기능이 유효한 메모를 잘못 삭제하는 문제가 있어서 비활성화함
+        return null;
     }
 
     // 수동 정리 도구들
@@ -251,24 +238,24 @@
         console.log('🛠️ 명령어: cleanupGhostMemos(), forceRefreshAllLists(), diagnoseMemoState()');
     }
 
-    // 초기화
+    // 초기화 (자동 정리 비활성화 모드)
     function initialize() {
-        console.log('👻 유령 메모 정리 시스템 초기화');
-        
-        // 초기 정리 실행
-        cleanupGhostMemos();
-        
-        // 정리 시스템이 포함된 삭제 함수로 교체
+        console.log('👻 유령 메모 정리 시스템 초기화 (자동 정리 비활성화)');
+
+        // 초기 정리 실행하지 않음 (문제 방지)
+        console.log('🚫 초기 정리 건너뛰기 - 유효한 메모 보호');
+
+        // 정리 시스템이 포함된 삭제 함수로 교체 (수동 삭제 시에만 작동)
         createCleanupDeleteMemo();
-        
-        // 자동 정리 시스템 설정
+
+        // 자동 정리 시스템 설정 (비활성화됨)
         setupAutoCleanup();
-        
+
         // 디버깅 도구 추가
         addCleanupDebugTools();
-        
-        console.log('✅ 유령 메모 정리 시스템 초기화 완료');
-        console.log('👻 이제 삭제된 메모가 UI에 남아있지 않습니다');
+
+        console.log('✅ 유령 메모 정리 시스템 초기화 완료 (자동 정리 비활성화)');
+        console.log('🛡️ 유효한 메모가 잘못 삭제되지 않도록 보호됨');
     }
 
     // DOM 로드 완료 후 초기화 (한 번만)

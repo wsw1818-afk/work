@@ -175,11 +175,11 @@
 
         .action-bar {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding: 16px;
+            gap: 8px;
+            margin-bottom: 18px;
+            padding: 12px 14px;
             background: rgba(255, 255, 255, 0.9);
-            border-radius: 12px;
+            border-radius: 10px;
             flex-wrap: wrap;
             align-items: center;
             justify-content: flex-end;
@@ -189,17 +189,18 @@
         }
 
         .action-btn {
-            padding: 10px 18px;
+            padding: 8px 14px;
             border: 1px solid rgba(99, 132, 183, 0.2);
-            border-radius: 8px;
+            border-radius: 7px;
             background: rgba(255, 255, 255, 0.8);
             color: #3c4043;
-            font-size: calc(13px * var(--font-scale));
+            font-size: calc(12px * var(--font-scale));
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             backdrop-filter: blur(4px);
+            white-space: nowrap;
         }
 
         .action-btn:hover {
@@ -212,23 +213,23 @@
         /* 상태 인디케이터 스타일 */
         .status-indicators {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             margin-left: auto;
         }
 
         .status-indicator {
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 12px;
-            border-radius: 20px;
+            gap: 5px;
+            padding: 6px 10px;
+            border-radius: 16px;
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid #e2e8f0;
-            font-size: calc(12px * var(--font-scale));
+            font-size: calc(11px * var(--font-scale));
             font-weight: 600;
             transition: all 0.3s ease;
             cursor: pointer;
-            min-width: 120px;
+            min-width: 100px;
         }
 
         .status-indicator:hover {
@@ -1776,6 +1777,34 @@
             display: flex;
         }
 
+        .memo-item-edit {
+            position: absolute;
+            top: 8px;
+            right: 36px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .memo-item-edit:hover {
+            background: #3182ce;
+            transform: scale(1.1);
+        }
+
+        .memo-item-edit.visible {
+            display: flex;
+        }
+
         .memo-item.unlocked .memo-item-preview {
             display: none;
         }
@@ -2326,17 +2355,59 @@
 
         .modal-content {
             background: var(--surface-color);
-            margin: 8% auto;
-            padding: 28px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 560px;
-            max-height: 85%;
+            margin: 6% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 85%;
+            max-width: 480px;
+            max-height: 88%;
             overflow-y: auto;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 3px 12px rgba(0, 0, 0, 0.08);
             border: 1px solid var(--primary-medium);
             backdrop-filter: blur(12px);
             animation: modalFadeIn 0.3s ease-out;
+        }
+
+        /* 일정 추가 모달 (createModal) 전용 스타일 - 더 컴팩트하게 */
+        #createModal .modal-content {
+            max-width: 420px;
+            width: 75%;
+            padding: 18px;
+            margin: 8% auto;
+        }
+
+        #createModal .modal-header {
+            margin: -18px -18px 16px -18px;
+            padding: 14px 18px;
+        }
+
+        #createModal .form-group {
+            margin-bottom: 18px;
+        }
+
+        /* 엑셀 내보내기 모달 최적화 */
+        #excelModal .modal-content {
+            max-width: 500px;
+            width: 80%;
+            padding: 18px;
+            margin: 6% auto;
+        }
+
+        #excelModal .modal-header {
+            margin: -18px -18px 16px -18px;
+            padding: 14px 18px;
+        }
+
+        #excelModal .form-group {
+            margin-bottom: 16px;
+        }
+
+        #excelModal .checkbox-group {
+            gap: 8px;
+        }
+
+        #excelModal .checkbox-group > div {
+            margin-bottom: 8px;
         }
         
         @keyframes modalFadeIn {
@@ -2354,13 +2425,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
+            margin-bottom: 18px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--surface-border);
             background: linear-gradient(135deg, var(--primary-light) 0%, rgba(255, 255, 255, 0.3) 100%);
-            margin: -28px -28px 24px -28px;
-            padding: 20px 28px;
-            border-radius: 16px 16px 0 0;
+            margin: -20px -20px 18px -20px;
+            padding: 16px 20px;
+            border-radius: 12px 12px 0 0;
         }
 
         .modal-title {
@@ -3046,70 +3117,109 @@
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">⚙️ 설정</h2>
-                <button class="modal-close" onclick="cancelSettings()">✕</button>
+                <h2 data-icon="⚙️">설정</h2>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">테마</label>
-                    <select class="form-select" id="themeSelect">
-                        <option value="light">라이트 모드</option>
-                        <option value="dark">다크 모드</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">전체 글자 크기</label>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <button type="button" class="size-control-btn" onclick="adjustFontSize(-0.1)">축소</button>
-                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                            <input type="range" class="size-slider" id="fontSizeSlider" min="0.7" max="1.5" step="0.1" value="1.0">
-                            <span class="size-display" id="fontSizeDisplay">100%</span>
-                        </div>
-                        <button type="button" class="size-control-btn" onclick="adjustFontSize(0.1)">확대</button>
+                <!-- 기본 설정 섹션 -->
+                <div class="settings-section">
+                    <h3>🎨 화면 설정</h3>
+                    <div class="form-group">
+                        <label>테마</label>
+                        <select id="themeSelect">
+                            <option value="light">라이트 모드</option>
+                            <option value="dark">다크 모드</option>
+                        </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">일자 숫자 크기</label>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <button type="button" class="size-control-btn" onclick="adjustDateSize(-0.1)">축소</button>
-                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                            <input type="range" class="size-slider" id="dateSizeSlider" min="0.7" max="1.8" step="0.1" value="1.0">
-                            <span class="size-display" id="dateSizeDisplay">100%</span>
+
+                <!-- 알림 설정 섹션 -->
+                <div class="settings-section">
+                    <h3>🔔 데스크탑 알림</h3>
+                    <div class="form-group">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <button class="btn btn-small btn-primary" onclick="requestNotificationPermission()">알림 권한 허용</button>
+                            <div class="status-indicator info" id="notificationStatus">⏳ 미설정</div>
                         </div>
-                        <button type="button" class="size-control-btn" onclick="adjustDateSize(0.1)">확대</button>
+                        <p class="text-muted" style="margin: 0; font-size: 0.85rem;">웹 밖 윈도우 화면에서도 알림을 보려면 권한을 허용해주세요.</p>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">달력 가로 크기</label>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <button type="button" class="size-control-btn" onclick="adjustCalendarSize('width', -0.1)">축소</button>
-                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                            <input type="range" class="size-slider" id="widthSlider" min="0.5" max="2.0" step="0.1" value="1.0">
-                            <span class="size-display" id="widthDisplay">100%</span>
+
+                <!-- 크기 설정 섹션 -->
+                <div class="settings-section">
+                    <h3>📏 크기 설정</h3>
+                    <div class="form-group">
+                        <label>전체 글자 크기</label>
+                        <div class="slider-container">
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustFontSize(-0.1)">축소</button>
+                            <input type="range" id="fontSizeSlider" min="0.7" max="1.5" step="0.1" value="1.0">
+                            <div class="slider-value" id="fontSizeDisplay">100%</div>
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustFontSize(0.1)">확대</button>
                         </div>
-                        <button type="button" class="size-control-btn" onclick="adjustCalendarSize('width', 0.1)">확대</button>
+                    </div>
+                    <div class="form-group">
+                        <label>일자 숫자 크기</label>
+                        <div class="slider-container">
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustDateSize(-0.1)">축소</button>
+                            <input type="range" id="dateSizeSlider" min="0.7" max="1.8" step="0.1" value="1.0">
+                            <div class="slider-value" id="dateSizeDisplay">100%</div>
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustDateSize(0.1)">확대</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>달력 가로 크기</label>
+                        <div class="slider-container">
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustCalendarSize('width', -0.1)">축소</button>
+                            <input type="range" id="widthSlider" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <div class="slider-value" id="widthDisplay">100%</div>
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustCalendarSize('width', 0.1)">확대</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>달력 세로 크기</label>
+                        <div class="slider-container">
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustCalendarSize('height', -0.1)">축소</button>
+                            <input type="range" id="heightSlider" min="0.5" max="2.0" step="0.1" value="1.0">
+                            <div class="slider-value" id="heightDisplay">100%</div>
+                            <button type="button" class="btn btn-small btn-secondary" onclick="adjustCalendarSize('height', 0.1)">확대</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>주 시작일</label>
+                        <select class="form-select">
+                            <option selected>일요일</option>
+                            <option>월요일</option>
+                        </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">달력 세로 크기</label>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <button type="button" class="size-control-btn" onclick="adjustCalendarSize('height', -0.1)">축소</button>
-                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                            <input type="range" class="size-slider" id="heightSlider" min="0.5" max="2.0" step="0.1" value="1.0">
-                            <span class="size-display" id="heightDisplay">100%</span>
+
+                <!-- 알람 테스트 섹션 -->
+                <div class="settings-section">
+                    <h3>🔔 알람 테스트</h3>
+                    <div class="form-group">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                            <button class="btn btn-small btn-secondary" onclick="testWebAlarm()">웹 내 알람 테스트</button>
+                            <button class="btn btn-small btn-secondary" onclick="testNativeAlarm()">데스크탑 알람 테스트</button>
+                            <button class="btn btn-small btn-secondary" onclick="test5SecondAlarm()">5초 후 알람</button>
                         </div>
-                        <button type="button" class="size-control-btn" onclick="adjustCalendarSize('height', 0.1)">확대</button>
+                        <p class="text-muted" style="margin: 0; font-size: 0.85rem;">알람이 제대로 작동하는지 테스트해보세요.</p>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">주 시작일</label>
-                    <select class="form-select">
-                        <option selected>일요일</option>
-                        <option>월요일</option>
-                    </select>
+
+                <!-- 진단 섹션 -->
+                <div class="settings-section">
+                    <h3>🔍 알림 진단</h3>
+                    <div class="form-group">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                            <button class="btn btn-small btn-secondary" onclick="window.notificationDiagnostics?.runFullDiagnostics?.()">전체 진단 실행</button>
+                            <button class="btn btn-small btn-secondary" onclick="window.immediateNotificationTest?.()">빠른 알림 테스트</button>
+                        </div>
+                        <p class="text-muted" style="margin: 0; font-size: 0.85rem;">알람이 보이지 않는 문제를 진단합니다.</p>
+                    </div>
                 </div>
-                <button class="btn-primary" onclick="saveSettings()">설정 저장</button>
-                <button class="btn-secondary" onclick="cancelSettings()">취소</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveSettings()">설정 저장</button>
+                <button class="btn btn-secondary" onclick="cancelSettings()">취소</button>
             </div>
         </div>
     </div>
@@ -3299,9 +3409,13 @@
             return fixedHolidays[key] || null;
         }
         
-        // 전역 달력 상태 변수
-        let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth() + 1;
+        // 전역 달력 상태 변수 (window 객체에 명시적 할당으로 안전성 보장)
+        window.currentYear = new Date().getFullYear();
+        window.currentMonth = new Date().getMonth() + 1;
+
+        // 전역 변수 별칭 (기존 코드 호환성)
+        let currentYear = window.currentYear;
+        let currentMonth = window.currentMonth;
         
         // 날짜 선택기 초기화
         function initDateSelector() {
@@ -3337,8 +3451,8 @@
             const yearSelect = document.getElementById('yearSelect');
             const monthSelect = document.getElementById('monthSelect');
             
-            currentYear = parseInt(yearSelect.value);
-            currentMonth = parseInt(monthSelect.value);
+            window.currentYear = currentYear = parseInt(yearSelect.value);
+            window.currentMonth = currentMonth = parseInt(monthSelect.value);
             
             // 달력 재생성
             createCalendar();
@@ -3349,11 +3463,11 @@
             currentMonth += direction;
             
             if (currentMonth > 12) {
-                currentMonth = 1;
-                currentYear++;
+                window.currentMonth = currentMonth = 1;
+                window.currentYear = currentYear = currentYear + 1;
             } else if (currentMonth < 1) {
-                currentMonth = 12;
-                currentYear--;
+                window.currentMonth = currentMonth = 12;
+                window.currentYear = currentYear = currentYear - 1;
             }
             
             // 드롭다운 업데이트
@@ -3523,23 +3637,17 @@
                     }
                     
                     if (!day.classList.contains('other-month')) {
-                        console.log('📅 openDateMemoModal 호출:', year, month, date);
-                        
-                        // 이벤트 완전 차단 (모든 전파 및 기본 동작 방지)
-                        e.stopPropagation();
-                        e.stopImmediatePropagation();
-                        e.preventDefault();
-                        
-                        // 사용자 클릭 플래그 설정 (차단 로직 우회)
-                        window._userClickOverride = true;
-                        
-                        // 지연 없이 즉시 모달 열기 (지연으로 인한 이벤트 누적 방지)
+                        console.log('📅 날짜 클릭됨 - 메모창 자동 열림 비활성화됨:', year, month, date);
+
+                        // 날짜 선택 표시만 처리 (메모창은 열지 않음)
+                        const selectedDays = document.querySelectorAll('.day.selected');
+                        selectedDays.forEach(selectedDay => selectedDay.classList.remove('selected'));
+                        day.classList.add('selected');
+
+                        console.log('✅ 날짜 선택 완료 - 메모창 열기');
+
+                        // 메모창 열기
                         openDateMemoModal(year, month, date);
-                        
-                        // 플래그 즉시 해제
-                        setTimeout(() => {
-                            window._userClickOverride = false;
-                        }, 100);
                     }
                 });
                 
@@ -3589,6 +3697,8 @@
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
             } else {
                 console.warn('모달을 찾을 수 없습니다:', modalId);
             }
@@ -3598,6 +3708,8 @@
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
             } else {
                 console.warn('닫을 모달을 찾을 수 없습니다:', modalId);
             }
@@ -7628,8 +7740,17 @@
         }
 
         function clearDateMemoForm() {
-            document.getElementById('dateMemoTitleInput').value = '';
-            document.getElementById('dateMemoContentInput').value = '';
+            const titleInput = document.getElementById('dateMemoTitleInput');
+            const contentInput = document.getElementById('dateMemoContentInput');
+
+            titleInput.value = '';
+            contentInput.value = '';
+
+            // 편집 모드 속성 제거
+            titleInput.removeAttribute('data-edit-memo-id');
+            contentInput.removeAttribute('data-edit-memo-id');
+
+            console.log('🧹 날짜 메모 폼 초기화 및 편집 모드 해제 완료');
         }
 
         async function saveDateMemo() {
@@ -7651,14 +7772,20 @@
                 return;
             }
 
-            const title = document.getElementById('dateMemoTitleInput').value.trim();
-            const content = document.getElementById('dateMemoContentInput').value.trim();
-            
-            console.log('📝 저장할 메모 데이터:', {title, content, selectedDate});
+            const titleInput = document.getElementById('dateMemoTitleInput');
+            const contentInput = document.getElementById('dateMemoContentInput');
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+
+            // 편집 모드인지 확인
+            const editMemoId = titleInput.getAttribute('data-edit-memo-id');
+            const isEditMode = editMemoId !== null;
+
+            console.log('📝 저장할 메모 데이터:', {title, content, selectedDate, isEditMode, editMemoId});
 
             if (!title) {
                 alert('메모 제목을 입력해주세요!');
-                
+
                 if (window.DiagnosticSystem) {
                     window.DiagnosticSystem.detectIssue('USER_INPUT', '빈 제목으로 메모 저장 시도', {
                         severity: 'info'
@@ -7667,14 +7794,29 @@
                 return;
             }
 
-            const memoId = Date.now();
-            const memo = {
-                id: memoId,
-                title: title,
-                content: content,
-                date: selectedDate,
-                timestamp: new Date().toISOString()
-            };
+            let memo;
+            if (isEditMode) {
+                // 편집 모드: 기존 메모 업데이트
+                console.log('✏️ 메모 편집 모드, ID:', editMemoId);
+                memo = {
+                    id: parseInt(editMemoId),
+                    title: title,
+                    content: content,
+                    date: selectedDate,
+                    timestamp: new Date().toISOString()
+                };
+            } else {
+                // 새 메모 생성
+                console.log('➕ 새 메모 생성 모드');
+                const memoId = Date.now();
+                memo = {
+                    id: memoId,
+                    title: title,
+                    content: content,
+                    date: selectedDate,
+                    timestamp: new Date().toISOString()
+                };
+            }
             
             // 첨부파일 처리 - IndexedDB의 임시 ID를 실제 메모 ID로 업데이트
             if (dateMemoAttachments.length > 0) {
@@ -7723,10 +7865,35 @@
                 }
             }
 
-            // localStorage에서 최신 메모 목록을 가져와서 새 메모 추가 (전역 변수 사용 안 함)
+            // localStorage에서 최신 메모 목록을 가져와서 메모 처리 (편집 또는 새 메모)
             const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
-            currentMemos.unshift(memo);
-            
+
+            if (isEditMode) {
+                // 편집 모드: 기존 메모를 찾아서 업데이트
+                const memoIndex = currentMemos.findIndex(m => m.id == editMemoId);
+                if (memoIndex !== -1) {
+                    // 기존 첨부파일 정보 보존하고 업데이트
+                    const existingMemo = currentMemos[memoIndex];
+                    memo.attachments = existingMemo.attachments || [];
+
+                    // 새 첨부파일이 있으면 추가
+                    if (dateMemoAttachments.length > 0) {
+                        memo.attachments = memo.attachments.concat(memo.attachments || []);
+                    }
+
+                    currentMemos[memoIndex] = memo;
+                    console.log('✏️ 기존 메모 업데이트 완료, ID:', editMemoId);
+                } else {
+                    console.error('❌ 편집할 메모를 찾을 수 없음, ID:', editMemoId);
+                    alert('편집할 메모를 찾을 수 없습니다.');
+                    return;
+                }
+            } else {
+                // 새 메모 생성 모드: 맨 앞에 추가
+                currentMemos.unshift(memo);
+                console.log('➕ 새 메모 추가 완료, ID:', memo.id);
+            }
+
             const saveResult = safelyStoreData('calendarMemos', currentMemos);
             if (!saveResult.success) {
                 alert('날짜 메모 저장 실패: ' + saveResult.message);
@@ -8645,6 +8812,99 @@
                 }
             });
             console.log('🔒 DOM 초기화 시 메모 모달 닫기 완료');
+
+            // 메모 관련 UI 요소 완전 제거 함수
+            function removeMemoUIElements() {
+                // 메모 리스트 완전 제거
+                const memoListIds = ['memoList', 'stickyMemoList'];
+                memoListIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.remove();
+                        console.log(`🗑️ ${id} 요소 완전 제거됨`);
+                    }
+                });
+
+                // 메모 관련 클래스 요소들 제거 (달력 및 메모 모달 관련 요소는 제외)
+                const memoClasses = ['.memo-item', '.memo-item-title', '.memo-item-content',
+                                   '.memo-item-date', '.memo-item-preview', '.memo-item-delete'];
+                memoClasses.forEach(className => {
+                    const elements = document.querySelectorAll(className);
+                    elements.forEach(el => {
+                        // 달력 관련 요소나 메모 모달 관련 요소는 건드리지 않음
+                        if (el.closest('.calendar-container') ||
+                            el.closest('#calendar') ||
+                            el.closest('#daysGrid') ||
+                            el.closest('#dateMemoModal') ||
+                            el.closest('#memoDetailModal') ||
+                            el.closest('.memo-modal')) {
+                            return;
+                        }
+                        el.remove();
+                        console.log(`🗑️ ${className} 요소 제거됨 (메모 모달 제외)`);
+                    });
+                });
+
+                // 편집/삭제 버튼 제거 (중요한 버튼은 제외)
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    // 달력 네비게이션 버튼은 건드리지 않음
+                    if (btn.textContent.includes('‹') ||
+                        btn.textContent.includes('›') ||
+                        btn.closest('.calendar-container') ||
+                        btn.closest('#calendar')) {
+                        return;
+                    }
+
+                    // 날짜 메모 모달 내부의 편집/삭제 버튼은 보호
+                    if (btn.closest('#dateMemoModal') &&
+                        (btn.classList.contains('memo-item-delete') || btn.classList.contains('memo-item-edit') ||
+                         btn.textContent.includes('✕') || btn.textContent.includes('✏️'))) {
+                        console.log(`🛡️ 날짜 메모 버튼 보호됨: ${btn.textContent.trim()}`);
+                        return;
+                    }
+
+                    const text = btn.textContent.trim();
+                    if (text.includes('편집') || text.includes('삭제') || text.includes('✏️') || text.includes('🗑️')) {
+                        btn.remove();
+                        console.log(`🗑️ 메모 버튼 제거됨: ${text}`);
+                    }
+                });
+
+                // "저장된 메모가 없습니다" 텍스트 포함 요소 제거 (달력 관련 요소는 제외)
+                const allElements = document.querySelectorAll('*');
+                allElements.forEach(element => {
+                    // 달력 관련 요소는 건드리지 않음
+                    if (element.id === 'calendar' ||
+                        element.classList.contains('calendar-container') ||
+                        element.classList.contains('day') ||
+                        element.classList.contains('month-year') ||
+                        element.id === 'daysGrid' ||
+                        element.closest('.calendar-container') ||
+                        element.closest('#calendar')) {
+                        return;
+                    }
+
+                    const text = element.textContent?.trim();
+                    if (text === '저장된 메모가 없습니다' ||
+                        text === '이 날짜에 저장된 메모가 없습니다') {
+                        element.style.display = 'none';
+                        element.style.visibility = 'hidden';
+                        element.style.opacity = '0';
+                        element.style.height = '0';
+                        element.style.overflow = 'hidden';
+                        element.style.position = 'absolute';
+                        element.style.left = '-9999px';
+                        console.log('🗑️ 메모 없음 메시지 숨김 처리됨:', text);
+                    }
+                });
+            }
+
+            // 즉시 실행
+            removeMemoUIElements();
+
+            // 주기적 실행 (다른 스크립트가 메모 요소를 생성할 경우 대비)
+            setInterval(removeMemoUIElements, 1000);
             
             setupModalWatcher();
             
@@ -8827,6 +9087,18 @@
     <script src="menu-click-guarantee.js"></script>
     
     <!-- 통합 메모 관리 시스템 활성화 -->
+    <!-- 🚨 긴급 무한루프 킬러 - CPU 과부하 해결 (최우선 로드) -->
+    <!-- emergency-loop-killer.js 비활성화 - 타이머 차단 문제 -->
+
+    <!-- 📅 달력 표시 문제 해결 -->
+    <script src="calendar-display-fix.js"></script>
+
+    <!-- 메모 상세 모달 무한 로딩 문제 해결 - 최우선 로드 -->
+    <script src="memo-loading-fix.js"></script>
+
+    <!-- 포괄적 클릭 이벤트 모니터링 및 진단 시스템 - 가장 먼저 로드 -->
+    <!-- comprehensive-click-monitor.js 비활성화 - CPU 과부하 방지 -->
+
     <script src="unified-memo-system.js"></script>
     
     <!-- 스티커 메모 통합 복원 (모든 기능 정상화) -->
@@ -8841,6 +9113,24 @@
     <script src="memo-refresh-fix.js"></script>
     <script src="instant-delete.js"></script>
     <script src="ghost-memo-cleanup.js"></script>
+
+    <!-- 모달 표시 수정 스크립트 -->
+    <script src="modal-visibility-fix.js"></script>
+
+    <!-- 모달 자동 열림 방지 수정 스크립트 -->
+    <script src="modal-auto-open-fix.js"></script>
+
+    <!-- 설정 초기화 문제 수정 스크립트 -->
+    <script src="settings-initialization-fix.js"></script>
+
+    <!-- 설정 저장 기능 개선 스크립트 -->
+    <script src="settings-save-fix.js"></script>
+
+    <!-- Framework7 버튼 이벤트 처리 개선 스크립트 -->
+    <script src="framework7-button-fix.js"></script>
+
+    <!-- 설정 모달 컨트롤 클릭 문제 해결 스크립트 -->
+    <script src="settings-modal-controls-fix.js"></script>
 
     <!-- Google Drive 동기화 상태창 (깜빡임 원인으로 비활성화) -->
     <script src="sync-status-window.js"></script>
@@ -8879,13 +9169,18 @@
     <!-- 스티커 메모 색상 변경 기능 -->
     <link rel="stylesheet" href="sticky-memo-colors.css">
     <!-- force-show-memos.css 제거 - 레이아웃 깨짐 원인 -->
-    
+    <!-- 날짜 메모 모달 강제 표시 CSS -->
+    <link rel="stylesheet" href="force-show-date-memo.css">
+
     <!-- 메모 편집 시 리스트 숨김 CSS -->
     <link rel="stylesheet" href="memo-edit-hide-styles.css">
     
     <!-- 달력 하단 메모 리스트 기본 숨김 CSS -->
     <link rel="stylesheet" href="hide-memo-lists.css">
-    
+
+    <!-- 설정 모달 크기 조정 CSS -->
+    <link rel="stylesheet" href="settings-modal-resize.css">
+
     <!-- 네이티브 데스크탑 알림 시스템 -->
     <script src="native-notification-system.js"></script>
     <script src="alarm-integration.js"></script>
@@ -8919,8 +9214,20 @@
     
     <!-- 메모 삭제 추적 및 복원 방지 시스템 -->
     <script src="memo-deletion-tracker.js"></script>
-    
-    
+
+    <!-- 창 닫기 시 설정 모달 자동 열림 방지 시스템 -->
+    <script src="prevent-settings-modal-auto-open.js"></script>
+
+    <!-- 설정 모달 중복 섹션 제거 시스템 -->
+    <script src="settings-modal-duplication-fix.js"></script>
+
+    <!-- 모달 겹침 문제 해결 (메모 편집 후 클릭시 삭제 모달이 사라지는 문제 해결) -->
+    <script src="modal-overlap-fix.js"></script>
+
+    <!-- 통합 모달 매니저 (리팩터링 버전) -->
+    <script src="unified-modal-manager.js"></script>
+    <!-- 기존 중복 스크립트들은 unified-modal-manager.js로 통합됨 -->
+
     <script>
     console.log('🧪 첨부파일 뷰어 테스트 스크립트 로드됨!');
     
@@ -9767,77 +10074,126 @@
     </script>
     
     <!-- force-modal-open.js 제거 - unified-memo-system.js와 충돌 -->
-    
+
+    <!-- 모달 드래그 시스템 로드 -->
+    <script src="modal-drag-system.js"></script>
+
+    <!-- 디버깅 스크립트 임시 추가 -->
+    <script src="debug-click-modal.js"></script>
+
     <!-- 메모 첨부파일 미리보기 및 X 버튼 수정 - body 끝에서 로드 -->
     <script>
     console.log('🔄 첨부파일 미리보기 스크립트 로드 시작');
     // memo-attachment-viewer.js 내용
     (function() {
         console.log('📦 메모 첨부파일 인라인 로드');
-        
+
+        let isProcessing = false;
+        let lastProcessTime = 0;
+        const PROCESS_DELAY = 2000; // 2초 제한
+
         // X 버튼 제거 및 첨부파일 미리보기
         function fixMemoXButtons() {
+            // 과도한 실행 방지
+            const now = Date.now();
+            if (isProcessing || (now - lastProcessTime) < PROCESS_DELAY) {
+                return;
+            }
+
+            isProcessing = true;
+            lastProcessTime = now;
             console.log('🔧 X 버튼 제거 시작');
-            
-            // 모든 X 버튼 찾기
-            const xButtons = document.querySelectorAll('button');
-            xButtons.forEach(button => {
-                const text = button.textContent.trim();
-                if (text === '×' || text === 'X' || text === 'x') {
-                    // 빨간색 배경의 X 버튼만 숨김
-                    const style = window.getComputedStyle(button);
-                    const bgColor = style.backgroundColor;
-                    if (bgColor && (bgColor.includes('239, 68, 68') || bgColor.includes('red') || bgColor === 'rgb(239, 68, 68)')) {
-                        button.style.display = 'none';
-                        console.log('❌ X 버튼 숨김:', button);
+
+            try {
+                // 모든 X 버튼 찾기
+                const xButtons = document.querySelectorAll('button');
+                xButtons.forEach(button => {
+                    const text = button.textContent.trim();
+                    if (text === '×' || text === 'X' || text === 'x') {
+                        // 빨간색 배경의 X 버튼만 숨김
+                        const style = window.getComputedStyle(button);
+                        const bgColor = style.backgroundColor;
+                        if (bgColor && (bgColor.includes('239, 68, 68') || bgColor.includes('red') || bgColor === 'rgb(239, 68, 68)')) {
+                            button.style.display = 'none';
+                            console.log('❌ X 버튼 숨김:', button);
+                        }
                     }
-                }
-            });
-            
-            // 첨부파일 버튼들을 미리보기 버튼으로 변경
-            const attachmentButtons = document.querySelectorAll('button[onclick*="downloadAttachment"]');
-            console.log('🔍 찾은 첨부파일 버튼:', attachmentButtons.length);
-            
-            attachmentButtons.forEach(button => {
-                const onclickStr = button.getAttribute('onclick');
-                if (onclickStr) {
-                    button.textContent = '👁️ 미리보기';
-                    button.style.backgroundColor = '#17a2b8';
-                    button.style.color = 'white';
-                    console.log('✅ 버튼 변경:', button);
-                }
-            });
+                });
+
+                // 첨부파일 버튼들을 미리보기 버튼으로 변경
+                const attachmentButtons = document.querySelectorAll('button[onclick*="downloadAttachment"]');
+                console.log('🔍 찾은 첨부파일 버튼:', attachmentButtons.length);
+
+                attachmentButtons.forEach(button => {
+                    const onclickStr = button.getAttribute('onclick');
+                    if (onclickStr) {
+                        button.textContent = '👁️ 미리보기';
+                        button.style.backgroundColor = '#17a2b8';
+                        button.style.color = 'white';
+                        console.log('✅ 버튼 변경:', button);
+                    }
+                });
+            } catch (error) {
+                console.error('X 버튼 제거 중 오류:', error);
+            } finally {
+                isProcessing = false;
+            }
         }
-        
-        // DOM 변경 감지
-        const observer = new MutationObserver(function() {
-            fixMemoXButtons();
-        });
-        
+
+        // 최소 간격으로 실행
+        let timeoutId = null;
+        function throttledFixMemoXButtons() {
+            if (timeoutId) return;
+            timeoutId = setTimeout(() => {
+                fixMemoXButtons();
+                timeoutId = null;
+            }, PROCESS_DELAY);
+        }
+
+        // DOM 변경 감지 (throttled)
+        const observer = new MutationObserver(throttledFixMemoXButtons);
+
         observer.observe(document.body, {
             childList: true,
             subtree: true
         });
-        
+
         // 초기 실행
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', fixMemoXButtons);
         } else {
             fixMemoXButtons();
         }
-        
-        // 주기적 체크
-        setInterval(fixMemoXButtons, 1000);
-        
+
         console.log('✅ 메모 첨부파일 미리보기 초기화 완료');
     })();
     </script>
     
-    <!-- 강제 X 버튼 제거 및 미리보기 -->
-    <script>
+    <!-- 닫기 버튼 복원 (X 버튼 제거 대신) -->
+    <script src="restore-close-buttons.js"></script>
+    
+    <!-- ESC 키 모달 복원 로직 수정 -->
+    <script src="esc-key-modal-fix.js"></script>
+
+    <!-- 메모 잠금 상태 복원 수정 -->
+    <script src="memo-lock-state-fix.js"></script>
+
+    <!-- 포괄적인 모달 닫기 문제 해결 -->
+    <script src="comprehensive-modal-close-fix.js"></script>
+
+    <!-- 메모 리스트 복원 수정 -->
+    <script src="memo-list-restoration-fix.js"></script>
+    <script src="ultimate-modal-cleanup-fix.js"></script>
+
+    <!-- 강제 X 버튼 제거 및 미리보기 - 비활성화 -->
+    <!-- <script>
     (function() {
         console.log('🔥 강제 X 버튼 제거 시작!!');
-        
+
+        let isRunning = false;
+        let lastRunTime = 0;
+        const MIN_INTERVAL = 3000; // 3초 제한
+
         function killXButtons() {
             // 모든 버튼 검사
             document.querySelectorAll('button').forEach(btn => {
@@ -9849,7 +10205,7 @@
                     btn.remove();
                 }
             });
-            
+
             // 빨간 배경 버튼 제거
             document.querySelectorAll('button').forEach(btn => {
                 const bg = window.getComputedStyle(btn).backgroundColor;
@@ -9859,7 +10215,7 @@
                     }
                 }
             });
-            
+
             // 메모 항목의 X 버튼
             document.querySelectorAll('.date-memo-item button, .memo-item button, [class*="memo"] button').forEach(btn => {
                 if (btn.textContent.trim() === '×' || btn.textContent.trim() === 'X') {
@@ -9867,7 +10223,7 @@
                 }
             });
         }
-        
+
         // 첨부 미리보기
         function fixAttachments() {
             document.querySelectorAll('button[onclick*="downloadAttachment"]').forEach(btn => {
@@ -9876,12 +10232,12 @@
                     btn.textContent = '👁️ 보기';
                     btn.style.background = '#17a2b8';
                     btn.style.color = 'white';
-                    
+
                     const oldOnclick = btn.onclick;
                     btn.onclick = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        
+
                         try {
                             const match = btn.getAttribute('onclick').match(/'([^']+)'/);
                             if (match) {
@@ -9949,32 +10305,69 @@
                 };
             };
         };
-        
-        // 통합 실행
+
+        // 통합 실행 (실행 제한 포함)
         function runFix() {
-            killXButtons();
-            fixAttachments();
+            const now = Date.now();
+
+            // 과도한 실행 방지
+            if (isRunning || (now - lastRunTime) < MIN_INTERVAL) {
+                return;
+            }
+
+            isRunning = true;
+            lastRunTime = now;
+
+            try {
+                killXButtons();
+                fixAttachments();
+            } catch (error) {
+                console.error('X 버튼 제거 중 오류:', error);
+            } finally {
+                isRunning = false;
+            }
         }
-        
+
+        // Throttled 실행 함수
+        let mutationTimeout = null;
+        function throttledRunFix() {
+            if (mutationTimeout) return;
+            mutationTimeout = setTimeout(() => {
+                runFix();
+                mutationTimeout = null;
+            }, MIN_INTERVAL);
+        }
+
         // 즉시 실행
         runFix();
-        
-        // DOM 감시
-        new MutationObserver(runFix).observe(document.body, {
+
+        // DOM 감시 (throttled)
+        new MutationObserver(throttledRunFix).observe(document.body, {
             childList: true,
-            subtree: true,
-            attributes: true
+            subtree: true
         });
-        
-        // 반복 실행
-        setInterval(runFix, 300);
-        
+
         // 이벤트 리스너
-        document.addEventListener('DOMContentLoaded', runFix);
-        window.addEventListener('load', runFix);
-        
-        console.log('✅ 강제 X 버튼 제거 활성화됨!!!');
-    })();
-    </script>
+        // document.addEventListener('DOMContentLoaded', runFix);
+        // window.addEventListener('load', runFix);
+
+        // console.log('✅ 강제 X 버튼 제거 활성화됨!!!');
+    // })();
+    --> </script>
+
+    <!-- 통합 모달 스타일 -->
+    <link rel="stylesheet" href="unified-modal-styles.css">
+
+    <!-- 통합 클라우드 모달 스크립트 -->
+    <script src="unified-cloud-modal.js"></script>
+
+    <!-- 무한루프 방지 스크립트만 유지 -->
+    <script src="disable-diagnostics.js"></script>
+
+    <!-- 포인터 이벤트 차단 문제 해결 -->
+    <script src="pointer-events-fix.js"></script>
+
+    <!-- 간단한 모달 표시 수정 스크립트 (최종 솔루션) -->
+    <script src="simple-modal-fix.js"></script>
 </body>
 </html>

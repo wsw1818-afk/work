@@ -1,0 +1,90 @@
+/* 🔧 설정 모달 크기 조정 CSS */
+/* 설정 모달을 엑셀 모달과 완전히 동일한 방식으로 구현 */
+
+/* 설정 모달 - 전체 화면 오버레이 포함 */
+#settingsModal {
+    /* 엑셀 모달과 동일한 전체 화면 오버레이 */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.4) !important; /* 엑셀 모달과 동일한 40% 투명 오버레이 */
+    z-index: 9999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 모달이 열릴 때만 flex 적용 */
+#settingsModal:not([style*="display: none"]) {
+    display: flex !important;
+}
+
+/* 모달이 닫힐 때 숨김 */
+#settingsModal[style*="display: none"] {
+    display: none !important;
+}
+
+/* 설정 모달 내용 컨테이너 */
+#settingsModal .modal-content {
+    position: relative !important;
+    width: 500px !important;
+    max-width: 85vw !important;
+    max-height: 85vh !important;
+    background: white !important;
+    border-radius: 15px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    overflow: auto !important;
+    padding: 25px;
+}
+
+/* 반응형 대응 - 엑셀 모달과 동일하게 */
+@media (max-width: 600px) {
+    #settingsModal .modal-content {
+        width: 85vw !important;
+        max-width: 85vw !important;
+    }
+}
+
+@media (max-width: 450px) {
+    #settingsModal .modal-content {
+        width: 90vw !important;
+        max-width: 90vw !important;
+        padding: 15px !important;
+    }
+}
+
+/* 설정 섹션 간격 조정 - 더 컴팩트하게 */
+#settingsModal .settings-section {
+    margin-bottom: 20px;
+}
+
+#settingsModal .settings-section:last-child {
+    margin-bottom: 0;
+}
+
+/* 버튼 컨테이너 정렬 - 다른 모달들과 동일하게 */
+#settingsModal .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+#settingsModal .modal-buttons button {
+    min-width: 100px;
+    padding: 10px 20px;
+}
+
+/* 중복 섹션 숨김 처리 */
+#settingsModal .settings-content > div:nth-last-child(3),
+#settingsModal .settings-content > div:nth-last-child(2) {
+    display: none !important;
+}
+
+/* 대체: 모든 div 중에서 H3가 없으면서 "알람 테스트"나 "알림 진단" 텍스트만 있는 것들 숨김 */
+#settingsModal div:not(:has(h3)):has([data-duplicate]) {
+    display: none !important;
+}

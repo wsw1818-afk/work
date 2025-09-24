@@ -1,0 +1,97 @@
+/* 창 활성화 시 주변 레이아웃 음영색 제거 스타일 */
+
+/* 모달 활성화 시 주변 레이아웃 음영 숨김 */
+.modal-active {
+    overflow: hidden;
+}
+
+/* 기존 백드롭이 활성화되면 주변 그림자와 블러 효과 제거 */
+.modal-backdrop,
+.modal-backdrop.show {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* 모달이 열려있을 때 캘린더 컨테이너 그림자 제거 */
+body.modal-open .calendar-container,
+body.modal-active .calendar-container {
+    box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
+/* 모달이 열려있을 때 모든 백그라운드 그림자 제거 */
+body.modal-open *:not(.modal):not(.modal *),
+body.modal-active *:not(.modal):not(.modal *) {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
+/* 모달 자체는 그림자 유지 */
+.modal-container,
+.modal,
+.modal-content,
+.memo-modal,
+.settings-modal {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 메모 스티커 모달이 활성화될 때 배경 처리 */
+.sticky-memo-modal.active ~ .calendar-container,
+.sticky-memo.visible ~ .calendar-container {
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+/* 설정 모달이 활성화될 때 배경 처리 */
+.settings-modal.show ~ .calendar-container,
+.settings-modal:not(.d-none) ~ .calendar-container {
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+/* 투명한 오버레이 효과 대신 완전 투명 */
+.modal-backdrop.fade {
+    opacity: 0 !important;
+}
+
+.modal-backdrop.show {
+    opacity: 0 !important;
+}
+
+/* 애니메이션 중에도 투명 유지 */
+.modal-backdrop.fade.show {
+    opacity: 0 !important;
+}
+
+/* 모달 컨테이너 위치 조정 - 백드롭 없이도 중앙 정렬 */
+.modal-container,
+.memo-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 50000 !important;
+    margin: 0 !important;
+}
+
+/* 스티커 메모는 드래그 가능하므로 위치 고정하지 않음 */
+.sticky-memo {
+    z-index: 49999 !important;
+}
+
+/* 모든 모달 백드롭 클릭 이벤트 비활성화 */
+.modal-backdrop {
+    pointer-events: none !important;
+}
+
+/* 모달 내용만 클릭 가능하도록 */
+.modal-container,
+.modal-content,
+.memo-modal,
+.sticky-memo {
+    pointer-events: all !important;
+}

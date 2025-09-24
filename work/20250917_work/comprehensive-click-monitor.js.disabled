@@ -1,0 +1,296 @@
+/**
+ * 포괄적 클릭 이벤트 모니터링 및 진단 시스템
+ * 모든 클릭 이벤트가 차단되는 원인을 실시간으로 추적하고 해결
+ */
+
+(function() {
+    'use strict';
+
+    console.log('🔍 포괄적 클릭 이벤트 모니터링 시스템 시작');
+
+    // 화면에 실시간 진단 창 생성
+    let diagnosticPanel = null;
+    let clickLog = [];
+
+    function createDiagnosticPanel() {
+        if (diagnosticPanel) return;
+
+        diagnosticPanel = document.createElement('div');
+        diagnosticPanel.id = 'clickDiagnosticPanel';
+        diagnosticPanel.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 400px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            z-index: 999999;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 10px;
+            overflow-y: auto;
+        `;
+
+        const header = document.createElement('div');
+        header.innerHTML = `
+            <strong>🔍 클릭 이벤트 진단기</strong>
+            <button onclick="this.parentElement.parentElement.remove()"
+                    style="float:right; background:red; color:white; border:none; padding:2px 8px; cursor:pointer;">✕</button>
+            <hr style="margin: 5px 0;">
+        `;
+
+        const logContainer = document.createElement('div');
+        logContainer.id = 'clickLogContainer';
+        logContainer.style.cssText = `
+            height: 250px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.3;
+        `;
+
+        diagnosticPanel.appendChild(header);
+        diagnosticPanel.appendChild(logContainer);
+        document.body.appendChild(diagnosticPanel);
+
+        console.log('✅ 진단 패널 생성 완료');
+    }
+
+    function addLogEntry(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const colors = {
+            info: '#00ff00',
+            warn: '#ffff00',
+            error: '#ff0000',
+            success: '#00ffff'
+        };
+
+        clickLog.push({ timestamp, message, type });
+
+        const logContainer = document.getElementById('clickLogContainer');
+        if (logContainer) {
+            const entry = document.createElement('div');
+            entry.style.color = colors[type] || '#00ff00';
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            // 로그가 너무 많아지면 오래된 항목 제거
+            if (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        console.log(`[클릭진단] ${message}`);
+    }
+
+    // 모든 DOM 요소에 대해 클릭 이벤트 감지
+    function setupGlobalClickMonitoring() {
+        // 최상위 레벨에서 모든 클릭 이벤트 캐치
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            const tagName = target.tagName;
+            const id = target.id;
+            const className = target.className;
+            const text = target.textContent ? target.textContent.substring(0, 50) : '';
+
+            addLogEntry(`✅ CLICK: ${tagName}${id ? '#' + id : ''}${className ? '.' + className : ''} "${text}"`, 'success');
+        }, true); // capture phase
+
+        // 클릭 이벤트가 차단되는 경우 감지
+        document.addEventListener('click', function(e) {
+            addLogEntry(`⚠️ 클릭 이벤트 버블링 단계 도달`, 'warn');
+        }, false); // bubble phase
+
+        // mousedown, mouseup도 모니터링
+        document.addEventListener('mousedown', function(e) {
+            addLogEntry(`🖱️ MOUSEDOWN: ${e.target.tagName} (${e.button})`, 'info');
+        }, true);
+
+        document.addEventListener('mouseup', function(e) {
+            addLogEntry(`🖱️ MOUSEUP: ${e.target.tagName} (${e.button})`, 'info');
+        }, true);
+    }
+
+    // 이벤트 리스너 차단 감지
+    function detectEventBlocking() {
+        const originalAddEventListener = EventTarget.prototype.addEventListener;
+        const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+
+        EventTarget.prototype.addEventListener = function(type, listener, options) {
+            if (type === 'click') {
+                addLogEntry(`📝 클릭 리스너 추가: ${this.tagName || this.constructor.name}`, 'info');
+            }
+            return originalAddEventListener.call(this, type, listener, options);
+        };
+
+        EventTarget.prototype.removeEventListener = function(type, listener, options) {
+            if (type === 'click') {
+                addLogEntry(`🗑️ 클릭 리스너 제거: ${this.tagName || this.constructor.name}`, 'warn');
+            }
+            return originalRemoveEventListener.call(this, type, listener, options);
+        };
+    }
+
+    // preventDefault 호출 감지
+    function detectPreventDefault() {
+        const originalPreventDefault = Event.prototype.preventDefault;
+        Event.prototype.preventDefault = function() {
+            if (this.type === 'click') {
+                addLogEntry(`🚫 preventDefault 호출됨: ${this.target.tagName}`, 'error');
+
+                // 호출 스택 추적
+                try {
+                    throw new Error();
+                } catch (e) {
+                    addLogEntry(`📍 호출위치: ${e.stack.split('\n')[2]}`, 'error');
+                }
+            }
+            return originalPreventDefault.call(this);
+        };
+    }
+
+    // stopPropagation 호출 감지
+    function detectStopPropagation() {
+        const originalStopPropagation = Event.prototype.stopPropagation;
+        Event.prototype.stopPropagation = function() {
+            if (this.type === 'click') {
+                addLogEntry(`⛔ stopPropagation 호출됨: ${this.target.tagName}`, 'error');
+            }
+            return originalStopPropagation.call(this);
+        };
+    }
+
+    // CSS pointer-events 검사
+    function checkPointerEvents() {
+        const elements = document.querySelectorAll('*');
+        let blockedCount = 0;
+
+        elements.forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (style.pointerEvents === 'none') {
+                blockedCount++;
+                if (el.id || el.className) {
+                    addLogEntry(`🚫 CSS pointer-events:none 발견: ${el.tagName}${el.id ? '#' + el.id : ''}${el.className ? '.' + el.className : ''}`, 'warn');
+                }
+            }
+        });
+
+        if (blockedCount > 0) {
+            addLogEntry(`⚠️ 총 ${blockedCount}개 요소에서 pointer-events:none 발견`, 'warn');
+        }
+    }
+
+    // 오버레이 요소 검사
+    function checkOverlayElements() {
+        const highZIndexElements = [];
+        const elements = document.querySelectorAll('*');
+
+        elements.forEach(el => {
+            const style = window.getComputedStyle(el);
+            const zIndex = parseInt(style.zIndex);
+
+            if (zIndex > 1000) {
+                const rect = el.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    highZIndexElements.push({
+                        element: el,
+                        zIndex: zIndex,
+                        rect: rect
+                    });
+                }
+            }
+        });
+
+        if (highZIndexElements.length > 0) {
+            addLogEntry(`🔍 높은 z-index 요소 ${highZIndexElements.length}개 발견`, 'warn');
+            highZIndexElements.forEach(item => {
+                addLogEntry(`  - ${item.element.tagName} z-index:${item.zIndex} (${item.rect.width}x${item.rect.height})`, 'warn');
+            });
+        }
+    }
+
+    // 특정 버튼들 개별 테스트
+    function testSpecificButtons() {
+        // 설정 버튼 테스트
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) {
+            addLogEntry(`🎯 설정 버튼 발견: display=${getComputedStyle(settingsBtn).display}, pointer-events=${getComputedStyle(settingsBtn).pointerEvents}`, 'info');
+
+            // 인공 클릭 테스트
+            try {
+                const event = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true
+                });
+                settingsBtn.dispatchEvent(event);
+                addLogEntry(`🧪 설정 버튼 인공 클릭 테스트 완료`, 'success');
+            } catch (error) {
+                addLogEntry(`❌ 설정 버튼 인공 클릭 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 달력 날짜 클릭 테스트
+        const dayElements = document.querySelectorAll('.day');
+        if (dayElements.length > 0) {
+            addLogEntry(`📅 달력 날짜 요소 ${dayElements.length}개 발견`, 'info');
+
+            const firstDay = dayElements[0];
+            const style = getComputedStyle(firstDay);
+            addLogEntry(`  첫 번째 날짜: display=${style.display}, pointer-events=${style.pointerEvents}, cursor=${style.cursor}`, 'info');
+        }
+    }
+
+    // 주기적 진단 실행
+    function runPeriodicDiagnostics() {
+        addLogEntry(`🔄 정기 진단 실행 중...`, 'info');
+        checkPointerEvents();
+        checkOverlayElements();
+        testSpecificButtons();
+    }
+
+    // 초기화 함수
+    function initialize() {
+        addLogEntry(`🚀 클릭 진단 시스템 초기화`, 'success');
+
+        createDiagnosticPanel();
+        setupGlobalClickMonitoring();
+        detectEventBlocking();
+        detectPreventDefault();
+        detectStopPropagation();
+
+        // 초기 진단 실행
+        setTimeout(() => {
+            runPeriodicDiagnostics();
+        }, 1000);
+
+        // 5초마다 정기 진단
+        setInterval(runPeriodicDiagnostics, 5000);
+
+        addLogEntry(`✅ 모든 모니터링 시스템 활성화`, 'success');
+        addLogEntry(`📝 이제 마우스로 클릭해보세요!`, 'info');
+    }
+
+    // 전역 함수로 수동 진단 실행 가능하게
+    window.runClickDiagnostics = runPeriodicDiagnostics;
+    window.clearClickLog = function() {
+        clickLog = [];
+        const logContainer = document.getElementById('clickLogContainer');
+        if (logContainer) {
+            logContainer.innerHTML = '';
+        }
+        addLogEntry(`🧹 로그 초기화됨`, 'info');
+    };
+
+    // DOM 로드 완료 후 초기화
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        initialize();
+    }
+
+    console.log('✅ 포괄적 클릭 이벤트 모니터링 시스템 로드 완료');
+    console.log('🛠️ 사용법: runClickDiagnostics() - 수동 진단, clearClickLog() - 로그 초기화');
+})();

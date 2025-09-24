@@ -308,7 +308,8 @@
                     <div class="memo-item-time">⏰ ${timeInfo}</div>
                     ${attachmentIndicator}
                     <div class="memo-item-preview">클릭하여 보기</div>
-                    ${isUnlocked ? `<button class="memo-item-delete visible" data-memo-id="${memo.id}">🗑️</button>` : ''}
+                    ${isUnlocked ? `<button class="memo-item-edit visible" onclick="event.stopPropagation(); editDateMemo(${memo.id})" title="편집">✏️</button>` : ''}
+                    ${isUnlocked ? `<button class="memo-item-delete visible" data-memo-id="${memo.id}" title="삭제">🗑️</button>` : ''}
                 </div>
             `;
         }).join('');
@@ -816,15 +817,41 @@
                     return;
                 }
                 
-                // 초기화 중 자동 열림 방지 (사용자 클릭은 허용)
-                if (window._preventAutoOpenDateModal && !window._userClickOverride) {
-                    console.log('🚫 초기화 중 자동 열림 차단');
-                    return;
-                }
+                // 초기화 중 자동 열림 방지 제거 - 사용자 클릭 허용
+                // if (window._preventAutoOpenDateModal && !window._userClickOverride) {
+                //     console.log('🚫 초기화 중 자동 열림 차단');
+                //     return;
+                // }
                 
                 // 원래 HTML 함수 실행 (HTML에서 이미 보호 함수 호출하므로 중복 호출 제거)
                 originalOpenDateMemoModal(year, month, date);
-                
+
+                // show-modal 클래스 추가하여 조건부 CSS 적용
+                const modal = document.getElementById('dateMemoModal');
+                if (modal) {
+                    modal.classList.add('show-modal');
+
+                    // 마우스 클릭 위치에 모달 배치
+                    const modalContent = modal.querySelector('.memo-modal-content');
+                    if (modalContent && window._lastClickPosition) {
+                        const { x, y } = window._lastClickPosition;
+                        const maxX = window.innerWidth - 400; // 모달 최소 폭
+                        const maxY = window.innerHeight - 300; // 모달 최소 높이
+
+                        modalContent.style.left = `${Math.min(x, maxX)}px`;
+                        modalContent.style.top = `${Math.min(y, maxY)}px`;
+
+                        console.log('📍 모달 위치 설정:', { x: Math.min(x, maxX), y: Math.min(y, maxY) });
+                    } else {
+                        // 기본 위치 (화면 중앙)
+                        if (modalContent) {
+                            modalContent.style.left = '50%';
+                            modalContent.style.top = '50%';
+                            modalContent.style.transform = 'translate(-50%, -50%)';
+                        }
+                    }
+                }
+
                 // unified 시스템 추가 처리
                 MemoSystem.selectedDate = selectedDate;
                 MemoSystem.locks.dateMemos = true;
@@ -852,21 +879,43 @@
         // HTML의 closeDateMemoModal 함수를 그대로 사용하되, 상태만 동기화
         const originalCloseDateMemoModal = window.closeDateMemoModal;
         
-        // HTML 함수 실행 후 추가 처리를 위한 훅만 설정
+        // HTML 함수 실행 후 추가 처리를 위한 훅 설정
         if (typeof originalCloseDateMemoModal === 'function') {
-            // HTML 함수가 있으면 그대로 사용 (덮어쓰지 않음)
-            console.log('✅ HTML closeDateMemoModal 함수 유지 - unified 시스템은 상태만 동기화');
-        } else {
-            // HTML 함수가 없는 경우에만 백업 함수 제공
+            // HTML 함수를 강화하여 show-modal 클래스 제거 추가
             window.closeDateMemoModal = function() {
+                console.log('🔒 unified closeDateMemoModal 호출됨');
+
+                // show-modal 클래스 제거 (CSS 숨김 적용)
                 const modal = document.getElementById('dateMemoModal');
-                if (modal) modal.style.display = 'none';
-                
-                // unified 시스템 상태 동기화
-                MemoSystem.locks.dateMemos = true;
+                if (modal) {
+                    modal.classList.remove('show-modal');
+                    console.log('✅ show-modal 클래스 제거됨');
+                }
+
+                // unified 시스템 상태 초기화
                 MemoSystem.selectedDate = null;
-                
-                console.log('📅 백업 closeDateMemoModal 함수 실행');
+                MemoSystem.locks.dateMemos = false;
+
+                // 원래 HTML 함수 실행
+                return originalCloseDateMemoModal.apply(this, arguments);
+            };
+            console.log('✅ HTML closeDateMemoModal 함수 강화 완료 - show-modal 클래스 제거 추가');
+        } else {
+            // HTML 함수가 없는 경우 백업 함수 제공
+            window.closeDateMemoModal = function() {
+                console.log('🔒 unified 백업 closeDateMemoModal 실행');
+
+                const modal = document.getElementById('dateMemoModal');
+                if (modal) {
+                    modal.classList.remove('show-modal');
+                    modal.style.display = 'none';
+                }
+
+                // unified 시스템 상태 동기화
+                MemoSystem.locks.dateMemos = false;
+                MemoSystem.selectedDate = null;
+
+                console.log('📅 백업 closeDateMemoModal 함수 실행 완료');
             };
         }
         
@@ -878,15 +927,16 @@
             console.log('🔄 통합시스템 달력 표시 강제 업데이트 시작');
             console.log('📍 updateCalendarDisplay 호출 위치:', new Error().stack.split('\n')[1]?.trim());
             
-            // DOM 요소 강제 초기화 (더 강력한 방법)
-            const grid = document.getElementById('daysGrid');
-            if (grid) {
-                // 이벤트와 DOM 완전 초기화
-                const parent = grid.parentNode;
-                const newGrid = grid.cloneNode(false);
-                parent.replaceChild(newGrid, grid);
-                console.log('🗑️ 기존 달력 DOM 완전 제거 (이벤트 포함)');
-            }
+            // DOM 요소 강제 초기화를 생략 - 달력 날짜 표시 문제 방지
+            // const grid = document.getElementById('daysGrid');
+            // if (grid) {
+            //     // 이벤트와 DOM 완전 초기화
+            //     const parent = grid.parentNode;
+            //     const newGrid = grid.cloneNode(false);
+            //     parent.replaceChild(newGrid, grid);
+            //     console.log('🗑️ 기존 달력 DOM 완전 제거 (이벤트 포함)');
+            // }
+            console.log('✅ 달력 DOM 초기화 생략 - 날짜 표시 보존');
             
             // localStorage 강제 새로고침 (브라우저 캐시 방지)
             const currentTime = Date.now();

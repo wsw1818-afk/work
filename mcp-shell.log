@@ -12,3 +12,93 @@
 {"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-17T03:17:57.565Z"}
 {"level":"info","message":"Username: SKNS","timestamp":"2025-09-17T03:17:57.566Z"}
 {"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-17T03:17:57.568Z"}
+{"level":"info","message":"Executing command: cd \"D:\\CLAUDE_CLI\\work\\20250917_work\" && node server.js","timestamp":"2025-09-17T03:48:10.086Z"}
+{"level":"error","message":"Command execution error: No quote function is defined: https://google.github.io/zx/quotes","timestamp":"2025-09-17T03:48:10.090Z"}
+{"level":"info","message":"Executing command: cd \"D:\\CLAUDE_CLI\\work\\20250917_work\" && mkdir \"백업\\old_files\" && move *backup*.html \"백업\\old_files\\\" && move test-*.html \"백업\\old_files\\\"","timestamp":"2025-09-17T03:53:41.676Z"}
+{"level":"error","message":"Command execution error: No quote function is defined: https://google.github.io/zx/quotes","timestamp":"2025-09-17T03:53:41.677Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-17T05:05:31.378Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-17T05:05:31.380Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-17T05:05:31.380Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-17T05:05:31.380Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-17T05:05:31.383Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-17T05:05:31.384Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-17T05:05:31.388Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-17T06:36:13.073Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-17T06:36:13.079Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-17T06:36:13.080Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-17T06:36:13.080Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-17T06:36:13.091Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-17T06:36:13.095Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-17T06:36:13.100Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-17T07:11:54.382Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-17T07:11:54.384Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-17T07:11:54.385Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-17T07:11:54.385Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-17T07:11:54.388Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-17T07:11:54.389Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-17T07:11:54.390Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-17T08:36:56.549Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-17T08:36:56.551Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-17T08:36:56.551Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-17T08:36:56.551Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-17T08:36:56.554Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-17T08:36:56.555Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-17T08:36:56.557Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-17T23:52:13.914Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-17T23:52:13.921Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-17T23:52:13.922Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-17T23:52:13.922Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-17T23:52:13.934Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-17T23:52:13.938Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-17T23:52:13.943Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-18T00:45:17.149Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-18T00:45:17.156Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-18T00:45:17.156Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-18T00:45:17.157Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-18T00:45:17.172Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-18T00:45:17.177Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-18T00:45:17.182Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-18T00:45:46.036Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-18T00:45:46.039Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-18T00:45:46.039Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-18T00:45:46.039Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-18T00:45:46.044Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-18T00:45:46.047Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-18T00:45:46.050Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-19T00:56:53.261Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-19T00:56:53.267Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-19T00:56:53.268Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-19T00:56:53.268Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-19T00:56:53.280Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-19T00:56:53.285Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-19T00:56:53.291Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-19T01:53:04.108Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-19T01:53:04.116Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-19T01:53:04.116Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-19T01:53:04.117Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-19T01:53:04.132Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-19T01:53:04.137Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-19T01:53:04.145Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-23T23:30:50.230Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-23T23:30:50.232Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-23T23:30:50.232Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-23T23:30:50.232Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-23T23:30:50.237Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-23T23:30:50.239Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-23T23:30:50.241Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-24T00:17:31.450Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-24T00:17:31.451Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-24T00:17:31.452Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-24T00:17:31.452Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-24T00:17:31.455Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-24T00:17:31.456Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-24T00:17:31.458Z"}
+{"level":"info","message":"Executing command: taskkill /PID 28496 /F","timestamp":"2025-09-24T01:48:13.198Z"}
+{"level":"error","message":"Command execution error: No quote function is defined: https://google.github.io/zx/quotes","timestamp":"2025-09-24T01:48:13.206Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-24T05:46:10.775Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-24T05:46:10.777Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-24T05:46:10.777Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-24T05:46:10.777Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-24T05:46:10.781Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-24T05:46:10.782Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-24T05:46:10.784Z"}

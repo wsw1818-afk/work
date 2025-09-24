@@ -10,6 +10,28 @@ div[id*="memoList"]:not(#dateMemoList) {
     visibility: hidden !important;
     height: 0 !important;
     overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 메모 관련 모든 UI 요소 숨김 */
+.memo-item,
+.memo-item-title,
+.memo-item-content,
+.memo-item-date,
+.memo-item-preview,
+.memo-item-delete,
+.memo-actions,
+button[onclick*="deleteMemo"],
+button[onclick*="editMemo"],
+*:contains("편집"),
+*:contains("삭제"),
+*:contains("✏️"),
+*:contains("🗑️") {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 /* dom-safety-fix.js가 생성하는 메모 리스트도 숨김 */
@@ -29,10 +51,30 @@ div[id*="memoList"]:not(#dateMemoList) {
     height: auto !important;
 }
 
-/* 메모가 없다는 메시지도 숨김 */
+/* 메모가 없다는 메시지와 관련 텍스트 모두 숨김 */
 div:has(> div:only-child:contains("저장된 메모가 없습니다")),
-div:has(> div:only-child:contains("이 날짜에 저장된 메모가 없습니다")) {
+div:has(> div:only-child:contains("이 날짜에 저장된 메모가 없습니다")),
+div:contains("저장된 메모가 없습니다"),
+div:contains("이 날짜에 저장된 메모가 없습니다"),
+*:contains("📝"),
+span:contains("편집"),
+span:contains("삭제") {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* 모든 메모 관련 텍스트 강제 숨김 */
+* {
+    &:contains("저장된 메모가 없습니다") {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }
 }
 
 /* 스티커 메모 모달 내부는 표시 */

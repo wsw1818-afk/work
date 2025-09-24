@@ -1,0 +1,168 @@
+/**
+ * 긴급 무한루프 킬러 - CPU 과부하 해결
+ * 모든 타이머와 루프를 강제 중단
+ */
+
+(function() {
+    'use strict';
+
+    console.log('🚨 긴급 무한루프 킬러 시작 - CPU 과부하 해결');
+
+    // 모든 타이머 ID 추적
+    let timerIds = [];
+    let intervalIds = [];
+
+    // 모든 setTimeout 강제 정리
+    function killAllTimeouts() {
+        console.log('🔪 모든 setTimeout 강제 정리 시작');
+
+        // 가능한 모든 timeout ID를 시도 (0부터 10000까지)
+        for (let i = 0; i < 10000; i++) {
+            try {
+                clearTimeout(i);
+            } catch (e) {
+                // 무시
+            }
+        }
+
+        console.log('✅ setTimeout 정리 완료');
+    }
+
+    // 모든 setInterval 강제 정리
+    function killAllIntervals() {
+        console.log('🔪 모든 setInterval 강제 정리 시작');
+
+        // 가능한 모든 interval ID를 시도 (0부터 10000까지)
+        for (let i = 0; i < 10000; i++) {
+            try {
+                clearInterval(i);
+            } catch (e) {
+                // 무시
+            }
+        }
+
+        console.log('✅ setInterval 정리 완료');
+    }
+
+    // requestAnimationFrame 정리
+    function killAllAnimationFrames() {
+        console.log('🔪 모든 requestAnimationFrame 강제 정리 시작');
+
+        for (let i = 0; i < 1000; i++) {
+            try {
+                cancelAnimationFrame(i);
+            } catch (e) {
+                // 무시
+            }
+        }
+
+        console.log('✅ requestAnimationFrame 정리 완료');
+    }
+
+    // 모든 이벤트 리스너 제거 (과도한 이벤트 루프 방지)
+    function killExcessiveEventListeners() {
+        console.log('🔪 과도한 이벤트 리스너 정리 시작');
+
+        // 모든 요소에서 과도한 이벤트 리스너 제거
+        const elements = document.querySelectorAll('*');
+        elements.forEach(element => {
+            // 새로운 요소로 교체하여 모든 이벤트 리스너 제거
+            if (element.id && element.id !== 'clickDiagnosticPanel') {
+                try {
+                    const newElement = element.cloneNode(true);
+                    element.parentNode.replaceChild(newElement, element);
+                } catch (e) {
+                    // 무시
+                }
+            }
+        });
+
+        console.log('✅ 이벤트 리스너 정리 완료');
+    }
+
+    // 타이머 생성 방지
+    function preventNewTimers() {
+        console.log('🛡️ 새로운 타이머 생성 방지 시작');
+
+        const originalSetTimeout = window.setTimeout;
+        const originalSetInterval = window.setInterval;
+
+        window.setTimeout = function(callback, delay) {
+            console.warn('⚠️ setTimeout 호출 차단됨');
+            return -1; // 무효한 타이머 ID 반환
+        };
+
+        window.setInterval = function(callback, delay) {
+            console.warn('⚠️ setInterval 호출 차단됨');
+            return -1; // 무효한 타이머 ID 반환
+        };
+
+        // 5초 후 정상 복구 (응급상황 해결 후)
+        setTimeout(() => {
+            window.setTimeout = originalSetTimeout;
+            window.setInterval = originalSetInterval;
+            console.log('✅ 타이머 함수 정상 복구');
+        }, 5000);
+
+        console.log('✅ 타이머 생성 방지 완료');
+    }
+
+    // 모든 스크립트의 while/for 루프 감지 및 중단 (가능한 범위에서)
+    function killCPUHogs() {
+        console.log('🔪 CPU 집약적 작업 중단 시작');
+
+        // 높은 CPU 사용률을 유발할 수 있는 전역 변수들 초기화
+        const suspiciousGlobals = [
+            'isProcessing',
+            'isLooping',
+            'isRunning',
+            'continuousUpdate',
+            'autoRefresh'
+        ];
+
+        suspiciousGlobals.forEach(varName => {
+            if (window[varName]) {
+                window[varName] = false;
+                console.log(`🛑 전역 변수 ${varName} = false로 설정`);
+            }
+        });
+
+        console.log('✅ CPU 집약적 작업 중단 완료');
+    }
+
+    // 즉시 모든 긴급 조치 실행
+    function emergencyKill() {
+        console.log('🚨 긴급 시스템 정리 시작');
+
+        try {
+            killAllTimeouts();
+            killAllIntervals();
+            killAllAnimationFrames();
+            killCPUHogs();
+            preventNewTimers();
+
+            // DOM 조작 최소화
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+
+            console.log('🎉 긴급 시스템 정리 완료 - CPU 사용률이 정상화되어야 합니다');
+
+        } catch (error) {
+            console.error('❌ 긴급 정리 중 오류:', error);
+        }
+    }
+
+    // 즉시 실행
+    emergencyKill();
+
+    // 전역 함수로 등록하여 콘솔에서 수동 실행 가능
+    window.emergencyKill = emergencyKill;
+    window.killAllTimers = function() {
+        killAllTimeouts();
+        killAllIntervals();
+        killAllAnimationFrames();
+    };
+
+    console.log('✅ 긴급 무한루프 킬러 로드 완료');
+    console.log('🛠️ 수동 실행: emergencyKill() 또는 killAllTimers()');
+})();

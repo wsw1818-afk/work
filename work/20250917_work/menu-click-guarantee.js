@@ -1,0 +1,1 @@
+console.log("menu-click-guarantee placeholder loaded");

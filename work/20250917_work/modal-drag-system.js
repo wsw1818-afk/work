@@ -15,6 +15,7 @@
     
     // ========== 드래그 가능한 모달 목록 ==========
     const draggableModals = [
+        'dateMemoModal',  // 날짜 메모 모달 추가
         'memoModal',
         'themeModal',
         'backupMenuModal',
@@ -79,35 +80,102 @@
     // ========== 개별 모달 드래그 설정 ==========
     function setupModalDrag(modal) {
         if (!modal || modal.dataset.dragSetup === 'true') return;
-        
+
         modal.dataset.dragSetup = 'true';
-        
+
+        // 날짜 메모 모달의 경우 특별 처리
+        if (modal.id === 'dateMemoModal') {
+            setupDateMemoModalDrag(modal);
+            return;
+        }
+
         // 모달 컨테이너 위치 설정
         const modalContent = modal.querySelector('.modal-content');
         if (modalContent) {
             modalContent.style.position = 'absolute';
             modalContent.style.cursor = 'move';
-            
+
             // 드래그 헨들 찾기 (헤더 또는 상단 영역)
             const dragHandle = modalContent.querySelector('.modal-header, .modal-title, h3, h2') || modalContent;
-            
+
             if (dragHandle) {
                 dragHandle.style.cursor = 'move';
                 dragHandle.style.userSelect = 'none';
-                
+
                 // 드래그 힌트 추가
                 dragHandle.title = '드래그하여 이동';
-                
+
                 // 마우스 이벤트
                 dragHandle.addEventListener('mousedown', (e) => startDrag(e, modal, modalContent));
-                
+
                 // 터치 이벤트
                 dragHandle.addEventListener('touchstart', (e) => startDrag(e, modal, modalContent), { passive: false });
             }
-            
+
             // 모달이 화면 밖으로 나가지 않도록 초기 위치 조정
             centerModal(modal, modalContent);
         }
+    }
+
+    // ========== 날짜 메모 모달 전용 드래그 설정 ==========
+    function setupDateMemoModalDrag(modal) {
+        const modalContent = modal.querySelector('.memo-modal-content');
+        if (!modalContent) return;
+
+        // 헤더를 드래그 핸들로 사용
+        const dragHandle = modal.querySelector('.memo-header');
+        if (!dragHandle) return;
+
+        dragHandle.style.cursor = 'move';
+        dragHandle.style.userSelect = 'none';
+        dragHandle.title = '드래그하여 이동';
+
+        // 마우스 이벤트
+        dragHandle.addEventListener('mousedown', (e) => startDateMemoDrag(e, modal, modalContent));
+
+        // 터치 이벤트
+        dragHandle.addEventListener('touchstart', (e) => startDateMemoDrag(e, modal, modalContent), { passive: false });
+
+        console.log('✅ 날짜 메모 모달 드래그 설정 완료');
+    }
+
+    // ========== 날짜 메모 모달 드래그 시작 ==========
+    function startDateMemoDrag(e, modal, modalContent) {
+        // 닫기 버튼에서는 드래그 비활성화
+        if (e.target.classList.contains('close-btn') || e.target.id === 'closeDateMemo') {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        isDragging = true;
+        currentModal = modal;
+
+        // 터치 이벤트와 마우스 이벤트 구분
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        // 현재 모달 위치 가져오기
+        const rect = modalContent.getBoundingClientRect();
+        originalPosition.x = rect.left;
+        originalPosition.y = rect.top;
+
+        // 드래그 오프셋 계산
+        dragOffset.x = clientX - originalPosition.x;
+        dragOffset.y = clientY - originalPosition.y;
+
+        // 드래그 중 스타일 적용
+        modalContent.style.transition = 'none';
+        modalContent.style.zIndex = '1000010';
+        modalContent.style.boxShadow = '0 10px 40px rgba(0,0,0,0.3)';
+        modalContent.style.transform = 'scale(1.02)';
+
+        // 커서 변경
+        document.body.style.cursor = 'move';
+        document.body.style.userSelect = 'none';
+
+        console.log('🖱️ 날짜 메모 모달 드래그 시작');
     }
     
     // ========== 드래그 시작 ==========
@@ -170,31 +238,65 @@
     }
     
     function updateModalPosition(clientX, clientY) {
+        // 날짜 메모 모달 특별 처리
+        if (currentModal.id === 'dateMemoModal') {
+            updateDateMemoModalPosition(clientX, clientY);
+            return;
+        }
+
         const modalContent = currentModal.querySelector('.modal-content');
         if (!modalContent) return;
-        
+
         // 새 위치 계산
         let newX = clientX - dragOffset.x;
         let newY = clientY - dragOffset.y;
-        
+
         // 화면 경계 제한
         const modalRect = modalContent.getBoundingClientRect();
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
-        
+
         // 최소 50px은 화면 안에 있도록
         const minVisible = 50;
         newX = Math.max(-modalRect.width + minVisible, Math.min(windowWidth - minVisible, newX));
         newY = Math.max(0, Math.min(windowHeight - minVisible, newY));
-        
+
         // 위치 적용
         modalContent.style.left = newX + 'px';
         modalContent.style.top = newY + 'px';
         modalContent.style.right = 'auto';
         modalContent.style.bottom = 'auto';
         modalContent.style.margin = '0';
-        
+
         // 위치 저장 (모달별로)
+        saveModalPosition(currentModal.id, newX, newY);
+    }
+
+    // ========== 날짜 메모 모달 위치 업데이트 ==========
+    function updateDateMemoModalPosition(clientX, clientY) {
+        const modalContent = currentModal.querySelector('.memo-modal-content');
+        if (!modalContent) return;
+
+        // 새 위치 계산
+        let newX = clientX - dragOffset.x;
+        let newY = clientY - dragOffset.y;
+
+        // 화면 경계 제한
+        const modalRect = modalContent.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // 최소 50px은 화면 안에 있도록
+        const minVisible = 50;
+        newX = Math.max(-modalRect.width + minVisible, Math.min(windowWidth - minVisible, newX));
+        newY = Math.max(0, Math.min(windowHeight - minVisible, newY));
+
+        // 위치 적용
+        modalContent.style.left = newX + 'px';
+        modalContent.style.top = newY + 'px';
+        modalContent.style.transform = 'none'; // transform 제거
+
+        // 위치 저장
         saveModalPosition(currentModal.id, newX, newY);
     }
     
