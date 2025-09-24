@@ -61,7 +61,8 @@
       "mcp__filesystem__move_file",
       "mcp__playwright__browser_drag",
       "Bash(del nul)",
-      "Bash(git remote add:*)"
+      "Bash(git remote add:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": [],
