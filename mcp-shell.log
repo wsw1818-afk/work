@@ -137,3 +137,5 @@
 {"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-24T23:15:20.151Z"}
 {"level":"info","message":"Username: SKNS","timestamp":"2025-09-24T23:15:20.152Z"}
 {"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-24T23:15:20.154Z"}
+{"level":"info","message":"Executing command: taskkill /PID 24152 /F","timestamp":"2025-09-24T23:24:30.569Z"}
+{"level":"error","message":"Command execution error: No quote function is defined: https://google.github.io/zx/quotes","timestamp":"2025-09-24T23:24:30.571Z"}
