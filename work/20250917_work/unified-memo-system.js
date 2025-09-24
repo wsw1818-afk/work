@@ -9,7 +9,7 @@
         data: [],  // 실제 메모 데이터 (단일 소스)
         locks: {
             memos: true,      // 기본 잠금 상태
-            dateMemos: true,  // 기본 잠금 상태
+            dateMemos: false,  // 기본 잠금 상태
             stickyMemos: true // 기본 잠금 상태
         },
         selectedDate: null,
@@ -854,8 +854,14 @@
 
                 // unified 시스템 추가 처리
                 MemoSystem.selectedDate = selectedDate;
-                MemoSystem.locks.dateMemos = true;
+                MemoSystem.locks.dateMemos = false;
                 refreshDateMemoList();
+                if (typeof updateInputAreaByLockState === 'function') {
+                    const modal = document.getElementById('dateMemoModal');
+                    if (modal) {
+                        updateInputAreaByLockState(modal);
+                    }
+                }
                 
                 console.log('📅 HTML openDateMemoModal + unified 시스템 처리 완료:', selectedDate);
             };
@@ -868,8 +874,14 @@
                 const modal = document.getElementById('dateMemoModal');
                 if (modal) modal.style.display = 'block';
                 
-                MemoSystem.locks.dateMemos = true;
+                MemoSystem.locks.dateMemos = false;
                 refreshDateMemoList();
+                if (typeof updateInputAreaByLockState === 'function') {
+                    const modal = document.getElementById('dateMemoModal');
+                    if (modal) {
+                        updateInputAreaByLockState(modal);
+                    }
+                }
                 
                 console.log('📅 백업 openDateMemoModal 함수 실행:', selectedDate);
             };

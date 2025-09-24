@@ -7755,143 +7755,87 @@
 
         async function saveDateMemo() {
             const startTime = Date.now();
-            console.log('💾 saveDateMemo 함수 시작', {selectedDate});
-            
+            console.log('💾 saveDateMemo 함수 시작', { selectedDate });
+
             if (window.DiagnosticSystem) {
                 window.DiagnosticSystem.trackInteraction('SAVE_DATE_MEMO', 'saveDateMemo', true, 0);
             }
-            
+
             if (!selectedDate) {
-                console.warn('⚠️ selectedDate가 없어 메모 저장 중단');
-                
+                console.warn('⚠️ selectedDate가 없어 메모를 저장할 수 없습니다.');
                 if (window.DiagnosticSystem) {
-                    window.DiagnosticSystem.detectIssue('SAVE_ERROR', 'selectedDate 누락', {
-                        severity: 'error'
-                    });
+                    window.DiagnosticSystem.detectIssue('SAVE_ERROR', 'selectedDate 미설정', { severity: 'error' });
                 }
                 return;
             }
 
             const titleInput = document.getElementById('dateMemoTitleInput');
             const contentInput = document.getElementById('dateMemoContentInput');
-            const title = titleInput.value.trim();
-            const content = contentInput.value.trim();
+            const title = (titleInput?.value || '').trim();
+            const content = (contentInput?.value || '').trim();
 
-            // 편집 모드인지 확인
-            const editMemoId = titleInput.getAttribute('data-edit-memo-id');
-            const isEditMode = editMemoId !== null;
+            const editMemoIdAttr = titleInput?.getAttribute('data-edit-memo-id');
+            const isEditMode = editMemoIdAttr !== null;
+            const memoId = isEditMode ? parseInt(editMemoIdAttr, 10) : Date.now();
 
-            console.log('📝 저장할 메모 데이터:', {title, content, selectedDate, isEditMode, editMemoId});
+            console.log('📥 저장 요청 데이터:', { title, content, selectedDate, isEditMode, memoId });
 
             if (!title) {
                 alert('메모 제목을 입력해주세요!');
-
                 if (window.DiagnosticSystem) {
-                    window.DiagnosticSystem.detectIssue('USER_INPUT', '빈 제목으로 메모 저장 시도', {
-                        severity: 'info'
-                    });
+                    window.DiagnosticSystem.detectIssue('USER_INPUT', '제목 미입력 저장 시도', { severity: 'info' });
                 }
                 return;
             }
 
-            let memo;
-            if (isEditMode) {
-                // 편집 모드: 기존 메모 업데이트
-                console.log('✏️ 메모 편집 모드, ID:', editMemoId);
-                memo = {
-                    id: parseInt(editMemoId),
-                    title: title,
-                    content: content,
-                    date: selectedDate,
-                    timestamp: new Date().toISOString()
-                };
-            } else {
-                // 새 메모 생성
-                console.log('➕ 새 메모 생성 모드');
-                const memoId = Date.now();
-                memo = {
-                    id: memoId,
-                    title: title,
-                    content: content,
-                    date: selectedDate,
-                    timestamp: new Date().toISOString()
-                };
+            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const existingIndex = currentMemos.findIndex(m => m.id == memoId);
+            const existingMemo = existingIndex !== -1 ? currentMemos[existingIndex] : null;
+
+            if (isEditMode && !existingMemo) {
+                alert('수정할 메모를 찾지 못했습니다. 화면을 새로고침 후 다시 시도해주세요.');
+                return;
             }
-            
-            // 첨부파일 처리 - IndexedDB의 임시 ID를 실제 메모 ID로 업데이트
-            if (dateMemoAttachments.length > 0) {
-                // 첨부파일 배열 복사 (참조가 아닌 깊은 복사)
-                memo.attachments = [];
-                
-                // IndexedDB에 저장된 파일들의 memoId 업데이트
-                for (let i = 0; i < dateMemoAttachments.length; i++) {
-                    const attachment = dateMemoAttachments[i];
-                    // 첨부파일 정보 복사
-                    const attachmentCopy = {...attachment};
-                    
+
+            const timestamp = new Date().toISOString();
+            const memo = {
+                id: memoId,
+                title,
+                content,
+                date: selectedDate,
+                timestamp,
+                attachments: existingMemo?.attachments ? JSON.parse(JSON.stringify(existingMemo.attachments)) : []
+            };
+
+            const attachments = Array.isArray(window.dateMemoAttachments) ? window.dateMemoAttachments : [];
+            if (attachments.length > 0) {
+                for (const attachment of attachments) {
+                    const attachmentCopy = { ...attachment };
                     if (attachment.useIndexedDB && attachment.indexedDbId) {
                         try {
-                            // IndexedDB에서 파일 가져오기
                             const dbAttachment = await getAttachmentFromDB(attachment.indexedDbId);
                             if (dbAttachment) {
-                                // 기존 임시 ID를 삭제하고
                                 await deleteAttachmentFromDB(attachment.indexedDbId);
-                                // 실제 메모 ID로 다시 저장
-                                const updatedAttachment = await saveAttachmentToDB({
+                                const updated = await saveAttachmentToDB({
                                     name: dbAttachment.fileName,
                                     size: dbAttachment.fileSize,
                                     type: dbAttachment.fileType,
                                     data: dbAttachment.data
                                 }, memoId);
-                                
-                                // 이전 ID 저장
-                                const oldId = attachment.indexedDbId;
-                                // 복사본의 첨부파일 ID 업데이트
-                                attachmentCopy.indexedDbId = updatedAttachment.id;
-                                
-                                console.log('✅ 첨부파일 ID 업데이트 완료:', {
-                                    이전ID: oldId,
-                                    새ID: updatedAttachment.id,
-                                    파일명: dbAttachment.fileName
-                                });
+                                attachmentCopy.indexedDbId = updated.id;
                             }
                         } catch (error) {
                             console.error('첨부파일 ID 업데이트 실패:', error);
                         }
                     }
-                    
-                    // 업데이트된 첨부파일 정보를 메모에 추가
                     memo.attachments.push(attachmentCopy);
                 }
             }
 
-            // localStorage에서 최신 메모 목록을 가져와서 메모 처리 (편집 또는 새 메모)
-            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
-
             if (isEditMode) {
-                // 편집 모드: 기존 메모를 찾아서 업데이트
-                const memoIndex = currentMemos.findIndex(m => m.id == editMemoId);
-                if (memoIndex !== -1) {
-                    // 기존 첨부파일 정보 보존하고 업데이트
-                    const existingMemo = currentMemos[memoIndex];
-                    memo.attachments = existingMemo.attachments || [];
-
-                    // 새 첨부파일이 있으면 추가
-                    if (dateMemoAttachments.length > 0) {
-                        memo.attachments = memo.attachments.concat(memo.attachments || []);
-                    }
-
-                    currentMemos[memoIndex] = memo;
-                    console.log('✏️ 기존 메모 업데이트 완료, ID:', editMemoId);
-                } else {
-                    console.error('❌ 편집할 메모를 찾을 수 없음, ID:', editMemoId);
-                    alert('편집할 메모를 찾을 수 없습니다.');
-                    return;
-                }
+                currentMemos[existingIndex] = memo;
             } else {
-                // 새 메모 생성 모드: 맨 앞에 추가
                 currentMemos.unshift(memo);
-                console.log('➕ 새 메모 추가 완료, ID:', memo.id);
             }
 
             const saveResult = safelyStoreData('calendarMemos', currentMemos);
@@ -7899,57 +7843,47 @@
                 alert('날짜 메모 저장 실패: ' + saveResult.message);
                 return;
             }
-            
-            clearDateMemoForm();
-            clearAttachments('dateMemoAttachmentList', dateMemoAttachments);
-            
-            // 첨부파일 ID 업데이트 후 UI 강제 새로고침
-            console.log('🔄 메모 저장 완료 - UI 강제 새로고침 시작');
-            
-            // 잠금 상태 보존하며 메모 표시
-            let wasLocked = false;
-            if (window.MemoSystem && window.MemoSystem.isDateMemosLocked) {
-                wasLocked = window.MemoSystem.isDateMemosLocked();
-                if (wasLocked) {
-                    console.log('🔒 잠금 상태 유지하며 메모 표시');
-                    // 잠금 해제하지 않고 그대로 유지
+
+            if (window.MemoSystem) {
+                const memoData = Array.isArray(window.MemoSystem.data) ? [...window.MemoSystem.data] : [];
+                const dataIndex = memoData.findIndex(m => m.id === memo.id);
+                if (dataIndex !== -1) {
+                    memoData[dataIndex] = memo;
+                } else {
+                    memoData.unshift(memo);
                 }
+                window.MemoSystem.data = memoData;
+                window.MemoSystem.selectedDate = selectedDate;
+                window.memos = memoData;
+                window.allMemos = memoData;
+                window.stickyMemos = memoData;
             }
-            
-            if (window.displayDateMemos) {
-                window.displayDateMemos();
-                console.log('✅ displayDateMemos 호출 완료');
+
+            titleInput?.removeAttribute('data-edit-memo-id');
+            contentInput?.removeAttribute('data-edit-memo-id');
+            if (titleInput) titleInput.value = '';
+            if (contentInput) contentInput.value = '';
+
+            if (typeof clearAttachments === 'function') {
+                clearAttachments('dateMemoAttachmentList', attachments);
             }
-            updateCalendarDisplay(); // 달력 표시 업데이트
-            
-            // 통합 시스템 UI 새로고침 (첨부파일 ID 반영을 위해)
-            if (typeof window.MemoSystem !== 'undefined' && window.MemoSystem.refreshAllUI) {
-                window.MemoSystem.refreshAllUI();
-                console.log('✅ 통합 시스템 UI 새로고침 완료');
-            }
-            
-            // 저장된 메모를 삭제 추적기에서 제외
+
+            if (window.displayDateMemos) window.displayDateMemos();
+            if (typeof updateCalendarDisplay === 'function') updateCalendarDisplay();
+            if (window.MemoSystem?.refreshAllUI) window.MemoSystem.refreshAllUI();
             if (window.MemoDeletionTracker) {
-                window.MemoDeletionTracker.deletedMemoIds.delete(memo.id.toString());
-                console.log('✅ 새 날짜 메모를 삭제 추적에서 제외:', memo.id);
+                window.MemoDeletionTracker.deletedMemoIds.delete(String(memo.id));
             }
-            
-            // 날짜별 메모 리스트 강제 업데이트
+
             setTimeout(() => {
-                if (window.displayDateMemos) {
-                    window.displayDateMemos();
-                }
-                // 열려있는 날짜 메모 모달의 메모 리스트도 업데이트
-                const dateMemoModal = document.getElementById('dateMemoModal');
-                if (dateMemoModal && dateMemoModal.style.display === 'block') {
-                    console.log('📋 열린 날짜 메모 모달의 리스트 강제 새로고침');
-                    if (window.MemoSystem && window.MemoSystem.renderDateMemoList) {
-                        window.MemoSystem.renderDateMemoList(selectedDate);
-                    }
+                if (window.displayDateMemos) window.displayDateMemos();
+                const modal = document.getElementById('dateMemoModal');
+                if (modal && modal.style.display === 'block' && window.MemoSystem?.renderDateMemoList) {
+                    window.MemoSystem.renderDateMemoList(selectedDate);
                 }
             }, 100);
-            
-            // alert(`📝 ${selectedDate} 메모가 저장되었습니다!`); // 메시지 제거
+
+            console.log('✅ saveDateMemo 완료', { memoId, elapsed: Date.now() - startTime });
         }
 
         // 통합 메모 시스템으로 대체됨 - 충돌 방지를 위해 비활성화
