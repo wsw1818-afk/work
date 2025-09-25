@@ -1545,6 +1545,21 @@
             position: absolute !important;
         }
 
+        /* 모든 메모 모달 기본 위치 강제 고정 - 마우스 위치 무시 */
+        .memo-modal .memo-modal-content {
+            position: fixed !important;
+            top: 25% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+        }
+
+        /* 드래그 중일 때만 absolute 위치 허용 */
+        .memo-modal-content.dragging {
+            position: absolute !important;
+            transform: none !important;
+        }
+
         .memo-title {
             font-size: calc(18px * var(--font-scale));
             font-weight: 500;
@@ -7618,6 +7633,18 @@
                 saveBtn.onclick = () => saveSimpleMemo();
             }
 
+            // 모달 콘텐츠를 중앙 상단 고정 위치로 설정
+            const modalContent = modal.querySelector('.memo-modal-content');
+            if (modalContent) {
+                modalContent.style.position = 'fixed';
+                modalContent.style.top = '25%';
+                modalContent.style.left = '50%';
+                modalContent.style.transform = 'translate(-50%, -50%)';
+                modalContent.style.margin = '0';
+                modalContent.classList.remove('dragging');
+                console.log('📍 날짜 메모 모달을 중앙 상단(25%) 위치로 고정');
+            }
+
             // 모달 표시
             modal.style.display = 'flex';
             modal.classList.remove('force-hidden');
@@ -7789,15 +7816,6 @@
                 notification.remove();
             }, 3000);
         }
-            // 모달 콘텐츠를 중앙 상단 고정 위치로 설정
-            modalContent.style.position = 'fixed';
-            modalContent.style.top = '25%';
-            modalContent.style.left = '50%';
-            modalContent.style.transform = 'translate(-50%, -50%)';
-            modalContent.style.margin = '0';
-            modalContent.classList.remove('dragging');
-
-            console.log('📍 날짜 메모 모달을 중앙 상단(25%) 위치로 고정');
 
             // 날짜 메모 모달 표시 - 전체 화면 오버레이 강제 적용
             dateMemoModal.style.display = 'block';
