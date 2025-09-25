@@ -200,6 +200,29 @@
                 window.displayDateMemos();
             }
 
+            // 달력 표시 강제 업데이트 - 메모 인디케이터 표시
+            console.log('🔄 [FINAL] 달력 표시 업데이트 시작');
+            if (typeof window.updateCalendarDisplay === 'function') {
+                setTimeout(() => {
+                    window.updateCalendarDisplay();
+                    console.log('✅ [FINAL] 달력 표시 업데이트 완료');
+                }, 100);
+            }
+
+            // 달력 강제 새로고침 (다른 방법)
+            if (typeof window.createCalendar === 'function') {
+                setTimeout(() => {
+                    const now = new Date();
+                    window.createCalendar(now.getFullYear(), now.getMonth());
+                    console.log('🔄 [FINAL] 달력 강제 재생성 완료');
+                }, 200);
+            }
+
+            // 메모 인디케이터 직접 추가
+            setTimeout(() => {
+                addMemoIndicatorToDate(normalizedDate);
+            }, 300);
+
             // 입력 필드 초기화
             titleInput.value = '';
             contentInput.value = '';
@@ -232,11 +255,59 @@
             console.log('🗑️ [FINAL] 메모 삭제됨:', memoId);
         }
 
+        // ========== 메모 인디케이터 추가 함수 ==========
+        function addMemoIndicatorToDate(dateString) {
+            console.log('🎯 [FINAL] 메모 인디케이터 추가 시도:', dateString);
+
+            // 해당 날짜 요소 찾기
+            const dayElement = document.querySelector(`[data-date="${dateString}"]`);
+            if (!dayElement) {
+                console.error('❌ [FINAL] 날짜 요소를 찾을 수 없습니다:', dateString);
+                return;
+            }
+
+            // 이미 인디케이터가 있는지 확인
+            let indicator = dayElement.querySelector('.memo-indicator, .memo-dot, .has-memo');
+
+            if (!indicator) {
+                // 해당 날짜에 메모가 실제로 있는지 확인
+                const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+                const dateMemos = memos.filter(memo => memo.date === dateString);
+
+                if (dateMemos.length > 0) {
+                    // 인디케이터 생성 및 추가
+                    indicator = document.createElement('div');
+                    indicator.className = 'memo-dot';
+                    indicator.style.cssText = `
+                        width: 6px;
+                        height: 6px;
+                        background-color: #ff4757;
+                        border-radius: 50%;
+                        position: absolute;
+                        top: 2px;
+                        right: 2px;
+                        z-index: 10;
+                    `;
+
+                    // 부모 요소를 relative position으로 설정
+                    dayElement.style.position = 'relative';
+                    dayElement.appendChild(indicator);
+
+                    console.log(`✅ [FINAL] 메모 인디케이터 추가됨: ${dateString} (메모 ${dateMemos.length}개)`);
+                } else {
+                    console.log(`ℹ️ [FINAL] ${dateString}에는 메모가 없어서 인디케이터를 추가하지 않음`);
+                }
+            } else {
+                console.log(`ℹ️ [FINAL] ${dateString}에 이미 메모 인디케이터 존재함`);
+            }
+        }
+
         // ========== 전역 함수 등록 ==========
         window.openDateMemoModal = openDateMemoModal;
         window.saveMemoFinal = saveMemoFinal;
         window.deleteMemoFinal = deleteMemoFinal;
         window.loadMemosForDateDirect = loadMemosForDateDirect;
+        window.addMemoIndicatorToDate = addMemoIndicatorToDate;
 
         console.log('✅ [FINAL] 최종 메모 시스템 초기화 완료');
     }
