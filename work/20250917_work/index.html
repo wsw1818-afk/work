@@ -3617,37 +3617,17 @@
                     `;
                 }
                 
-                // 날짜 클릭 이벤트 추가
+                // 날짜 클릭 이벤트 - 심플하게 재구현
                 day.addEventListener('click', function(e) {
-                    console.log('📅 날짜 클릭됨:', date, 'isTrusted:', e.isTrusted);
-                    
-                    // 자동 클릭 방지
-                    if (e.isTrusted === false) {
-                        console.log('🚫 자동 클릭 차단');
-                        return;
-                    }
-                    
-                    // 메모창이 이미 열려있으면 클릭 차단
-                    const dateMemoModal = document.getElementById('dateMemoModal');
-                    if (dateMemoModal && dateMemoModal.style.display === 'block') {
-                        console.log('🚫 메모창이 열려있어 날짜 클릭 차단');
-                        e.stopPropagation();
-                        e.preventDefault();
-                        return;
-                    }
-                    
                     if (!day.classList.contains('other-month')) {
-                        console.log('📅 날짜 클릭됨 - 메모창 자동 열림 비활성화됨:', year, month, date);
+                        e.stopPropagation();
 
-                        // 날짜 선택 표시만 처리 (메모창은 열지 않음)
-                        const selectedDays = document.querySelectorAll('.day.selected');
-                        selectedDays.forEach(selectedDay => selectedDay.classList.remove('selected'));
+                        // 선택된 날짜 표시
+                        document.querySelectorAll('.day.selected').forEach(d => d.classList.remove('selected'));
                         day.classList.add('selected');
 
-                        console.log('✅ 날짜 선택 완료 - 메모창 열기');
-
-                        // 메모창 열기
-                        openDateMemoModal(year, month, date);
+                        // 새로운 심플한 메모 모달 열기
+                        openSimpleMemoModal(year, month, date);
                     }
                 });
                 
@@ -7517,58 +7497,175 @@
             openMemoDetail(id);
         }
 
-        // 날짜별 메모 기능
-        function openDateMemoModal(year, month, date) {
-            console.log('📅 openDateMemoModal HTML 함수 호출됨:', year, month, date);
-            
-            // 모달이 방금 닫힌 상태면 무시 (재열림 방지) - 같은 날짜만 차단
+        // ========== 새로운 심플한 메모 시스템 ==========
+        let currentEditingMemo = null;
+
+        // 심플한 메모 모달 열기
+        function openSimpleMemoModal(year, month, date) {
             const targetDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-            if (modalJustClosed) {
-                // 같은 날짜만 차단하고, 다른 날짜는 허용
-                if (window.lastClosedModalDate === targetDate) {
-                    console.log('🔒 같은 날짜 모달 재열림 차단:', targetDate);
-                    return;
-                } else {
-                    console.log('🔄 다른 날짜이므로 모달 열림 허용:', targetDate);
-                    modalJustClosed = false; // 다른 날짜면 차단 해제
-                    window.modalJustClosed = false;
-                }
-            }
-            
-            // 모달이 이미 열려있고 같은 날짜면 무시
-            const dateMemoModal = document.getElementById('dateMemoModal');
-            if (dateMemoModal && dateMemoModal.style.display === 'block' && selectedDate === targetDate) {
-                console.log('📅 같은 날짜 모달이 이미 열려있음, 무시:', targetDate);
-                return;
-            }
-            
             selectedDate = targetDate;
             window.selectedDate = targetDate;
-            document.getElementById('dateMemoTitle').textContent = `📅 ${selectedDate} 메모`;
-            
-            // 날짜별 메모 모달만 열기 (스티키 메모는 열지 않음)
-            const modalContent = dateMemoModal.querySelector('.memo-modal-content');
-            
-            // 달력 컨테이너 위치 계산
-            const calendarContainer = document.querySelector('.calendar-container');
-            const containerRect = calendarContainer.getBoundingClientRect();
-            
-            // 모달을 달력 중앙에 배치
-            const modalWidth = 500; // max-width 값
-            const modalHeight = 400; // 예상 높이
-            
-            const centerX = containerRect.left + (containerRect.width - modalWidth) / 2;
-            const centerY = containerRect.top + (containerRect.height - modalHeight) / 2;
-            
-            // 화면 경계 확인
-            const maxX = window.innerWidth - modalWidth - 20;
-            const maxY = window.innerHeight - modalHeight - 20;
-            
-            const constrainedX = Math.max(20, Math.min(centerX, maxX));
-            const constrainedY = Math.max(20, Math.min(centerY, maxY));
-            
-            // 모달을 중앙에 정상적으로 표시 (absolute positioning 제거)
-            modalContent.style.position = '';
+
+            // 모달 요소 가져오기
+            const modal = document.getElementById('dateMemoModal');
+            if (!modal) return;
+
+            // 제목 설정
+            document.getElementById('dateMemoTitle').textContent = `📅 ${targetDate} 메모`;
+
+            // 메모 리스트 로드
+            loadDateMemos(targetDate);
+
+            // 입력 필드 초기화
+            document.getElementById('memoTitle').value = '';
+            document.getElementById('memoContent').value = '';
+            currentEditingMemo = null;
+
+            // 저장 버튼 텍스트 설정
+            const saveBtn = document.getElementById('saveDateMemo');
+            if (saveBtn) {
+                saveBtn.textContent = '💾 저장';
+                saveBtn.onclick = () => saveSimpleMemo();
+            }
+
+            // 모달 표시
+            modal.style.display = 'flex';
+            modal.classList.remove('force-hidden');
+        }
+
+        // 날짜별 메모 로드
+        function loadDateMemos(date) {
+            const memoList = document.getElementById('dateMemoList');
+            if (!memoList) return;
+
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const dateMemos = memos.filter(memo => memo.date === date);
+
+            if (dateMemos.length === 0) {
+                memoList.innerHTML = '<div class="no-memos">메모가 없습니다</div>';
+                return;
+            }
+
+            memoList.innerHTML = dateMemos.map(memo => `
+                <div class="memo-item" data-memo-id="${memo.id}">
+                    <div class="memo-header">
+                        <span class="memo-title">${memo.title}</span>
+                        <div class="memo-actions">
+                            <button onclick="editSimpleMemo('${memo.id}')">✏️</button>
+                            <button onclick="deleteSimpleMemo('${memo.id}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="memo-content">${memo.content}</div>
+                </div>
+            `).join('');
+        }
+
+        // 심플한 메모 저장
+        function saveSimpleMemo() {
+            const titleInput = document.getElementById('memoTitle');
+            const contentInput = document.getElementById('memoContent');
+
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+
+            if (!title && !content) {
+                alert('제목이나 내용을 입력해주세요.');
+                return;
+            }
+
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+
+            if (currentEditingMemo) {
+                // 편집 모드
+                const memoIndex = memos.findIndex(m => m.id === currentEditingMemo);
+                if (memoIndex !== -1) {
+                    memos[memoIndex].title = title || '제목 없음';
+                    memos[memoIndex].content = content;
+                    memos[memoIndex].lastModified = new Date().toISOString();
+                }
+            } else {
+                // 새 메모 추가
+                const newMemo = {
+                    id: Date.now().toString(),
+                    date: selectedDate,
+                    title: title || '제목 없음',
+                    content: content,
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
+                };
+                memos.push(newMemo);
+            }
+
+            // 저장
+            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+
+            // UI 업데이트
+            loadDateMemos(selectedDate);
+            updateCalendarDisplay();
+
+            // 입력 필드 초기화
+            titleInput.value = '';
+            contentInput.value = '';
+            currentEditingMemo = null;
+
+            // 성공 메시지
+            showNotification('메모가 저장되었습니다.');
+        }
+
+        // 메모 편집
+        function editSimpleMemo(memoId) {
+            const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            const memo = memos.find(m => m.id === memoId);
+
+            if (memo) {
+                document.getElementById('memoTitle').value = memo.title;
+                document.getElementById('memoContent').value = memo.content;
+                currentEditingMemo = memoId;
+
+                const saveBtn = document.getElementById('saveDateMemo');
+                if (saveBtn) {
+                    saveBtn.textContent = '📝 수정';
+                }
+            }
+        }
+
+        // 메모 삭제
+        function deleteSimpleMemo(memoId) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+
+            let memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+            memos = memos.filter(m => m.id !== memoId);
+            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+
+            // UI 업데이트
+            loadDateMemos(selectedDate);
+            updateCalendarDisplay();
+
+            showNotification('메모가 삭제되었습니다.');
+        }
+
+        // 알림 표시
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 4px;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
             modalContent.style.left = '';
             modalContent.style.top = '';
             modalContent.style.margin = '';
@@ -7625,9 +7722,22 @@
             }
         };
         
+        // 심플한 모달 닫기
         function closeDateMemoModal() {
+            const modal = document.getElementById('dateMemoModal');
+            if (modal) {
+                modal.style.display = 'none';
+
+                // 입력 필드 초기화
+                document.getElementById('memoTitle').value = '';
+                document.getElementById('memoContent').value = '';
+                currentEditingMemo = null;
+            }
+        }
+
+        function closeDateMemoModal_old() {
             console.log('🔒 closeDateMemoModal 호출됨');
-            
+
             // 너무 빠른 중복 클릭 방지 (500ms 이내)
             const now = Date.now();
             if (now - lastCloseTime < 500) {
@@ -7635,7 +7745,7 @@
                 return;
             }
             lastCloseTime = now;
-            
+
             // 이미 닫히는 중이면 무시
             if (isDateMemoModalClosing) {
                 console.log('⚠️ 이미 닫히는 중 - 중복 호출 무시');
@@ -7754,7 +7864,12 @@
             console.log('🧹 날짜 메모 폼 초기화 및 편집 모드 해제 완료');
         }
 
-        async function saveDateMemo() {
+        // 기존 saveDateMemo 함수를 새로운 버전으로 대체
+        function saveDateMemo() {
+            saveSimpleMemo();
+        }
+
+        async function saveDateMemo_old() {
             console.log('💾 saveDateMemo 함수 시작', { selectedDate: window.selectedDate });
 
             // selectedDate 확인 및 설정
