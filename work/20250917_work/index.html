@@ -3303,7 +3303,7 @@
         <div class="memo-modal-content">
             <div class="memo-header">
                 <h2 class="memo-title" id="dateMemoTitle">📅 날짜 메모</h2>
-                <button class="close-btn" id="closeDateMemo">✕</button>
+                <button class="modal-close" id="closeDateMemo" onclick="closeDateMemoModal()" style="position: absolute; top: 10px; right: 15px; background: transparent; border: none; font-size: 20px; cursor: pointer; color: #999;">×</button>
             </div>
 
             <div class="memo-form">
@@ -9263,8 +9263,8 @@
     <!-- ❌ 모달 닫기 기능 수정 시스템 -->
     <script src="modal-close-fix.js"></script>
 
-    <!-- 🎯 중복 닫기 버튼 제거 시스템 -->
-    <script src="duplicate-close-button-fix.js"></script>
+    <!-- 🎯 최종 닫기 버튼 해결 시스템 (모든 충돌 해결) -->
+    <script src="final-close-button-fix.js"></script>
 
     <!-- 📅 달력 표시 문제 해결 -->
     <script src="calendar-display-fix.js"></script>
