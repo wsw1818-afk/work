@@ -7120,33 +7120,18 @@
                 }
             }
             
-            // 상세 모달 위치 설정 (이미 위에서 선언된 memoDetailModal 재사용)
+            // 상세 모달 위치 리셋 (중앙 상단 고정 위치 사용)
             const modalContent = memoDetailModal.querySelector('.memo-modal-content');
-            
-            // 달력 컨테이너 위치 계산
-            const calendarContainer = document.querySelector('.calendar-container');
-            const containerRect = calendarContainer.getBoundingClientRect();
-            
-            // 모달을 달력 중앙에 배치
-            const modalWidth = 500;
-            const modalHeight = 400;
-            
-            const centerX = containerRect.left + (containerRect.width - modalWidth) / 2;
-            const centerY = containerRect.top + (containerRect.height - modalHeight) / 2;
-            
-            // 화면 경계 확인
-            const maxX = window.innerWidth - modalWidth - 20;
-            const maxY = window.innerHeight - modalHeight - 20;
-            
-            const constrainedX = Math.max(20, Math.min(centerX, maxX));
-            const constrainedY = Math.max(20, Math.min(centerY, maxY));
-            
-            // 모달을 중앙에 정상적으로 표시 (absolute positioning 제거)
-            modalContent.style.position = '';
-            modalContent.style.left = '';
-            modalContent.style.top = '';
-            modalContent.style.margin = '';
-            modalContent.classList.remove('dragging');
+            if (modalContent) {
+                // 모든 위치 관련 스타일 제거하여 CSS 기본값 적용
+                modalContent.style.position = '';
+                modalContent.style.left = '';
+                modalContent.style.top = '';
+                modalContent.style.margin = '';
+                modalContent.classList.remove('dragging');
+
+                console.log('📍 메모 상세 모달 위치 리셋 - CSS 기본 위치 적용');
+            }
             
             // z-index를 가장 높게 설정하여 다른 모든 모달보다 앞에 표시
             memoDetailModal.style.zIndex = '999999';
@@ -7804,11 +7789,16 @@
                 notification.remove();
             }, 3000);
         }
-            modalContent.style.left = '';
-            modalContent.style.top = '';
-            modalContent.style.margin = '';
+            // 모달 콘텐츠를 중앙 상단 고정 위치로 설정
+            modalContent.style.position = 'fixed';
+            modalContent.style.top = '25%';
+            modalContent.style.left = '50%';
+            modalContent.style.transform = 'translate(-50%, -50%)';
+            modalContent.style.margin = '0';
             modalContent.classList.remove('dragging');
-            
+
+            console.log('📍 날짜 메모 모달을 중앙 상단(25%) 위치로 고정');
+
             // 날짜 메모 모달 표시 - 전체 화면 오버레이 강제 적용
             dateMemoModal.style.display = 'block';
             dateMemoModal.style.visibility = 'visible';

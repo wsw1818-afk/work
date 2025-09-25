@@ -70,7 +70,7 @@ window.openDateMemoModal = function(...args) {
         originalOpenDateMemoModal.apply(this, args);
     }
 
-    // 초기 위치만 설정 (드래그 방해 안함)
+    // 초기 위치만 중앙 상단 25%로 설정 (드래그 방해 안함)
     setTimeout(() => {
         const dateMemoModal = document.getElementById('dateMemoModal');
         if (dateMemoModal) {
