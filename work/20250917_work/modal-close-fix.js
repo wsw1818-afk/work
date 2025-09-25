@@ -60,35 +60,40 @@ function closeDateMemoModal() {
     }
 }
 
-// DOM이 준비되면 닫기 이벤트 바인딩
+// DOM이 준비되면 닫기 이벤트 바인딩 (중복 방지)
 function bindCloseEvents() {
-    // X 버튼 클릭 이벤트
-    const closeButtons = document.querySelectorAll('.modal-close, [onclick*="close"], [onclick*="Close"]');
-    closeButtons.forEach(button => {
-        // 기존 이벤트 제거 후 새로 바인딩
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
+    // 모든 닫기 버튼 찾기 (중복 제거 후)
+    setTimeout(() => {
+        const closeButtons = document.querySelectorAll('.modal-close:not(.duplicate-processed)');
 
-        newButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        closeButtons.forEach(button => {
+            // 중복 처리 방지 마킹
+            button.classList.add('duplicate-processed');
 
-            // 모달 찾기
-            const modal = this.closest('.modal') || document.getElementById('dateMemoModal');
-            if (modal) {
-                const modalId = modal.id || 'dateMemoModal';
-                if (modalId === 'dateMemoModal') {
-                    closeDateMemoModal();
-                } else {
-                    safeCloseModal(modalId);
+            // 새 이벤트 바인딩 (기존 이벤트와 충돌 방지)
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+
+                // 모달 찾기
+                const modal = this.closest('.modal') || document.getElementById('dateMemoModal');
+                if (modal) {
+                    const modalId = modal.id || 'dateMemoModal';
+                    if (modalId === 'dateMemoModal') {
+                        closeDateMemoModal();
+                    } else {
+                        safeCloseModal(modalId);
+                    }
                 }
-            }
 
-            return false;
+                console.log('❌ 단일 닫기 버튼 클릭 처리:', modal?.id);
+                return false;
+            }, { once: false, passive: false });
+
+            console.log('❌ 닫기 버튼 이벤트 바인딩 완료:', button.className);
         });
-
-        console.log('❌ 닫기 버튼 이벤트 바인딩 완료');
-    });
+    }, 200); // 중복 제거 시스템 후 실행
 
     // ESC 키 이벤트
     document.addEventListener('keydown', function(e) {
