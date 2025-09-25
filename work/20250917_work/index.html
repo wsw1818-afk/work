@@ -10385,5 +10385,93 @@
 
     <!-- 간단한 모달 표시 수정 스크립트 (최종 솔루션) -->
     <script src="simple-modal-fix.js"></script>
+
+    <!-- 페이지 로드 시 자동 달력 생성 및 오버레이 방지 -->
+    <script>
+    (function() {
+        console.log('🚀 페이지 로드 시 자동 달력 생성 시작');
+
+        // 페이지 로드 완료 후 실행
+        function initializePageAfterLoad() {
+            // 1. 모든 오버레이 강제 숨김
+            const overlayPatterns = [
+                '.modal-backdrop', '.backdrop', '.overlay', '.modal-bg', '.modal-background',
+                '.dimmer', '.mask', '.screen', '.cover', '.blur', '.shade',
+                '[class*="overlay"]', '[class*="backdrop"]', '[class*="modal-bg"]'
+            ];
+
+            overlayPatterns.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => el.remove());
+            });
+
+            // 2. CSS 스타일 강제 주입
+            const style = document.createElement('style');
+            style.id = 'overlay-prevention';
+            style.textContent = `
+                /* 오버레이 완전 차단 */
+                .modal-backdrop, .backdrop, .overlay, .modal-bg, .modal-background,
+                .dimmer, .mask, .screen, .cover, .blur, .shade,
+                [class*="overlay"], [class*="backdrop"], [class*="modal-bg"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                }
+
+                /* 달력 강제 표시 */
+                .calendar, .calendar-grid, .days, .day {
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
+                }
+
+                /* 모달 완전 숨김 */
+                .modal, [id*="modal"], [id*="Modal"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                }
+            `;
+
+            if (!document.getElementById('overlay-prevention')) {
+                document.head.appendChild(style);
+            }
+
+            // 3. fixCalendar 함수 실행
+            setTimeout(() => {
+                if (typeof window.fixCalendar === 'function') {
+                    window.fixCalendar();
+                    console.log('✅ 자동 fixCalendar 실행 완료');
+                } else {
+                    console.log('⚠️ fixCalendar 함수를 찾을 수 없음');
+                }
+            }, 1000);
+
+            // 4. 5초 후 재시도
+            setTimeout(() => {
+                if (typeof window.fixCalendar === 'function') {
+                    window.fixCalendar();
+                    console.log('✅ 5초 후 fixCalendar 재실행 완료');
+                }
+            }, 5000);
+        }
+
+        // DOM 로드 완료 시 실행
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePageAfterLoad);
+        } else {
+            initializePageAfterLoad();
+        }
+
+        // 페이지 완전 로드 후에도 실행
+        window.addEventListener('load', () => {
+            setTimeout(initializePageAfterLoad, 2000);
+        });
+
+        console.log('✅ 자동 달력 생성 스크립트 로드 완료');
+    })();
+    </script>
 </body>
 </html>
