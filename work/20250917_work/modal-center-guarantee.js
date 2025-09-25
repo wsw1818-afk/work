@@ -5,14 +5,20 @@ console.log('📍 모달 중앙 정렬 보장 시스템 로드됨');
 function forceModalCenter(modal) {
     if (!modal) return;
 
-    // 인라인 스타일로 상단 35% 위치에 정렬
-    modal.style.position = 'fixed';
-    modal.style.top = '35%';
-    modal.style.left = '50%';
-    modal.style.transform = 'translate(-50%, -50%)';
-    modal.style.zIndex = '999999';
+    // 최우선 강제 인라인 스타일로 상단 20% 위치에 정렬
+    modal.style.setProperty('position', 'fixed', 'important');
+    modal.style.setProperty('top', '20%', 'important');
+    modal.style.setProperty('left', '50%', 'important');
+    modal.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+    modal.style.setProperty('z-index', '999999', 'important');
+    modal.style.setProperty('margin', '0', 'important');
 
-    console.log('📍 모달 상단 정렬 강제 적용:', modal.id);
+    // 추가 보장을 위한 속성들
+    modal.style.setProperty('max-height', '70vh', 'important');
+    modal.style.setProperty('width', '85%', 'important');
+    modal.style.setProperty('max-width', '480px', 'important');
+
+    console.log('📍 모달 상단 20% 강제 적용 완료:', modal.id || modal.className);
 }
 
 // 모든 모달 컨텐츠를 중앙 정렬하는 함수
@@ -60,21 +66,41 @@ window.openDateMemoModal = function(...args) {
         originalOpenDateMemoModal.apply(this, args);
     }
 
-    // 강제 중앙 정렬 적용
-    setTimeout(() => {
-        const dateMemoModal = document.getElementById('dateMemoModal');
-        if (dateMemoModal) {
-            dateMemoModal.style.display = 'block';
-            dateMemoModal.style.visibility = 'visible';
-            dateMemoModal.style.opacity = '1';
+    // 즉시 강제 적용
+    const dateMemoModal = document.getElementById('dateMemoModal');
+    if (dateMemoModal) {
+        dateMemoModal.style.display = 'block';
+        dateMemoModal.style.visibility = 'visible';
+        dateMemoModal.style.opacity = '1';
 
-            // 모달 컨텐츠 중앙 정렬
-            const modalContent = dateMemoModal.querySelector('.modal-content, .memo-modal-content');
-            if (modalContent) {
-                forceModalCenter(modalContent);
+        // 모달 컨텐츠 강제 중앙 정렬
+        const modalContent = dateMemoModal.querySelector('.modal-content, .memo-modal-content');
+        if (modalContent) {
+            forceModalCenter(modalContent);
+        }
+    }
+
+    // 추가 보장을 위한 지연 적용
+    setTimeout(() => {
+        const modal = document.getElementById('dateMemoModal');
+        if (modal) {
+            const content = modal.querySelector('.modal-content, .memo-modal-content');
+            if (content) {
+                forceModalCenter(content);
             }
         }
     }, 10);
+
+    // 더 강력한 지연 적용
+    setTimeout(() => {
+        const modal = document.getElementById('dateMemoModal');
+        if (modal) {
+            const content = modal.querySelector('.modal-content, .memo-modal-content');
+            if (content) {
+                forceModalCenter(content);
+            }
+        }
+    }, 100);
 };
 
 // DOM이 준비되면 즉시 적용
