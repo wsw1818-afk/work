@@ -1518,10 +1518,14 @@
             padding: 0 0 16px 0;
             margin: 0 0 20px 0;
             border-bottom: 1px solid #e8eaed;
-            cursor: move;
-            user-select: none;
+            cursor: default !important;
+            user-select: none !important;
             background: transparent;
             border-radius: 0;
+            -webkit-user-drag: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            pointer-events: auto !important;
         }
         
         .memo-header:hover {
@@ -1900,11 +1904,17 @@
             overflow-y: auto;
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--primary-medium);
-            position: relative;
-            margin: auto;
-            transform: translateZ(0);
+            position: fixed !important;
+            top: 35% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
             backdrop-filter: blur(16px);
             animation: memoModalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none !important;
+            -webkit-user-drag: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
         }
         
         @keyframes memoModalSlideIn {
@@ -9260,6 +9270,9 @@
     <!-- ⚡ 최적화된 닫기 버튼 시스템 (CPU 효율적) -->
     <script src="optimized-close-button.js"></script>
 
+    <!-- 📌 메모창 위치 완전 고정 시스템 -->
+    <script src="fixed-modal-position.js"></script>
+
     <!-- 📅 달력 표시 문제 해결 -->
     <script src="calendar-display-fix.js"></script>
 
@@ -10245,8 +10258,8 @@
     
     <!-- force-modal-open.js 제거 - unified-memo-system.js와 충돌 -->
 
-    <!-- 모달 드래그 시스템 로드 -->
-    <script src="modal-drag-system.js"></script>
+    <!-- 모달 드래그 시스템 로드 - 위치 고정을 위해 비활성화 -->
+    <!-- <script src="modal-drag-system.js"></script> -->
 
     <!-- 디버깅 스크립트 임시 추가 -->
     <script src="debug-click-modal.js"></script>
