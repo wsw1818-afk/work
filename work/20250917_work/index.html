@@ -7762,12 +7762,16 @@
                 window.DiagnosticSystem.trackInteraction('SAVE_DATE_MEMO', 'saveDateMemo', true, 0);
             }
 
-            if (!window.selectedDate) {
-                console.warn('⚠️ selectedDate가 없어 메모를 저장할 수 없습니다.');
+            // selectedDate를 지역 변수로 즉시 저장 (다른 스크립트에 의한 변경 방지)
+            let currentSelectedDate = window.selectedDate;
+            if (!currentSelectedDate) {
+                console.warn('⚠️ selectedDate가 없어서 현재 날짜로 설정합니다.');
+                const today = new Date();
+                currentSelectedDate = [today.getFullYear(), today.getMonth() + 1, today.getDate()];
+                console.log('🔧 selectedDate 자동 설정:', currentSelectedDate);
                 if (window.DiagnosticSystem) {
-                    window.DiagnosticSystem.detectIssue('SAVE_ERROR', 'selectedDate 미설정', { severity: 'error' });
+                    window.DiagnosticSystem.detectIssue('SAVE_ERROR', 'selectedDate 자동 설정됨', { severity: 'warning' });
                 }
-                return;
             }
 
             const titleInput = document.getElementById('dateMemoTitleInput');
@@ -7799,11 +7803,16 @@
             }
 
             const timestamp = new Date().toISOString();
+            // selectedDate 배열을 일관된 날짜 문자열로 변환 (지역 변수 사용)
+            const dateString = Array.isArray(currentSelectedDate) ?
+                `${currentSelectedDate[0]}-${String(currentSelectedDate[1]).padStart(2, '0')}-${String(currentSelectedDate[2]).padStart(2, '0')}` :
+                currentSelectedDate;
+
             const memo = {
                 id: memoId,
                 title,
                 content,
-                date: selectedDate,
+                date: dateString,
                 timestamp,
                 attachments: existingMemo?.attachments ? JSON.parse(JSON.stringify(existingMemo.attachments)) : []
             };
@@ -7854,7 +7863,7 @@
                     memoData.unshift(memo);
                 }
                 window.MemoSystem.data = memoData;
-                window.MemoSystem.selectedDate = selectedDate;
+                window.MemoSystem.selectedDate = dateString;
                 window.memos = memoData;
                 window.allMemos = memoData;
                 window.stickyMemos = memoData;
@@ -7880,7 +7889,7 @@
                 if (window.displayDateMemos) window.displayDateMemos();
                 const modal = document.getElementById('dateMemoModal');
                 if (modal && modal.style.display === 'block' && window.MemoSystem?.renderDateMemoList) {
-                    window.MemoSystem.renderDateMemoList(selectedDate);
+                    window.MemoSystem.renderDateMemoList(dateString);
                 }
             }, 100);
 
