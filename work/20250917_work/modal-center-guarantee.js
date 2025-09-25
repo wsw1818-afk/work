@@ -5,20 +5,20 @@ console.log('📍 모달 중앙 정렬 보장 시스템 로드됨');
 function forceModalCenter(modal) {
     if (!modal) return;
 
-    // 최우선 강제 인라인 스타일로 상단 20% 위치에 정렬
+    // 최우선 강제 인라인 스타일로 상단 30% 위치에 정렬 (드래그 가능)
     modal.style.setProperty('position', 'fixed', 'important');
-    modal.style.setProperty('top', '20%', 'important');
+    modal.style.setProperty('top', '30%', 'important');
     modal.style.setProperty('left', '50%', 'important');
     modal.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
     modal.style.setProperty('z-index', '999999', 'important');
     modal.style.setProperty('margin', '0', 'important');
 
     // 추가 보장을 위한 속성들
-    modal.style.setProperty('max-height', '70vh', 'important');
+    modal.style.setProperty('max-height', '65vh', 'important');
     modal.style.setProperty('width', '85%', 'important');
     modal.style.setProperty('max-width', '480px', 'important');
 
-    console.log('📍 모달 상단 20% 강제 적용 완료:', modal.id || modal.className);
+    console.log('📍 모달 상단 30% 강제 적용 완료:', modal.id || modal.className);
 }
 
 // 모든 모달 컨텐츠를 중앙 정렬하는 함수
