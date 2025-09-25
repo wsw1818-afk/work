@@ -1,24 +1,28 @@
 // 모달 중앙 정렬 보장 시스템
 console.log('📍 모달 중앙 정렬 보장 시스템 로드됨');
 
-// 모달을 화면 상단 가까이에 위치시키는 함수 (스크롤 불필요)
+// 모달을 화면 상단 가까이에 초기 위치시키는 함수 (드래그 방해 안함)
 function forceModalCenter(modal) {
     if (!modal) return;
 
-    // 최우선 강제 인라인 스타일로 25% 위치에 정렬 (더 위쪽 보기 편한 위치)
-    modal.style.setProperty('position', 'fixed', 'important');
-    modal.style.setProperty('top', '25%', 'important');
-    modal.style.setProperty('left', '50%', 'important');
-    modal.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
-    modal.style.setProperty('z-index', '999999', 'important');
-    modal.style.setProperty('margin', '0', 'important');
+    // 드래그 상태가 아닐 때만 초기 위치 설정
+    if (!modal.classList.contains('dragging') && !modal.closest('.memo-modal')?.classList.contains('has-positioned-content')) {
+        modal.style.setProperty('position', 'fixed', 'important');
+        modal.style.setProperty('top', '25%', 'important');
+        modal.style.setProperty('left', '50%', 'important');
+        modal.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+        modal.style.setProperty('margin', '0', 'important');
 
-    // 추가 보장을 위한 속성들
-    modal.style.setProperty('max-height', '70vh', 'important');
-    modal.style.setProperty('width', '85%', 'important');
-    modal.style.setProperty('max-width', '480px', 'important');
+        // 추가 보장을 위한 속성들
+        modal.style.setProperty('max-height', '70vh', 'important');
+        modal.style.setProperty('width', '85%', 'important');
+        modal.style.setProperty('max-width', '480px', 'important');
 
-    console.log('📍 모달 25% 위치 강제 적용 완료:', modal.id || modal.className);
+        console.log('📍 모달 25% 초기 위치 설정 완료:', modal.id || modal.className);
+    } else {
+        console.log('📍 드래그 상태이므로 위치 설정 건너뜀:', modal.id || modal.className);
+    }
 }
 
 // 모든 모달 컨텐츠를 중앙 정렬하는 함수
@@ -56,7 +60,7 @@ window.openModal = function(modalId) {
     }, 10);
 };
 
-// openDateMemoModal 함수 강화
+// openDateMemoModal 함수 강화 - 드래그 방해 안함
 const originalOpenDateMemoModal = window.openDateMemoModal;
 window.openDateMemoModal = function(...args) {
     console.log('📍 중앙 정렬 보장 openDateMemoModal 호출:', args);
@@ -66,9 +70,10 @@ window.openDateMemoModal = function(...args) {
         originalOpenDateMemoModal.apply(this, args);
     }
 
-    // 즉시 강제 적용
-    const dateMemoModal = document.getElementById('dateMemoModal');
-    if (dateMemoModal) {
+    // 초기 위치만 설정 (드래그 방해 안함)
+    setTimeout(() => {
+        const dateMemoModal = document.getElementById('dateMemoModal');
+        if (dateMemoModal) {
         dateMemoModal.style.display = 'block';
         dateMemoModal.style.visibility = 'visible';
         dateMemoModal.style.opacity = '1';
@@ -159,17 +164,28 @@ if (document.body) {
     });
 }
 
-// 윈도우 리사이즈 시에도 중앙 정렬 유지
+// 윈도우 리사이즈 시에만 중앙 정렬 (드래그 방해 안함)
 window.addEventListener('resize', function() {
-    setTimeout(centerAllModalContents, 100);
+    setTimeout(() => {
+        const modalContents = document.querySelectorAll('.modal-content');
+        modalContents.forEach(content => {
+            // 드래그 중이 아닐 때만 위치 조정
+            if (!content.classList.contains('dragging') &&
+                !content.closest('.memo-modal')?.classList.contains('has-positioned-content')) {
+                forceModalCenter(content);
+            }
+        });
+    }, 100);
 });
 
-// 스크롤 시에도 중앙 정렬 유지 (필요한 경우)
+// 스크롤 이벤트는 드래그에 방해되므로 비활성화
+/*
 let scrollTimeout;
 window.addEventListener('scroll', function() {
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(centerAllModalContents, 50);
 });
+*/
 
 console.log('📍 모달 중앙 정렬 보장 시스템 완전 활성화');
 
