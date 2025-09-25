@@ -64,7 +64,8 @@
       "Bash(git remote add:*)",
       "Bash(git push:*)",
       "Bash(claude mcp:*)",
-      "mcp__playwright__browser_file_upload"
+      "mcp__playwright__browser_file_upload",
+      "mcp__filesystem__search_files"
     ],
     "deny": [],
     "ask": [],

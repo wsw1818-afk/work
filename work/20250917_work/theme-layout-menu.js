@@ -36,18 +36,74 @@
     };
     
     // 레이아웃 뷰 설정 제거됨
+
+    // 공통 DOM 헬퍼
+    function forEachElement(selector, callback) {
+        document.querySelectorAll(selector).forEach(callback);
+    }
+
+    function applyStylesToAll(selector, styles) {
+        forEachElement(selector, (element) => {
+            Object.assign(element.style, styles);
+        });
+    }
     
+    function getDarkModeLabel() {
+        return darkModeConfig.enabled ? '🌙 다크 모드' : '☀️ 라이트 모드';
+    }
+
+    function findMenuContainer() {
+        const enhancedContainer = document.querySelector('.action-controls.enhanced-menu');
+        if (enhancedContainer) {
+            return enhancedContainer;
+        }
+
+        const baseContainer = document.querySelector('.action-controls');
+        if (baseContainer) {
+            baseContainer.classList.add('enhanced-menu');
+            return baseContainer;
+        }
+
+        const scheduleBar = document.querySelector('.schedule-add-bar');
+        if (!scheduleBar) {
+            console.error('스케줄 바를 찾을 수 없음');
+            return null;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'action-controls enhanced-menu';
+        scheduleBar.appendChild(container);
+        return container;
+    }
+
+    function ensureMenuButton(config) {
+        const button = document.getElementById(config.id) || document.createElement('button');
+        button.id = config.id;
+        button.type = 'button';
+        button.className = config.className;
+        button.innerHTML = config.label;
+        if (config.title) {
+            button.title = config.title;
+        }
+        button.onclick = config.onClick;
+        return button;
+    }
+
+    function updateDarkModeToggleButton() {
+        const toggleBtn = document.getElementById('darkModeToggle');
+        if (!toggleBtn) {
+            return;
+        }
+        toggleBtn.innerHTML = getDarkModeLabel();
+        toggleBtn.setAttribute('aria-pressed', String(darkModeConfig.enabled));
+        toggleBtn.title = '다크/라이트 모드 전환';
+    }
+
     // ========== 다크 모드 토글 ==========
     function toggleDarkMode() {
         darkModeConfig.enabled = !darkModeConfig.enabled;
         localStorage.setItem('darkMode', darkModeConfig.enabled);
         applyDarkMode();
-        
-        // 토글 버튼 업데이트
-        const toggleBtn = document.getElementById('darkModeToggle');
-        if (toggleBtn) {
-            toggleBtn.innerHTML = darkModeConfig.enabled ? '🌙 다크 모드' : '☀️ 라이트 모드';
-        }
         
         showNotification(darkModeConfig.enabled ? '다크 모드 활성화' : '라이트 모드 활성화');
     }
@@ -70,38 +126,43 @@
         // 달력 컨테이너
         const container = document.querySelector('.container');
         if (container) {
-            container.style.background = colors.background;
-            container.style.color = colors.text;
+            Object.assign(container.style, {
+                background: colors.background,
+                color: colors.text
+            });
         }
-        
+
         // 날짜 셀들
-        document.querySelectorAll('.day').forEach(day => {
-            if (!day.classList.contains('empty')) {
-                day.style.background = colors.dayBg;
-                day.style.color = colors.text;
-                day.style.borderColor = colors.border;
+        forEachElement('.day', (day) => {
+            if (day.classList.contains('empty')) {
+                return;
             }
+            Object.assign(day.style, {
+                background: colors.dayBg,
+                color: colors.text,
+                borderColor: colors.border
+            });
         });
-        
+
         // 오늘 날짜
         const today = document.querySelector('.day.today');
         if (today) {
             today.style.background = colors.todayBg;
         }
-        
+
         // 메모가 있는 날짜
-        document.querySelectorAll('.has-memo').forEach(elem => {
-            elem.style.background = colors.memoBg;
-        });
-        
+        applyStylesToAll('.has-memo', { background: colors.memoBg });
+
         // 모달들
-        document.querySelectorAll('.modal-content').forEach(modal => {
-            modal.style.background = colors.background;
-            modal.style.color = colors.text;
-            modal.style.borderColor = colors.border;
+        applyStylesToAll('.modal-content', {
+            background: colors.background,
+            color: colors.text,
+            borderColor: colors.border
         });
+
+        updateDarkModeToggleButton();
     }
-    
+
     // 레이아웃 뷰 전환 기능 제거됨
     
     // ========== 글자 크기 조절 ==========
@@ -129,20 +190,17 @@
         document.documentElement.style.setProperty('--base-font-size', size + 'px');
         
         // 달력 관련 요소들
-        document.querySelectorAll('.day-number').forEach(elem => {
-            elem.style.fontSize = size + 'px';
-        });
-        
-        document.querySelectorAll('.weekday').forEach(elem => {
-            elem.style.fontSize = (size + 2) + 'px';
-        });
-        
-        document.querySelector('#monthYear')?.style.setProperty('font-size', (size + 6) + 'px');
-        
+        applyStylesToAll('.day-number', { fontSize: size + 'px' });
+
+        applyStylesToAll('.weekday', { fontSize: (size + 2) + 'px' });
+
+        const monthYear = document.querySelector('#monthYear');
+        if (monthYear) {
+            monthYear.style.fontSize = (size + 6) + 'px';
+        }
+
         // 메뉴 버튼들
-        document.querySelectorAll('.menu-btn').forEach(elem => {
-            elem.style.fontSize = size + 'px';
-        });
+        applyStylesToAll('.menu-btn', { fontSize: size + 'px' });
     }
     
     // ========== 색상 빠른 변경 ==========
@@ -177,9 +235,7 @@
         }
         
         // 메모가 있는 날짜들
-        document.querySelectorAll('.has-memo').forEach(elem => {
-            elem.style.background = theme.memo;
-        });
+        applyStylesToAll('.has-memo', { background: theme.memo });
         
         // localStorage에 저장
         const themeData = {
@@ -194,78 +250,66 @@
     }
     
     // ========== 확장 메뉴 생성 ==========
+
     function createEnhancedMenu() {
-        // 기존 메뉴 컨테이너 찾기
-        let menuContainer = document.querySelector('.action-controls');
+        const menuContainer = findMenuContainer();
         if (!menuContainer) {
-            console.log('메뉴 컨테이너를 찾을 수 없음, 새로 생성');
-            const scheduleBar = document.querySelector('.schedule-add-bar');
-            if (scheduleBar) {
-                menuContainer = document.createElement('div');
-                menuContainer.className = 'action-controls enhanced-menu';
-                scheduleBar.appendChild(menuContainer);
-            } else {
-                console.error('스케줄 바를 찾을 수 없음');
-                return;
-            }
+            return;
         }
-        
-        // 글자 크기 상세 설정 버튼
-        const fontSizeBtn = document.createElement('button');
-        fontSizeBtn.id = 'fontSizeDetailBtn';
-        fontSizeBtn.className = 'menu-btn font-detail-btn';
-        fontSizeBtn.innerHTML = '📝 글자 크기';
-        fontSizeBtn.title = '글자 크기 상세 설정';
-        fontSizeBtn.onclick = () => {
-            if (window.AdvancedControls) {
-                window.AdvancedControls.openFontSizeModal();
-            } else {
-                console.error('Advanced Controls not loaded');
-            }
-        };
-        
-        // 색상 모드 상세 설정 버튼  
-        const colorModeBtn = document.createElement('button');
-        colorModeBtn.id = 'colorModeDetailBtn';
-        colorModeBtn.className = 'menu-btn color-mode-btn';
-        colorModeBtn.innerHTML = '🎨 색상 모드';
-        colorModeBtn.title = '색상 및 테마 상세 설정';
-        colorModeBtn.onclick = () => {
-            if (window.AdvancedControls) {
-                window.AdvancedControls.openColorModeModal();
-            } else {
-                console.error('Advanced Controls not loaded');
-            }
-        };
-        
-        // 다크 모드 토글 버튼
-        const darkModeBtn = document.createElement('button');
-        darkModeBtn.id = 'darkModeToggle';
-        darkModeBtn.className = 'menu-btn toggle-btn';
-        darkModeBtn.innerHTML = darkModeConfig.enabled ? '🌙 다크 모드' : '☀️ 라이트 모드';
-        darkModeBtn.onclick = toggleDarkMode;
-        
-        // 뷰 선택 기능 제거됨
-        
-        // 기존 테마/레이아웃 버튼에 새 기능 추가
+
+        const fragment = document.createDocumentFragment();
+        const buttons = [
+            ensureMenuButton({
+                id: 'fontSizeDetailBtn',
+                className: 'menu-btn font-detail-btn',
+                label: '📝 글자 크기',
+                title: '글자 크기 상세 설정',
+                onClick: () => {
+                    if (window.AdvancedControls) {
+                        window.AdvancedControls.openFontSizeModal();
+                    } else {
+                        console.error('Advanced Controls not loaded');
+                    }
+                }
+            }),
+            ensureMenuButton({
+                id: 'colorModeDetailBtn',
+                className: 'menu-btn color-mode-btn',
+                label: '🎨 색상 모드',
+                title: '색상 및 테마 상세 설정',
+                onClick: () => {
+                    if (window.AdvancedControls) {
+                        window.AdvancedControls.openColorModeModal();
+                    } else {
+                        console.error('Advanced Controls not loaded');
+                    }
+                }
+            }),
+            ensureMenuButton({
+                id: 'darkModeToggle',
+                className: 'menu-btn toggle-btn',
+                label: getDarkModeLabel(),
+                title: '다크/라이트 모드 전환',
+                onClick: toggleDarkMode
+            })
+        ];
+
+        buttons.forEach((button) => fragment.appendChild(button));
+        menuContainer.insertBefore(fragment, menuContainer.firstChild);
+
         const themeBtn = document.getElementById('themeBtn');
-        if (themeBtn) {
-            // 우클릭으로 빠른 다크모드 토글
-            themeBtn.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
+        if (themeBtn && themeBtn.dataset.darkModeContextBound !== 'true') {
+            themeBtn.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
                 toggleDarkMode();
             });
+            themeBtn.dataset.darkModeContextBound = 'true';
         }
-        
-        // 레이아웃 버튼 우클릭 이벤트 제거됨
-        
-        // 메뉴에 추가 (뷰 선택기 제외)
-        menuContainer.insertBefore(fontSizeBtn, menuContainer.firstChild);
-        menuContainer.insertBefore(colorModeBtn, fontSizeBtn.nextSibling);
-        menuContainer.insertBefore(darkModeBtn, colorModeBtn.nextSibling);
-        
-        // 뷰 선택기 이벤트 리스너 제거됨
+
+        menuContainer.dataset.enhancedMenuInitialized = 'true';
+        updateDarkModeToggleButton();
     }
+
     
     // ========== 알림 표시 ==========
     function showNotification(message) {
@@ -392,6 +436,7 @@
         // 메뉴 생성
         setTimeout(() => {
             createEnhancedMenu();
+            updateDarkModeToggleButton();
             
             // 초기 설정 적용
             if (darkModeConfig.enabled) {

@@ -2343,7 +2343,9 @@
 
         /* 공통 모달 스타일 */
         .modal {
-            display: none;
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
             position: fixed !important;
             z-index: 50000 !important;
             left: 0 !important;
@@ -3679,6 +3681,13 @@
                 modal.style.display = 'block';
                 modal.style.visibility = 'visible';
                 modal.style.opacity = '1';
+
+                // 잠깐의 지연 후 안정적으로 표시 상태 유지
+                setTimeout(() => {
+                    modal.style.display = 'block';
+                    modal.style.visibility = 'visible';
+                    modal.style.opacity = '1';
+                }, 10);
             } else {
                 console.warn('모달을 찾을 수 없습니다:', modalId);
             }
@@ -9120,6 +9129,19 @@
             }
         });
 
+        // DOM 로드 직후 즉시 모달 숨김 (깜박임 방지)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM 로드 완료 - 모달 즉시 숨김');
+
+            // 모든 모달을 즉시 숨김
+            const allModals = document.querySelectorAll('.modal, [id*="modal"], [id*="Modal"]');
+            allModals.forEach(modal => {
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+            });
+        });
+
         // 페이지 로드 완료 후 추가 체크
         window.addEventListener('load', function() {
             console.log('페이지 완전 로드 완료');
@@ -9131,6 +9153,7 @@
                 if (modal) {
                     modal.style.display = 'none';
                     modal.style.visibility = 'hidden';
+                    modal.style.opacity = '0';
                     modal.classList.remove('has-positioned-content', 'opening', 'closing');
                     console.log(`🔒 ${modalId} 강제 숨김 완료`);
                 }
@@ -9141,7 +9164,7 @@
             // 버튼들이 제대로 바인딩되었는지 재확인
             const buttons = document.querySelectorAll('.action-btn');
             console.log('찾은 액션 버튼 개수:', buttons.length);
-            
+
             if (buttons.length === 0) {
                 console.error('액션 버튼을 찾을 수 없습니다. HTML 구조를 확인해주세요.');
             }
@@ -9180,6 +9203,9 @@
     <!-- 통합 메모 관리 시스템 활성화 -->
     <!-- 🚨 긴급 무한루프 킬러 - CPU 과부하 해결 (최우선 로드) -->
     <!-- emergency-loop-killer.js 비활성화 - 타이머 차단 문제 -->
+
+    <!-- 🛡️ 모달 깜박임 방지 (최우선 로드) -->
+    <script src="prevent-modal-flash.js"></script>
 
     <!-- 📅 달력 표시 문제 해결 -->
     <script src="calendar-display-fix.js"></script>
