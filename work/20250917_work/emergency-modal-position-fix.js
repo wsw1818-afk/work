@@ -7,18 +7,18 @@ console.log('🚨 긴급 모달 위치 수정 시스템 활성화');
     const emergencyStyle = document.createElement('style');
     emergencyStyle.id = 'emergency-modal-position-fix';
     emergencyStyle.textContent = `
-        /* 적당한 모달 위치 - 드래그 가능하고 편리한 위치 */
+        /* 편리한 모달 위치 - 더 아래쪽으로 조정 */
         .modal-content,
         #dateMemoModal .modal-content,
         #dateMemoModal .memo-modal-content,
         [class*="modal-content"] {
             position: fixed !important;
-            top: 30% !important;
+            top: 45% !important;
             left: 50% !important;
             transform: translate(-50%, -50%) !important;
             z-index: 999999 !important;
             margin: 0 !important;
-            max-height: 65vh !important;
+            max-height: 70vh !important;
             width: 85% !important;
             max-width: 480px !important;
         }
@@ -28,9 +28,9 @@ console.log('🚨 긴급 모달 위치 수정 시스템 활성화');
             .modal-content,
             #dateMemoModal .modal-content,
             #dateMemoModal .memo-modal-content {
-                top: 25% !important;
+                top: 40% !important;
                 width: 95% !important;
-                max-height: 70vh !important;
+                max-height: 75vh !important;
             }
         }
 
@@ -39,8 +39,8 @@ console.log('🚨 긴급 모달 위치 수정 시스템 활성화');
             .modal-content,
             #dateMemoModal .modal-content,
             #dateMemoModal .memo-modal-content {
-                top: 20% !important;
-                max-height: 75vh !important;
+                top: 35% !important;
+                max-height: 80vh !important;
             }
         }
     `;
@@ -53,15 +53,15 @@ console.log('🚨 긴급 모달 위치 수정 시스템 활성화');
     function emergencyForcePosition(element) {
         if (!element) return;
 
-        // 모든 CSS 속성을 강제로 설정 - 적당한 위치 30%
+        // 모든 CSS 속성을 강제로 설정 - 더 아래쪽 위치 45%
         const styles = {
             'position': 'fixed',
-            'top': '30%',
+            'top': '45%',
             'left': '50%',
             'transform': 'translate(-50%, -50%)',
             'z-index': '999999',
             'margin': '0',
-            'max-height': '65vh',
+            'max-height': '70vh',
             'width': '85%',
             'max-width': '480px'
         };
@@ -169,15 +169,15 @@ console.log('🚨 긴급 모달 위치 수정 시스템 활성화');
     console.log('🚨 긴급 모달 위치 수정 시스템 완전 활성화');
 })();
 
-// 전역 긴급 함수 - 적당한 위치 30%
+// 전역 긴급 함수 - 더 아래쪽 위치 45%
 window.emergencyFixModalPosition = function() {
     const modals = document.querySelectorAll('.modal-content, .memo-modal-content');
     modals.forEach(modal => {
         modal.style.setProperty('position', 'fixed', 'important');
-        modal.style.setProperty('top', '30%', 'important');
+        modal.style.setProperty('top', '45%', 'important');
         modal.style.setProperty('left', '50%', 'important');
         modal.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
         modal.style.setProperty('z-index', '999999', 'important');
     });
-    console.log('🚨 긴급 함수로 모달 위치 30% 수정 완료');
+    console.log('🚨 긴급 함수로 모달 위치 45% 수정 완료');
 };
