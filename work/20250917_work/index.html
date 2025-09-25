@@ -1531,11 +1531,27 @@
         .memo-modal-content.dragging {
             transform: translateZ(0);
             user-select: none;
+            z-index: 9999999 !important;
+            position: absolute !important;
         }
-        
+
         .memo-header.dragging {
             cursor: grabbing !important;
             background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* 하이브리드 모달 - 초기 위치 고정 */
+        .memo-modal:not(.has-positioned-content) .memo-modal-content {
+            position: fixed !important;
+            top: 25% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+        }
+
+        /* 드래그된 모달 - absolute 위치 */
+        .memo-modal.has-positioned-content .memo-modal-content {
+            position: absolute !important;
         }
 
         .memo-title {
@@ -9260,8 +9276,8 @@
     <!-- ⚡ 최적화된 닫기 버튼 시스템 (CPU 효율적) -->
     <script src="optimized-close-button.js"></script>
 
-    <!-- 📌 메모창 위치 완전 고정 시스템 - 드래그 허용을 위해 비활성화 -->
-    <!-- <script src="fixed-modal-position.js"></script> -->
+    <!-- 🔄 하이브리드 모달 위치 시스템 (고정 위치 + 드래그 기능) -->
+    <script src="hybrid-modal-position.js"></script>
 
     <!-- 📅 달력 표시 문제 해결 -->
     <script src="calendar-display-fix.js"></script>
