@@ -129,54 +129,11 @@ if (document.readyState === 'loading') {
     centerAllModalContents();
 }
 
-// MutationObserver로 새로 생성되는 모달도 감시
-const modalObserver = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-        mutation.addedNodes.forEach(function(node) {
-            if (node.nodeType === 1) { // Element node
-                // 모달 컨텐츠가 추가되면 중앙 정렬
-                if (node.classList && node.classList.contains('modal-content')) {
-                    setTimeout(() => forceModalCenter(node), 10);
-                }
+// CPU 최적화: MutationObserver 비활성화됨 - 정적 CSS로 위치 처리
+// const modalObserver = new MutationObserver(...); // 비활성화
 
-                // 모달 안의 컨텐츠 체크
-                const modalContents = node.querySelectorAll ? node.querySelectorAll('.modal-content') : [];
-                modalContents.forEach(content => {
-                    setTimeout(() => forceModalCenter(content), 10);
-                });
-            }
-        });
-    });
-});
-
-// body 감시 시작
-if (document.body) {
-    modalObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-} else {
-    document.addEventListener('DOMContentLoaded', function() {
-        modalObserver.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    });
-}
-
-// 윈도우 리사이즈 시에만 중앙 정렬 (드래그 방해 안함)
-window.addEventListener('resize', function() {
-    setTimeout(() => {
-        const modalContents = document.querySelectorAll('.modal-content');
-        modalContents.forEach(content => {
-            // 드래그 중이 아닐 때만 위치 조정
-            if (!content.classList.contains('dragging') &&
-                !content.closest('.memo-modal')?.classList.contains('has-positioned-content')) {
-                forceModalCenter(content);
-            }
-        });
-    }, 100);
-});
+// CPU 최적화: 리사이즈 이벤트도 비활성화됨 - CSS가 반응형으로 처리
+// window.addEventListener('resize', ...); // 비활성화
 
 // 스크롤 이벤트는 드래그에 방해되므로 비활성화
 /*

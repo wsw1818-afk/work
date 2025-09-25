@@ -90,13 +90,13 @@
         }
 
         // 모달 컨테이너 위치 설정
-        const modalContent = modal.querySelector('.modal-content');
+        const modalContent = modal.querySelector('.modal-content, .memo-modal-content');
         if (modalContent) {
             modalContent.style.position = 'absolute';
             modalContent.style.cursor = 'move';
 
             // 드래그 헨들 찾기 (헤더 또는 상단 영역)
-            const dragHandle = modalContent.querySelector('.modal-header, .modal-title, h3, h2') || modalContent;
+            const dragHandle = modalContent.querySelector('.modal-header, .memo-header, .modal-title, .memo-title, h3, h2') || modalContent;
 
             if (dragHandle) {
                 dragHandle.style.cursor = 'move';

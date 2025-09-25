@@ -1545,19 +1545,20 @@
             position: absolute !important;
         }
 
-        /* 모든 메모 모달 기본 위치 강제 고정 - 마우스 위치 무시 */
-        .memo-modal .memo-modal-content {
-            position: fixed !important;
-            top: 25% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            margin: 0 !important;
+        /* 메모 모달 초기 위치 (드래그 가능하도록 !important 제거) */
+        .memo-modal .memo-modal-content:not(.dragging) {
+            position: fixed;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
         }
 
-        /* 드래그 중일 때만 absolute 위치 허용 */
+        /* 드래그 중일 때는 absolute 위치로 전환 */
         .memo-modal-content.dragging {
             position: absolute !important;
             transform: none !important;
+            z-index: 9999999 !important;
         }
 
         .memo-title {
@@ -7633,16 +7634,35 @@
                 saveBtn.onclick = () => saveSimpleMemo();
             }
 
-            // 모달 콘텐츠를 중앙 상단 고정 위치로 설정
+            // 모달 콘텐츠를 중앙 상단 고정 위치로 설정 (드래그 가능하도록)
             const modalContent = modal.querySelector('.memo-modal-content');
             if (modalContent) {
+                // 드래그 상태가 아닐 때만 초기 위치 설정
+                modalContent.classList.remove('dragging');
                 modalContent.style.position = 'fixed';
                 modalContent.style.top = '25%';
                 modalContent.style.left = '50%';
                 modalContent.style.transform = 'translate(-50%, -50%)';
                 modalContent.style.margin = '0';
-                modalContent.classList.remove('dragging');
-                console.log('📍 날짜 메모 모달을 중앙 상단(25%) 위치로 고정');
+
+                // 모달 컨테이너도 드래그 상태 해제
+                const modalContainer = modalContent.closest('.memo-modal');
+                if (modalContainer) {
+                    modalContainer.classList.remove('has-positioned-content');
+                }
+
+                console.log('📍 날짜 메모 모달을 중앙 상단(25%) 위치로 고정 (드래그 가능)');
+
+                // 0.1초 후에 한 번 더 위치 강제 설정 (다른 스크립트 간섭 방지)
+                setTimeout(() => {
+                    if (!modalContent.classList.contains('dragging')) {
+                        modalContent.style.position = 'fixed';
+                        modalContent.style.top = '25%';
+                        modalContent.style.left = '50%';
+                        modalContent.style.transform = 'translate(-50%, -50%)';
+                        modalContent.style.margin = '0';
+                    }
+                }, 100);
             }
 
             // 모달 표시

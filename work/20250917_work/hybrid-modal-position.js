@@ -193,33 +193,8 @@ function initializeHybridSystem() {
     // 드래그 기능 즉시 활성화
     enableDragFunctionality();
 
-    // MutationObserver로 새 모달 감지
-    const hybridObserver = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                const target = mutation.target;
-
-                if ((target.classList.contains('memo-modal') || target.id.includes('modal')) &&
-                    (target.style.display === 'block' || target.style.visibility === 'visible')) {
-
-                    setTimeout(() => {
-                        enforceInitialPosition(target);
-                        enableDragFunctionality();
-                    }, 50);
-                }
-            }
-        });
-    });
-
-    // Observer 시작
-    if (document.body) {
-        hybridObserver.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['style']
-        });
-    }
+    // CPU 최적화: MutationObserver 비활성화됨
+    // const hybridObserver = new MutationObserver(...); // 비활성화
 
     console.log('🔄 하이브리드 모달 시스템 활성화 완료');
 }
@@ -231,7 +206,7 @@ if (document.readyState === 'loading') {
     initializeHybridSystem();
 }
 
-// 보장을 위한 지연 초기화
-setTimeout(initializeHybridSystem, 500);
+// CPU 최적화: 지연 초기화 비활성화됨
+// setTimeout(initializeHybridSystem, 500); // 비활성화
 
 console.log('🔄 하이브리드 모달 위치 시스템 로드 완료');
