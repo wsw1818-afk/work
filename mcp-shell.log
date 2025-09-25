@@ -141,3 +141,10 @@
 {"level":"error","message":"Command execution error: No quote function is defined: https://google.github.io/zx/quotes","timestamp":"2025-09-24T23:24:30.571Z"}
 {"level":"info","message":"Executing command: taskkill /PID 32692 /F","timestamp":"2025-09-25T01:28:50.406Z"}
 {"level":"error","message":"Command execution error: No quote function is defined: https://google.github.io/zx/quotes","timestamp":"2025-09-25T01:28:50.410Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-25T05:26:53.445Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-25T05:26:53.446Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-25T05:26:53.446Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-25T05:26:53.447Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-25T05:26:53.450Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-25T05:26:53.452Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-25T05:26:53.453Z"}

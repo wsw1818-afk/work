@@ -7500,6 +7500,48 @@
         // ========== 새로운 심플한 메모 시스템 ==========
         let currentEditingMemo = null;
 
+        // ========== 표준화된 openDateMemoModal 함수 ==========
+        function openDateMemoModal(...args) {
+            console.log('📅 openDateMemoModal 호출됨:', args);
+
+            let dateString;
+
+            // 다양한 호출 방식 처리
+            if (args.length === 1) {
+                // openDateMemoModal("2025-09-25") 또는 openDateMemoModal("2025-09-25-undefined-undefined")
+                dateString = args[0];
+                // undefined 부분 제거
+                if (dateString && typeof dateString === 'string') {
+                    dateString = dateString.split('-').slice(0, 3).join('-');
+                    // 잘못된 형식 수정 (예: "2025-09-25-undefined-undefined")
+                    dateString = dateString.replace(/-undefined/g, '');
+                }
+            } else if (args.length >= 3) {
+                // openDateMemoModal(2025, 9, 25)
+                const [year, month, day] = args;
+                dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            } else {
+                console.error('❌ openDateMemoModal: 잘못된 매개변수:', args);
+                return;
+            }
+
+            // 날짜 유효성 검사
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateString || !dateRegex.test(dateString)) {
+                console.error('❌ 잘못된 날짜 형식:', dateString);
+                return;
+            }
+
+            console.log('✅ 정규화된 날짜:', dateString);
+
+            // openSimpleMemoModal 호출
+            const [year, month, day] = dateString.split('-').map(Number);
+            openSimpleMemoModal(year, month, day);
+        }
+
+        // 전역으로 노출
+        window.openDateMemoModal = openDateMemoModal;
+
         // 심플한 메모 모달 열기
         function openSimpleMemoModal(year, month, date) {
             const targetDate = `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
@@ -7573,6 +7615,23 @@
                 return;
             }
 
+            // 날짜 정규화 (undefined 부분 제거)
+            let normalizedDate = selectedDate || window.selectedDate;
+            if (normalizedDate && typeof normalizedDate === 'string') {
+                normalizedDate = normalizedDate.split('-').slice(0, 3).join('-');
+                normalizedDate = normalizedDate.replace(/-undefined/g, '');
+            }
+
+            // 날짜 유효성 검사
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!normalizedDate || !dateRegex.test(normalizedDate)) {
+                console.error('❌ 잘못된 날짜 형식, 오늘 날짜 사용:', normalizedDate);
+                const today = new Date();
+                normalizedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            }
+
+            console.log('💾 메모 저장 - 정규화된 날짜:', normalizedDate);
+
             const memos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
 
             if (currentEditingMemo) {
@@ -7586,22 +7645,34 @@
             } else {
                 // 새 메모 추가
                 const newMemo = {
-                    id: Date.now().toString(),
-                    date: selectedDate,
+                    id: Date.now(),
+                    date: normalizedDate,  // 정규화된 날짜 사용
                     title: title || '제목 없음',
                     content: content,
-                    createdAt: new Date().toISOString(),
-                    lastModified: new Date().toISOString()
+                    attachments: [],
+                    timestamp: new Date().toISOString()
                 };
                 memos.push(newMemo);
+                console.log('✅ 새 메모 추가됨:', newMemo);
             }
 
             // 저장
             localStorage.setItem('calendarMemos', JSON.stringify(memos));
 
+            // 선택된 날짜도 정규화해서 업데이트
+            selectedDate = normalizedDate;
+            window.selectedDate = normalizedDate;
+
             // UI 업데이트
-            loadDateMemos(selectedDate);
-            updateCalendarDisplay();
+            loadDateMemos(normalizedDate);
+            if (typeof updateCalendarDisplay === 'function') {
+                updateCalendarDisplay();
+            }
+
+            // 통합 시스템이 있다면 함께 업데이트
+            if (window.displayDateMemos) {
+                window.displayDateMemos();
+            }
 
             // 입력 필드 초기화
             titleInput.value = '';
@@ -7609,7 +7680,11 @@
             currentEditingMemo = null;
 
             // 성공 메시지
-            showNotification('메모가 저장되었습니다.');
+            if (typeof showNotification === 'function') {
+                showNotification('메모가 저장되었습니다.');
+            } else {
+                console.log('✅ 메모가 저장되었습니다.');
+            }
         }
 
         // 메모 편집
@@ -10590,5 +10665,8 @@
         console.log('✅ 자동 달력 생성 스크립트 로드 완료');
     })();
     </script>
+
+    <!-- 최종 메모 저장 문제 해결 스크립트 - 모든 스크립트보다 마지막에 로드 -->
+    <script src="memo-final-fix.js"></script>
 </body>
 </html>
