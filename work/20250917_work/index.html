@@ -2357,12 +2357,16 @@
 
         .modal-content {
             background: var(--surface-color);
-            margin: 6% auto;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
             padding: 20px;
             border-radius: 12px;
             width: 85%;
             max-width: 480px;
-            max-height: 88%;
+            max-height: 88vh;
             overflow-y: auto;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 3px 12px rgba(0, 0, 0, 0.08);
             border: 1px solid var(--primary-medium);
@@ -2370,12 +2374,41 @@
             animation: modalFadeIn 0.3s ease-out;
         }
 
+        /* 반응형 디자인 - 모바일 최적화 */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                max-width: none;
+                max-height: 95vh;
+                padding: 16px;
+                border-radius: 8px;
+            }
+
+            #createModal .modal-content,
+            #excelModal .modal-content {
+                width: 95%;
+                padding: 16px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .modal-content {
+                max-height: 95vh;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+        }
+
         /* 일정 추가 모달 (createModal) 전용 스타일 - 더 컴팩트하게 */
         #createModal .modal-content {
             max-width: 420px;
             width: 75%;
             padding: 18px;
-            margin: 8% auto;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
         }
 
         #createModal .modal-header {
@@ -2392,7 +2425,11 @@
             max-width: 500px;
             width: 80%;
             padding: 18px;
-            margin: 6% auto;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
         }
 
         #excelModal .modal-header {

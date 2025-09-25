@@ -65,7 +65,8 @@
       "Bash(git push:*)",
       "Bash(claude mcp:*)",
       "mcp__playwright__browser_file_upload",
-      "mcp__filesystem__search_files"
+      "mcp__filesystem__search_files",
+      "Read(//tmp/claude-code-extension/1758781127934/**)"
     ],
     "deny": [],
     "ask": [],
