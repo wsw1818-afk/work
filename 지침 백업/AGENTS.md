@@ -29,10 +29,6 @@
 1. **계획**: 변경 파일, 영향, 테스트 항목을 PLAN에 체크리스트로  
 2. **패치**: 전체 재작성 금지. PATCH는 최소 diff  
 3. **검증 실행**: *명령어 매핑*에 따라 실행하고 RESULTS에 로그 기록  
-   - **테스트 루프**: `테스트 실행 → 실패 로그 인용 → 최소 수정(PATCH) → 재실행`을 **최대 3회** 반복  
-   - **종료 조건**: 테스트/린트/타입체크 **모두 통과**해야 완료로 간주  
-   - **flaky 완화**: 시드 고정, 타임아웃 상향, 단일 테스트 격리 후 재시도(1회)  
-   - **시간 보고**: 총 테스트 실행 시간을 **RESULTS**에 초 단위로 기입  
 4. **자체 점검**: CHECKS에 품질/보안/성능/접근성 결과 기입  
 5. **안내**: NEXT_STEPS에 초보자도 따라 할 수 있는 3단계 안내
 
@@ -44,14 +40,12 @@
 - 개발: `pnpm dev` | `yarn dev` | `npm run dev`  
 - 빌드: `pnpm build` | `yarn build` | `npm run build`  
 - 테스트: `pnpm test` | `yarn test` | `npm test`  
-  - Vitest: `pnpm vitest run` / Jest: `pnpm jest --runInBand`  
-  - 단일 케이스: `pnpm vitest run -t "<name>"` / `pnpm jest -t "<name>"`  
 - 타입체크: `pnpm typecheck` 또는 `tsc -p .`  
 - 린트: `pnpm lint` 또는 `eslint .`
 
 ### Python
 - 설치: `pip install -r requirements.txt`  
-- 테스트: `pytest -q`  (단일: `pytest -q -k "<expr>"`)  
+- 테스트: `pytest -q`  
 - 린트/포맷: `ruff check .` / `ruff format .`  
 - 타입체크: `pyright` 또는 `mypy`
 
@@ -80,13 +74,6 @@
 - 단위 + 통합 테스트 최소 1개  
 - 테스트가 없으면 샘플 테스트 추가 제안  
 - 예: "검색어 book 입력 → 3건 200ms 내 표시"
-
-### 6.1 자동 테스트/수정 루프(에이전트 규칙)
-- 모든 작업은 완료 전에 **전체 테스트**를 실행한다.  
-- 실패 시 **최소 수정**으로 원인 구간만 고치고 **재실행**한다(최대 3회).  
-- 실패 로그는 **원문 일부를 인용**하고, **환경 변수/시간·랜덤/네트워크 의존** 여부를 점검한다.  
-- **Flaky**로 판단되면: 시드 고정(`--seed`), 타임아웃 상향, 테스트 격리/리트라이를 제안하고 근본 원인을 기록.  
-- 성능 기준(§20) 내에서 **테스트 총 소요 시간**을 RESULTS에 수치로 보고한다.
 
 ---
 
@@ -161,6 +148,8 @@
 
 ---
 
+---
+
 ## 16) AI 도구 활용 정책
 - GitHub Copilot / Claude / ChatGPT 등 **AI 제안 코드는 반드시 리뷰 후 채택**합니다.
 - 생성된 코드는 **테스트·린트·타입체크 통과** 여부를 RESULTS에 로그로 증명합니다.
@@ -216,30 +205,20 @@
 - **번들 크기**: baseline 대비 `+10%` 초과 시 리뷰( `+25%` 강경 경고 )
 - **테스트 전체 실행 시간**: `< 5초` 권고 / `5~15초` 경고 / `> 15초` 리뷰
 - 운영 팁:
-  - 최초 기준을 `docs/perf-baseline.md`(또는 JSON)로 저장: `{{ buildTime, bundleKB, testTime }}`
+  - 최초 기준을 `docs/perf-baseline.md`(또는 JSON)로 저장: `{ buildTime, bundleKB, testTime }`
   - PR에서는 **RESULTS에 전/후 수치 표**로 보고
   - 필요 시 `size-limit`/번들 분석기 등 **devDependency** 도입 제안(설치 전 승인)
 
----
 
-## 21) Codex 전용 — 자동 테스트 실행 & 수정 루프
-> Codex가 이 문서의 지침을 따를 때 적용되는 “마무리 체크 규칙”입니다.
-
-### 21.1 실행 원칙
-- Codex는 이 문서의 **테스트/타입/린트 명령**을 근거로 작업 종료 전 **프로그램적 체크를 실행**하고, 실패 시 **수정 후 재실행**을 시도한다.  
-- **Auto 승인 모드**에서는 워킹 디렉터리 내부의 **파일 읽기/수정/명령 실행**이 자동이며, **네트워크/외부 경로 접근은 승인**이 필요하다.  
-- 결과는 답변의 **RESULTS**와 **CHECKS** 섹션에 요약한다.
-
-### 21.2 비대화형(스크립팅) 실행 예시
-```bash
-# 프로젝트 테스트를 돌리고, 실패 시 수정 후 재실행하여 모두 통과할 때까지 시도
-codex exec "Run the project's test suite as defined in AGENTS.md. If any tests fail, diagnose and fix them with minimal changes, then re-run until all tests pass. Summarize changes."
+### Diff 예시
+```diff
+diff --git a/app/todos/page.tsx b/app/todos/page.tsx
+--- a/app/todos/page.tsx
++++ b/app/todos/page.tsx
+@@ -12,6 +12,12 @@
+   const [q, setQ] = useState('');
++  // 검색어 변경 시 서버 필터링 호출(200ms 목표)
++  useEffect(() => {
++    // debounce 등은 성능 요구에 맞춰 후속 PR에서 추가
++  }, [q]);
 ```
-
-### 21.3 실패 대응 빠른 체크
-- 환경변수/시계·랜덤/외부 API 의존 여부를 먼저 점검  
-- 타임아웃·리트라이·격리로 flaky 완화 후 **근본 원인 수정** 우선
-
----
-
-> 문서 버전: v1.3 — 마지막 업데이트: 2025-09-25
