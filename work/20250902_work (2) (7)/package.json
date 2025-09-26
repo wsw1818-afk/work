@@ -1,0 +1,22 @@
+{
+  "name": "calendar-app",
+  "version": "1.0.0",
+  "description": "Korean Calendar App with Google Drive Integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "playwright test",
+    "mcp:check": "node scripts/mcp-check.mjs",
+    "test:pw": "playwright test --reporter=line --trace=off --workers=1",
+    "test:affected": "node scripts/pw-affected.mjs",
+    "check": "npm run lint --if-present && npm run typecheck --if-present && npm run test:pw"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/server-filesystem": "^2025.8.21",
+    "@playwright/test": "^1.55.1"
+  }
+}

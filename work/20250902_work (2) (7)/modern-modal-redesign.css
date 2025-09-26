@@ -1,0 +1,674 @@
+/* 현대적 모달 완전 재디자인 - Modern Modal Complete Redesign */
+
+/* 전역 모달 컨테이너 - 기본적으로 숨김 */
+.modal,
+.unified-modal,
+.backup-modal,
+.sync-modal,
+.drive-modal,
+.storage-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    animation: modalBackdropFade 0.3s ease-out !important;
+}
+
+/* 모달이 보여질 때만 활성화 */
+.modal.show,
+.modal:target,
+.unified-modal.show,
+.backup-modal.show,
+.sync-modal.show,
+.drive-modal.show,
+.storage-modal.show {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+@keyframes modalBackdropFade {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(12px);
+    }
+}
+
+/* 모달 다이얼로그 */
+.modal-dialog,
+.modal .modal-dialog,
+.unified-modal .modal-dialog {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 600px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(32px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 모달 컨텐츠 */
+.modal-content,
+.modal .modal-content,
+.unified-modal .modal-content,
+.drive-modal .modal-content,
+.sync-modal .modal-content {
+    position: relative !important;
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 24px !important;
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 85vh !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+/* 모달 헤더 완전 재디자인 */
+.modal-header,
+.modal .modal-header,
+.unified-modal .modal-header,
+.drive-modal .modal-header,
+.sync-modal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 28px 32px !important;
+    border: none !important;
+    border-radius: 24px 24px 0 0 !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 80px !important;
+    overflow: hidden !important;
+}
+
+/* 헤더 배경 패턴 */
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* 모달 제목 */
+.modal-title,
+.modal .modal-title,
+.modal-header .modal-title {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    z-index: 2 !important;
+    position: relative !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    letter-spacing: -0.025em !important;
+    flex: 1 !important;
+    max-width: calc(100% - 80px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 제목 아이콘 */
+.modal-title::before {
+    content: attr(data-icon) !important;
+    font-size: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    flex-shrink: 0 !important;
+}
+
+/* X 닫기 버튼 완전 재디자인 */
+.modal-close,
+.modal .modal-close,
+.modal-header .modal-close,
+.modal-header .close,
+.modal-header button.close,
+.modal-header button[aria-label="Close"],
+.btn-close {
+    position: absolute !important;
+    top: 24px !important;
+    right: 24px !important;
+    width: 48px !important;
+    height: 48px !important;
+    border: none !important;
+    border-radius: 16px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(10px) !important;
+    color: white !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 999 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    transform: scale(1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* X 버튼 내용 */
+.modal-close::before,
+.modal .modal-close::before,
+.modal-header .close::before,
+.modal-header button.close::before {
+    content: '✕' !important;
+    font-size: 18px !important;
+    font-weight: 300 !important;
+    display: block !important;
+    line-height: 1 !important;
+}
+
+/* 기존 스팬 숨김 */
+.modal-close span,
+.modal .modal-close span,
+.modal-header .close span,
+.modal-header button.close span {
+    display: none !important;
+}
+
+/* X 버튼 호버 효과 */
+.modal-close:hover,
+.modal .modal-close:hover,
+.modal-header .close:hover,
+.modal-header button.close:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: scale(1.05) rotate(90deg) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* X 버튼 액티브 효과 */
+.modal-close:active,
+.modal .modal-close:active {
+    transform: scale(0.95) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 모달 바디 */
+.modal-body,
+.modal .modal-body {
+    padding: 32px !important;
+    background: #ffffff !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: calc(85vh - 160px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+}
+
+/* 모달 바디 스크롤바 */
+.modal-body::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+    border-radius: 4px !important;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+    border: 2px solid #f1f5f9 !important;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
+
+/* 섹션 스타일 */
+.backup-section,
+.export-section,
+.storage-section,
+.sync-section,
+.cloud-section,
+.modal-section {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+}
+
+.backup-section:hover,
+.export-section:hover,
+.storage-section:hover,
+.sync-section:hover,
+.cloud-section:hover,
+.modal-section:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 섹션 제목 */
+.backup-section h3,
+.export-section h3,
+.storage-section h3,
+.sync-section h3,
+.cloud-section h3,
+.modal-section h3,
+.section-title {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    margin: 0 0 12px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* 섹션 제목 아이콘 */
+.backup-section h3::before,
+.export-section h3::before,
+.storage-section h3::before,
+.sync-section h3::before,
+.cloud-section h3::before,
+.section-title::before {
+    font-size: 20px !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 버튼 스타일 */
+.backup-btn,
+.export-btn,
+.storage-btn,
+.cloud-btn,
+.sync-btn,
+.modal-btn,
+.btn-primary,
+.btn-secondary {
+    width: 100% !important;
+    padding: 16px 24px !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+    text-decoration: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* 기본 버튼 */
+.btn-primary,
+.backup-btn,
+.export-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* 보조 버튼 */
+.btn-secondary,
+.storage-btn {
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 2px solid #e2e8f0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 버튼 호버 효과 */
+.backup-btn:hover,
+.export-btn:hover,
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a67d8, #553c9a) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4) !important;
+}
+
+.btn-secondary:hover,
+.storage-btn:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 버튼 액티브 효과 */
+.backup-btn:active,
+.export-btn:active,
+.storage-btn:active,
+.btn:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 모달 푸터 */
+.modal-footer,
+.modal .modal-footer {
+    padding: 24px 32px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-radius: 0 0 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: flex-end !important;
+}
+
+/* 특정 모달 색상 테마 */
+#excelModal .modal-header { background: linear-gradient(135deg, #10b981, #059669) !important; }
+#settingsModal .modal-header { background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important; }
+#storageModal .modal-header { background: linear-gradient(135deg, #f59e0b, #d97706) !important; }
+#backupModal .modal-header { background: linear-gradient(135deg, #ef4444, #dc2626) !important; }
+#unifiedCloudModal .modal-header,
+#cloudModal .modal-header { background: linear-gradient(135deg, #06b6d4, #0891b2) !important; }
+#memoModal .modal-header,
+#dateMemoModal .modal-header { background: linear-gradient(135deg, #ec4899, #db2777) !important; }
+#createModal .modal-header { background: linear-gradient(135deg, #06b6d4, #0891b2) !important; }
+
+/* 아이콘 설정 */
+#excelModal .modal-title::before { content: '📊'; }
+#settingsModal .modal-title::before { content: '⚙️'; }
+#storageModal .modal-title::before { content: '🗄️'; }
+#backupModal .modal-title::before { content: '📦'; }
+#unifiedCloudModal .modal-title::before,
+#cloudModal .modal-title::before { content: '☁️'; }
+#memoModal .modal-title::before,
+#dateMemoModal .modal-title::before { content: '📝'; }
+#createModal .modal-title::before { content: '➕'; }
+
+/* 반응형 디자인 - 태블릿 */
+@media (max-width: 768px) {
+    .modal-dialog,
+    .modal .modal-dialog {
+        max-width: 90vw !important;
+        margin: 20px !important;
+    }
+    
+    .modal-header,
+    .modal .modal-header {
+        padding: 24px 24px !important;
+        min-height: 72px !important;
+    }
+    
+    .modal-title,
+    .modal .modal-title {
+        font-size: 20px !important;
+        max-width: calc(100% - 70px) !important;
+    }
+    
+    .modal-close,
+    .modal .modal-close {
+        width: 44px !important;
+        height: 44px !important;
+        top: 20px !important;
+        right: 20px !important;
+    }
+    
+    .modal-body,
+    .modal .modal-body {
+        padding: 24px !important;
+        gap: 20px !important;
+    }
+    
+    .modal-footer,
+    .modal .modal-footer {
+        padding: 20px 24px !important;
+    }
+}
+
+/* 반응형 디자인 - 모바일 */
+@media (max-width: 576px) {
+    .modal-dialog,
+    .modal .modal-dialog {
+        max-width: 95vw !important;
+        margin: 10px !important;
+    }
+    
+    .modal-content,
+    .modal .modal-content {
+        border-radius: 20px !important;
+        max-height: 90vh !important;
+    }
+    
+    .modal-header,
+    .modal .modal-header {
+        padding: 20px 20px !important;
+        min-height: 64px !important;
+        border-radius: 20px 20px 0 0 !important;
+    }
+    
+    .modal-title,
+    .modal .modal-title {
+        font-size: 18px !important;
+        gap: 12px !important;
+        max-width: calc(100% - 65px) !important;
+    }
+    
+    .modal-title::before {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 24px !important;
+        border-radius: 12px !important;
+    }
+    
+    .modal-close,
+    .modal .modal-close {
+        width: 40px !important;
+        height: 40px !important;
+        top: 18px !important;
+        right: 18px !important;
+        border-radius: 12px !important;
+    }
+    
+    .modal-body,
+    .modal .modal-body {
+        padding: 20px !important;
+        gap: 16px !important;
+        max-height: calc(90vh - 140px) !important;
+    }
+    
+    .backup-section,
+    .export-section,
+    .storage-section {
+        padding: 20px !important;
+        border-radius: 12px !important;
+    }
+    
+    .backup-btn,
+    .export-btn,
+    .storage-btn,
+    .modal-btn {
+        padding: 14px 20px !important;
+        font-size: 14px !important;
+    }
+    
+    .modal-footer,
+    .modal .modal-footer {
+        padding: 16px 20px !important;
+        border-radius: 0 0 20px 20px !important;
+    }
+}
+
+/* 다크 모드 지원 */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal .modal-content {
+    background: #1e293b !important;
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal .modal-body {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .backup-section,
+[data-theme="dark"] .export-section,
+[data-theme="dark"] .storage-section {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .modal-footer,
+[data-theme="dark"] .modal .modal-footer {
+    background: #334155 !important;
+    border-color: #475569 !important;
+}
+
+/* 접근성 개선 */
+.modal-close:focus,
+.modal .modal-close:focus {
+    outline: 2px solid #ffffff !important;
+    outline-offset: 2px !important;
+}
+
+/* 모든 모달 기본 숨김 (show 클래스가 없을 때만) */
+.modal:not(.show):not(:target),
+.modal-dialog:not(.show),
+#excelModal:not(.show),
+#settingsModal:not(.show),
+#storageModal:not(.show),
+#backupModal:not(.show),
+#unifiedCloudModal:not(.show),
+#cloudModal:not(.show),
+#memoModal:not(.show),
+#dateMemoModal:not(.show),
+#memoDetailModal:not(.show),
+#createModal:not(.show) {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 9999;
+}
+
+/* Bootstrap 모달 백드롭 숨김 */
+.modal-backdrop:not(.show),
+.modal-overlay:not(.show) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* body 스크롤 잠금 해제 */
+body:not(.modal-open) {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+/* 모든 액션 버튼 클릭 가능하도록 강화 */
+.action-btn,
+button.action-btn,
+#createBtn,
+#memoBtn,
+#excelBtn,
+#unifiedCloudBtn,
+#syncStatusBtn,
+#settingsBtn,
+#storageBtn,
+#themeToggle {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 100 !important;
+    position: relative !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.action-btn:hover,
+button.action-btn:hover {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 액션 바 영역도 클릭 가능하게 */
+.action-bar {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+.action-row {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 60 !important;
+}
+
+/* 애니메이션 비활성화 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+    .modal,
+    .modal-dialog,
+    .modal-content,
+    .modal-close,
+    .backup-btn,
+    .export-btn,
+    .storage-btn {
+        animation: none !important;
+        transition: none !important;
+    }
+}

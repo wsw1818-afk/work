@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "--root",
+        "${workspaceFolder}"
+      ],
+      "transport": "stdio"
+    },
+    "process": {
+      "command": "node",
+      "args": [
+        "D:/claude_CLI/mcp-servers/packages/process-server/dist/index.js"
+      ],
+      "transport": "stdio"
+    },
+    "git": {
+      "command": "node",
+      "args": [
+        "D:/claude_CLI/mcp-servers/packages/git-server/dist/index.js"
+      ],
+      "transport": "stdio"
+    }
+  }
+}
