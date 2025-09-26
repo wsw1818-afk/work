@@ -24,8 +24,37 @@
         try {
             const stored = localStorage.getItem('calendarMemos');
             if (stored) {
-                MemoSystem.data = JSON.parse(stored);
-                console.log(`✅ 메모 로드 완료: ${MemoSystem.data.length}개`);
+                const parsedData = JSON.parse(stored);
+
+                // Check if data is in object format (date-keyed) or array format
+                if (Array.isArray(parsedData)) {
+                    MemoSystem.data = parsedData;
+                } else if (typeof parsedData === 'object' && parsedData !== null) {
+                    // Convert object format to array format
+                    MemoSystem.data = [];
+                    for (const date in parsedData) {
+                        if (Array.isArray(parsedData[date])) {
+                            // Each memo already has a date property, just collect them
+                            MemoSystem.data.push(...parsedData[date]);
+                        }
+                    }
+                    console.log('📋 메모 데이터 형식 변환: Object → Array');
+                    console.log(`   변환된 메모 개수: ${MemoSystem.data.length}개`);
+
+                    // Verify all memos have required properties
+                    MemoSystem.data = MemoSystem.data.filter(memo => {
+                        if (!memo || typeof memo !== 'object') return false;
+                        if (!memo.id || !memo.date) {
+                            console.warn('⚠️ 잘못된 메모 구조 발견:', memo);
+                            return false;
+                        }
+                        return true;
+                    });
+                } else {
+                    MemoSystem.data = [];
+                }
+
+                console.log(`✅ 메모 로드 완료: ${MemoSystem.data ? MemoSystem.data.length : 0}개`);
             } else {
                 MemoSystem.data = [];
                 console.log('📭 저장된 메모가 없습니다');
@@ -34,21 +63,40 @@
             console.error('❌ 메모 로드 실패:', error);
             MemoSystem.data = [];
         }
-        
+
+        // Ensure MemoSystem.data is always an array
+        if (!Array.isArray(MemoSystem.data)) {
+            console.error('⚠️ MemoSystem.data가 배열이 아닙니다. 빈 배열로 초기화합니다.');
+            MemoSystem.data = [];
+        }
+
         // 전역 변수 동기화
         window.memos = MemoSystem.data;
         window.allMemos = MemoSystem.data;
         window.stickyMemos = MemoSystem.data;
-        
+
         return MemoSystem.data;
     }
 
     // localStorage에 메모 저장
     function saveMemosToStorage() {
         try {
+            // Convert array format back to date-keyed object format for compatibility
+            const dateKeyedData = {};
+            if (Array.isArray(MemoSystem.data)) {
+                MemoSystem.data.forEach(memo => {
+                    if (memo && memo.date) {
+                        if (!dateKeyedData[memo.date]) {
+                            dateKeyedData[memo.date] = [];
+                        }
+                        dateKeyedData[memo.date].push(memo);
+                    }
+                });
+            }
+
             // HTML에서 정의된 safelyStoreData 함수 사용
             if (typeof window.safelyStoreData === 'function') {
-                const saveResult = window.safelyStoreData('calendarMemos', MemoSystem.data);
+                const saveResult = window.safelyStoreData('calendarMemos', dateKeyedData);
                 if (!saveResult.success) {
                     console.error('❌ 메모 저장 실패:', saveResult.message);
                     alert('메모 저장 실패: ' + saveResult.message);
@@ -56,14 +104,14 @@
                 }
             } else {
                 // 폴백: 기본 localStorage 사용
-                localStorage.setItem('calendarMemos', JSON.stringify(MemoSystem.data));
+                localStorage.setItem('calendarMemos', JSON.stringify(dateKeyedData));
             }
-            
+
             // 전역 변수 동기화
             window.memos = MemoSystem.data;
             window.allMemos = MemoSystem.data;
             window.stickyMemos = MemoSystem.data;
-            
+
             console.log(`✅ 메모 저장 완료: ${MemoSystem.data.length}개`);
             return true;
         } catch (error) {

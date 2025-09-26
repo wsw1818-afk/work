@@ -74,11 +74,18 @@
                         overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
                         overlay.style.zIndex = '999998';
                         overlay.style.display = 'block';
+                        overlay.style.pointerEvents = 'auto';
 
                         // 오버레이 클릭 시 모달 닫기
                         overlay.onclick = function() {
-                            dateMemoModal.style.display = 'none';
+                            if (typeof window.closeDateMemoModal === 'function') {
+                                window.closeDateMemoModal();
+                            } else {
+                                dateMemoModal.style.display = 'none';
+                            }
                             overlay.style.display = 'none';
+                            overlay.style.pointerEvents = 'none';
+                            overlay.style.opacity = '0';
                         };
 
                         console.log('✅ dateMemoModal 강제 표시 완료!');
@@ -140,6 +147,35 @@
         console.log('✅ closeModal 함수 개선 완료');
     }
 
+    // ===== closeDateMemoModal 패치 =====
+    function patchCloseDateMemoModal() {
+        const applyPatch = () => {
+            const original = window.closeDateMemoModal;
+            if (typeof original !== 'function' || original._overlayPatched) {
+                return;
+            }
+
+            window.closeDateMemoModal = function(...args) {
+                try {
+                    return original.apply(this, args);
+                } finally {
+                    const overlay = document.querySelector('.modal-overlay');
+                    if (overlay) {
+                        overlay.style.display = 'none';
+                        overlay.style.pointerEvents = 'none';
+                        overlay.style.opacity = '0';
+                    }
+                }
+            };
+
+            window.closeDateMemoModal._overlayPatched = true;
+            console.log('✅ closeDateMemoModal 오버레이 정리 패치 적용');
+        };
+
+        applyPatch();
+        document.addEventListener('DOMContentLoaded', applyPatch, { once: true });
+    }
+
     // ===== ESC 키로 모달 닫기 =====
     function setupKeyboardClose() {
         document.addEventListener('keydown', function(e) {
@@ -193,6 +229,7 @@
 
         enhanceOpenDateMemoModal();
         enhanceCloseModal();
+        patchCloseDateMemoModal();
         setupKeyboardClose();
         addDirectModalShow();
 

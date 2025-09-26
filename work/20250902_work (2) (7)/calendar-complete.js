@@ -886,9 +886,26 @@
         content.style.borderRadius = '8px';
         content.style.padding = '20px';
         
-        // calendarMemos에서 해당 날짜의 메모 가져오기
-        const allMemos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
-        const memos = allMemos[date] || [];
+        // calendarMemos에서 해당 날짜의 메모 가져오기 (배열/객체 호환)
+        let memos = [];
+        try {
+            if (typeof window.loadCalendarMemosArray === 'function') {
+                memos = window.loadCalendarMemosArray().filter((memo) => memo.date === date);
+            } else {
+                const rawData = localStorage.getItem('calendarMemos');
+                if (rawData) {
+                    const parsed = JSON.parse(rawData);
+                    if (Array.isArray(parsed)) {
+                        memos = parsed.filter((memo) => memo.date === date);
+                    } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed[date])) {
+                        memos = parsed[date];
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('calendarMemos 파싱 실패:', error);
+            memos = [];
+        }
         
         content.innerHTML = `
             <h3 style="color: #667eea; margin-bottom: 20px;">📅 ${date} 일정 메모</h3>
@@ -1141,11 +1158,10 @@
         const selectedDate = dateInput.value;
         
         // 달력 메모로 저장 (calendarMemos 형식으로)
-        const memos = JSON.parse(localStorage.getItem('calendarMemos') || '{}');
-        if (!memos[selectedDate]) {
-            memos[selectedDate] = [];
-        }
-        
+        const memos = (typeof window.loadCalendarMemosArray === 'function')
+            ? window.loadCalendarMemosArray()
+            : JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+
         const memo = {
             id: Date.now(),
             title: title,
@@ -1153,9 +1169,14 @@
             date: selectedDate,
             timestamp: new Date().toISOString()
         };
-        
-        memos[selectedDate].push(memo);
-        localStorage.setItem('calendarMemos', JSON.stringify(memos));
+
+        memos.unshift(memo);
+
+        if (typeof window.saveCalendarMemosArray === 'function') {
+            saveCalendarMemosArray(memos);
+        } else {
+            localStorage.setItem('calendarMemos', JSON.stringify(memos));
+        }
         
         // 입력 필드 초기화
         input.value = '';

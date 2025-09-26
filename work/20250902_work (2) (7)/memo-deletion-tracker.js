@@ -187,14 +187,36 @@
         // 현재 상태 테스트
         testRestorationPrevention: function() {
             console.log('🧪 [복원 방지 테스트] 시작...');
-            
-            // 현재 메모 상태
-            const currentMemos = JSON.parse(localStorage.getItem('calendarMemos') || '[]');
+
+            // 현재 메모 상태 (object format과 array format 둘 다 처리)
+            let currentMemos = [];
+            try {
+                const stored = localStorage.getItem('calendarMemos');
+                if (stored) {
+                    const parsedData = JSON.parse(stored);
+
+                    // Handle both object format (date-keyed) and array format
+                    if (Array.isArray(parsedData)) {
+                        currentMemos = parsedData;
+                    } else if (typeof parsedData === 'object' && parsedData !== null) {
+                        // Convert object format to array
+                        for (const date in parsedData) {
+                            if (Array.isArray(parsedData[date])) {
+                                currentMemos.push(...parsedData[date]);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('❌ localStorage 파싱 실패:', error);
+                currentMemos = [];
+            }
+
             const deletedIds = [...this.deletedMemoIds];
-            
+
             console.log('📋 현재 메모:', currentMemos.length + '개');
             console.log('🗑️ 삭제된 ID:', deletedIds.length + '개', deletedIds);
-            
+
             // 복원된 메모 찾기
             const restoredMemos = currentMemos.filter(memo => this.isDeleted(memo.id));
             
@@ -204,9 +226,20 @@
                     console.error(`   ${i+1}. "${memo.title}" (ID: ${memo.id})`);
                 });
                 
-                // 즉시 정리
+                // 즉시 정리 (원본 형식 유지)
                 const cleanedMemos = currentMemos.filter(memo => !this.isDeleted(memo.id));
-                localStorage.setItem('calendarMemos', JSON.stringify(cleanedMemos));
+
+                // 다시 object format으로 변환하여 저장
+                const memosByDate = {};
+                cleanedMemos.forEach(memo => {
+                    const date = memo.date;
+                    if (!memosByDate[date]) {
+                        memosByDate[date] = [];
+                    }
+                    memosByDate[date].push(memo);
+                });
+
+                localStorage.setItem('calendarMemos', JSON.stringify(memosByDate));
                 console.log('🧹 복원된 메모 즉시 정리 완료:', currentMemos.length + '개 → ' + cleanedMemos.length + '개');
                 
                 return {

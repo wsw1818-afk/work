@@ -70,7 +70,8 @@
       "Bash(rg:*)",
       "Bash(\"D:\\claude_CLI\\work\\20250902_work (2) (7)\\조용한실행.bat\")",
       "Bash(wc:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "SlashCommand(/git-log)"
     ],
     "deny": [],
     "ask": []

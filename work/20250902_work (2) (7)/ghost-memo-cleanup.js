@@ -7,17 +7,35 @@
     // 유령 메모 감지 및 정리
     function cleanupGhostMemos() {
         console.log('🧹 유령 메모 정리 시작');
-        
+
         // 현재 localStorage에서 실제 메모 데이터 가져오기
         let actualMemos = [];
         try {
             const stored = localStorage.getItem('calendarMemos');
             if (stored) {
-                actualMemos = JSON.parse(stored);
+                const parsedData = JSON.parse(stored);
+
+                // Handle both object format (date-keyed) and array format
+                if (Array.isArray(parsedData)) {
+                    actualMemos = parsedData;
+                } else if (typeof parsedData === 'object' && parsedData !== null) {
+                    // Convert object format to array
+                    for (const date in parsedData) {
+                        if (Array.isArray(parsedData[date])) {
+                            actualMemos.push(...parsedData[date]);
+                        }
+                    }
+                }
             }
         } catch (error) {
             console.error('❌ localStorage 읽기 실패:', error);
             return;
+        }
+
+        // Ensure actualMemos is always an array
+        if (!Array.isArray(actualMemos)) {
+            console.warn('⚠️ actualMemos가 배열이 아닙니다. 빈 배열로 처리합니다.');
+            actualMemos = [];
         }
 
         const actualMemoIds = new Set(actualMemos.map(m => String(m.id)));
