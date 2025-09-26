@@ -1,0 +1,9 @@
+﻿* text eol=lf
+*.html text working-tree-encoding=UTF-8
+*.css text working-tree-encoding=UTF-8
+*.js text working-tree-encoding=UTF-8
+*.ts text working-tree-encoding=UTF-8
+
+*.png binary
+*.ttf binary
+
