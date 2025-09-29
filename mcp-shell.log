@@ -162,3 +162,10 @@
 {"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-29T00:51:59.628Z"}
 {"level":"info","message":"Username: SKNS","timestamp":"2025-09-29T00:51:59.630Z"}
 {"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-29T00:51:59.631Z"}
+{"level":"info","message":"MCP Shell Server started","timestamp":"2025-09-29T04:36:44.471Z"}
+{"level":"info","message":"Shell: C:\\Program Files\\Git\\bin\\bash.exe","timestamp":"2025-09-29T04:36:44.474Z"}
+{"level":"info","message":"Working Directory: C:\\Users\\SKNS","timestamp":"2025-09-29T04:36:44.475Z"}
+{"level":"info","message":"Platform: win32","timestamp":"2025-09-29T04:36:44.475Z"}
+{"level":"info","message":"Hostname: DESKTOP-330NP95","timestamp":"2025-09-29T04:36:44.486Z"}
+{"level":"info","message":"Username: SKNS","timestamp":"2025-09-29T04:36:44.490Z"}
+{"level":"info","message":"MCP Shell Server ready","timestamp":"2025-09-29T04:36:44.495Z"}
