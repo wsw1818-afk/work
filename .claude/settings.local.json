@@ -67,7 +67,8 @@
       "mcp__playwright__browser_file_upload",
       "mcp__filesystem__search_files",
       "Read(//tmp/claude-code-extension/1758781127934/**)",
-      "Read(//c/Users/SKNS/Downloads/**)"
+      "Read(//c/Users/SKNS/Downloads/**)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": [],
