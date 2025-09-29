@@ -68,7 +68,9 @@
       "mcp__filesystem__search_files",
       "Read(//tmp/claude-code-extension/1758781127934/**)",
       "Read(//c/Users/SKNS/Downloads/**)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(tasklist:*)",
+      "Bash(wmic process:*)"
     ],
     "deny": [],
     "ask": [],
