@@ -73,7 +73,8 @@
       "Bash(wmic process:*)",
       "Bash(powershell:*)",
       "Read(//d/**)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": [],
