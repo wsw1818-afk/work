@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "testops": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-u", "mcp_servers/testops_server.py"],
+      "env": { "PYTHONUNBUFFERED": "1" }
+    }
+  }
+}

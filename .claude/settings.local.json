@@ -70,7 +70,10 @@
       "Read(//c/Users/SKNS/Downloads/**)",
       "Bash(grep:*)",
       "Bash(tasklist:*)",
-      "Bash(wmic process:*)"
+      "Bash(wmic process:*)",
+      "Bash(powershell:*)",
+      "Read(//d/**)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": [],
