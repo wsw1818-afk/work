@@ -13,6 +13,7 @@ import {
 import { prisma } from "@/lib/prisma"
 import { Filter } from "lucide-react"
 import { ExportButton } from "@/components/export-button"
+import { AddTransactionDialog } from "@/components/add-transaction-dialog"
 
 export const dynamic = "force-dynamic"
 
@@ -92,7 +93,11 @@ export default async function TransactionsPage({
 }: {
   searchParams: SearchParams
 }) {
-  const data = await getTransactions(searchParams)
+  const [data, categories, accounts] = await Promise.all([
+    getTransactions(searchParams),
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.account.findMany({ orderBy: { name: "asc" } }),
+  ])
 
   return (
     <div className="space-y-6">
@@ -109,6 +114,7 @@ export default async function TransactionsPage({
             필터
           </Button>
           <ExportButton />
+          <AddTransactionDialog categories={categories} accounts={accounts} />
         </div>
       </div>
 
