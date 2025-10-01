@@ -2,6 +2,7 @@
   "name": "finance-tracker",
   "version": "1.0.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -13,7 +14,62 @@
     "test:e2e": "playwright test",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "electron:dev": "electron .",
+    "electron:build": "next build && electron-builder",
+    "electron:build:win": "next build && electron-builder --win",
+    "electron:build:mac": "next build && electron-builder --mac",
+    "electron:build:linux": "next build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.financetracker.app",
+    "productName": "가계부",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "!**/*",
+      ".next/**/*",
+      "electron/**/*",
+      "public/**/*",
+      "app/**/*",
+      "components/**/*",
+      "lib/**/*",
+      "prisma/**/*",
+      "package.json",
+      "next.config.mjs",
+      "postcss.config.mjs",
+      "tailwind.config.ts",
+      "tsconfig.json"
+    ],
+    "asarUnpack": [
+      "node_modules/@prisma/**/*",
+      "node_modules/.prisma/**/*",
+      "prisma/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icon.png",
+      "verifyUpdateCodeSignature": false,
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "public/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "public/icon.png"
+    }
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
@@ -28,6 +84,7 @@
     "lucide-react": "^0.378.0",
     "next": "^14.2.0",
     "next-auth": "^4.24.0",
+    "next-electron-server": "^1.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "recharts": "^2.12.0",
@@ -43,6 +100,8 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.0",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
     "postcss": "^8.4.0",
