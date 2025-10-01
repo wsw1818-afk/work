@@ -23,7 +23,12 @@
       "Bash(pnpm prisma:seed:*)",
       "Bash(tsx scripts/generate-sample-excel.ts:*)",
       "Bash(pnpm tsx:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n🎉 가계부 웹앱 완성: Next.js 14 + Prisma + TypeScript\n\n- ✨ 주요 기능: 엑셀 가져오기/내보내기, 대시보드, 거래 관리, 자동 분류, 예산\n- 📊 Prisma 시드: 33건 거래, 11 카테고리, 4 계정, 10 규칙, 6 예산\n- 📝 README: 377줄 (빠른 시작, API 문서, 데이터 모델)\n- 🧪 샘플 엑셀: 15건 거래 (20KB)\n- 🚀 빌드: 12개 라우트, 87.2~97.8kB\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(pnpm prisma studio:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n📊 차트 시각화 추가: 카테고리 파이차트 + 6개월 추이 라인차트\n\n- components/charts/category-pie-chart.tsx 추가\n- components/charts/monthly-trend-chart.tsx 추가\n- 대시보드 페이지에 6개월 추이 데이터 계산 로직 추가\n- Recharts를 사용한 반응형 차트 구현\n- KRW 통화 포맷 및 한국어 로케일 적용\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

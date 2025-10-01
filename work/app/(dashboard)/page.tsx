@@ -2,8 +2,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
-import { format } from "date-fns"
+import { format, subMonths } from "date-fns"
 import { ko } from "date-fns/locale"
+import { CategoryPieChart } from "@/components/charts/category-pie-chart"
+import { MonthlyTrendChart } from "@/components/charts/monthly-trend-chart"
 
 export const dynamic = "force-dynamic"
 
@@ -64,6 +66,42 @@ async function getDashboardData() {
     (a, b) => b.total - a.total
   )
 
+  // 최근 6개월 추이 데이터
+  const monthlyTrend = []
+  for (let i = 5; i >= 0; i--) {
+    const targetDate = subMonths(now, i)
+    const targetMonth = format(targetDate, "yyyy-MM")
+    const monthStart = `${targetMonth}-01`
+    const monthEnd = format(
+      new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0),
+      "yyyy-MM-dd"
+    )
+
+    const monthTransactions = await prisma.transaction.findMany({
+      where: {
+        date: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+        status: "confirmed",
+      },
+    })
+
+    const monthExpense = monthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    const monthIncome = monthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    monthlyTrend.push({
+      month: format(targetDate, "M월", { locale: ko }),
+      expense: monthExpense,
+      income: monthIncome,
+    })
+  }
+
   return {
     expenses,
     income,
@@ -71,6 +109,7 @@ async function getDashboardData() {
     transactions,
     categoryExpenses,
     currentMonth,
+    monthlyTrend,
   }
 }
 
@@ -133,7 +172,36 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* 카테고리별 지출 */}
+      {/* 차트 섹션 */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* 카테고리별 지출 파이 차트 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>카테고리별 지출 분포</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CategoryPieChart
+              data={data.categoryExpenses.map((cat) => ({
+                name: cat.name,
+                value: cat.total,
+                color: cat.color,
+              }))}
+            />
+          </CardContent>
+        </Card>
+
+        {/* 월별 추이 차트 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>최근 6개월 추이</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MonthlyTrendChart data={data.monthlyTrend} />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 카테고리별 지출 목록 */}
       <Card>
         <CardHeader>
           <CardTitle>카테고리별 지출</CardTitle>
