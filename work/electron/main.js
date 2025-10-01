@@ -16,17 +16,7 @@ function createWindow() {
   });
 
   // 개발 모드: Next.js 서버에 연결
-  // 여러 포트를 시도 (3000-3010)
-  const tryPorts = [3000, 3001, 3002, 3003, 3004, 3005];
-  let url = 'http://localhost:3000';
-
-  // 환경 변수가 있으면 사용
-  if (process.env.ELECTRON_START_URL) {
-    url = process.env.ELECTRON_START_URL;
-  } else {
-    // 포트 3004부터 시도 (역순)
-    url = 'http://localhost:3004';
-  }
+  const url = process.env.ELECTRON_START_URL || 'http://localhost:3001';
 
   console.log('Loading URL:', url);
   mainWindow.loadURL(url);
