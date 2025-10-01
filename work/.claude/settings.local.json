@@ -28,7 +28,14 @@
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
       "Bash(pnpm prisma studio:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\n📊 차트 시각화 추가: 카테고리 파이차트 + 6개월 추이 라인차트\n\n- components/charts/category-pie-chart.tsx 추가\n- components/charts/monthly-trend-chart.tsx 추가\n- 대시보드 페이지에 6개월 추이 데이터 계산 로직 추가\n- Recharts를 사용한 반응형 차트 구현\n- KRW 통화 포맷 및 한국어 로케일 적용\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\n📊 차트 시각화 추가: 카테고리 파이차트 + 6개월 추이 라인차트\n\n- components/charts/category-pie-chart.tsx 추가\n- components/charts/monthly-trend-chart.tsx 추가\n- 대시보드 페이지에 6개월 추이 데이터 계산 로직 추가\n- Recharts를 사용한 반응형 차트 구현\n- KRW 통화 포맷 및 한국어 로케일 적용\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "Bash(pnpm prisma:*)",
+      "Bash(del prismadev.db)",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_click",
+      "Bash(git commit -m \"$(cat <<''EOF''\n🔧 루트 페이지 리디렉션 수정 + 10월 거래 데이터 추가\n\n- app/page.tsx: 루트 경로를 대시보드로 리디렉션\n- scripts/add-october-transactions.ts: 2025년 10월 거래 18건 추가\n- 대시보드 차트에 실제 데이터 표시\n- 거래 내역 페이지 정상 작동 확인 (총 84건, 페이지네이션)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
