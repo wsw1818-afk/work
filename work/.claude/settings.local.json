@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(dir)",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(pnpm install:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(test:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npm run prisma:seed:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run electron:build:*)",
+      "Bash(timeout:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run electron:dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(start chrome http://localhost:3001)",
+      "Bash(start chrome http://localhost:3000)",
+      "Bash(ping:*)",
+      "Bash(start /B npm run dev)",
+      "Bash(start-app-npm.bat)",
+      "Bash(cmd //c start-app-npm.bat)",
+      "mcp__playwright__playwright_console_logs",
+      "Bash(del \"D:\\claude_CLI\\work\\work\\work\\app\\(dashboard)\\layout.tsx\")",
+      "mcp__playwright__playwright_navigate",
+      "mcp__playwright__playwright_screenshot",
+      "mcp__playwright__playwright_get_visible_html",
+      "mcp__playwright__playwright_click",
+      "Read(//c/Users/wsw18/.claude/**)",
+      "Bash(npm install:*)",
+      "mcp__playwright__playwright_fill",
+      "mcp__playwright__playwright_close",
+      "mcp__playwright__playwright_evaluate"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
