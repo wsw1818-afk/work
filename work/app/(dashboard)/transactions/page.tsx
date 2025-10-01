@@ -11,7 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { prisma } from "@/lib/prisma"
-import { Download, Filter } from "lucide-react"
+import { Filter } from "lucide-react"
+import { ExportButton } from "@/components/export-button"
 
 export const dynamic = "force-dynamic"
 
@@ -107,10 +108,7 @@ export default async function TransactionsPage({
             <Filter className="mr-2 h-4 w-4" />
             필터
           </Button>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            내보내기
-          </Button>
+          <ExportButton />
         </div>
       </div>
 
