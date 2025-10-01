@@ -175,7 +175,7 @@ export function AddTransactionDialog({ categories, accounts }: AddTransactionDia
               <Label htmlFor="accountId" className="text-right">
                 계정 *
               </Label>
-              <Select name="accountId" required>
+              <Select name="accountId" required defaultValue={accounts[0]?.id}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="선택..." />
                 </SelectTrigger>
