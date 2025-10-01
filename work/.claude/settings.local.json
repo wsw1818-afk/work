@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/SKNS/**)",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Read(//c/Users/**)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(npx:*)",
+      "Bash(npm search:*)",
+      "Bash(npm install:*)",
+      "Bash(task-master-ai:*)",
+      "Bash(task-master:*)",
+      "Bash(where task-master-ai)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm prisma migrate dev:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm prisma:seed:*)",
+      "Bash(tsx scripts/generate-sample-excel.ts:*)",
+      "Bash(pnpm tsx:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
