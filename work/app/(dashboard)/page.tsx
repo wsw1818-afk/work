@@ -1,116 +1,52 @@
-// app/(dashboard)/page.tsx
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { prisma } from "@/lib/prisma"
-import { format, subMonths } from "date-fns"
+import { Skeleton } from "@/components/ui/skeleton"
+import { format } from "date-fns"
 import { ko } from "date-fns/locale"
-import { CategoryPieChart } from "@/components/charts/category-pie-chart"
-import { MonthlyTrendChart } from "@/components/charts/monthly-trend-chart"
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight
+} from "lucide-react"
 
-export const dynamic = "force-dynamic"
-
-async function getDashboardData() {
-  // 현재 월 계산
-  const now = new Date()
-  const currentMonth = format(now, "yyyy-MM")
-  const startDate = `${currentMonth}-01`
-  const endDate = format(
-    new Date(now.getFullYear(), now.getMonth() + 1, 0),
-    "yyyy-MM-dd"
-  )
-
-  // 이번 달 거래 내역
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-      status: "confirmed",
-    },
-    include: {
-      category: true,
-      account: true,
-    },
-    orderBy: {
-      date: "desc",
-    },
-    take: 20,
-  })
-
-  // 지출/수입 합계
-  const expenses = transactions
-    .filter((t) => t.type === "expense" && t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const income = transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const netAmount = income - expenses
-
-  // 카테고리별 지출
-  const categoryMap = new Map<string, { name: string; total: number; color?: string }>()
-  transactions
-    .filter((t) => t.type === "expense" && t.category)
-    .forEach((t) => {
-      const catName = t.category!.name
-      const existing = categoryMap.get(catName) || { name: catName, total: 0, color: t.category!.color || undefined }
-      categoryMap.set(catName, {
-        ...existing,
-        total: existing.total + t.amount,
-      })
-    })
-
-  const categoryExpenses = Array.from(categoryMap.values()).sort(
-    (a, b) => b.total - a.total
-  )
-
-  // 최근 6개월 추이 데이터
-  const monthlyTrend = []
-  for (let i = 5; i >= 0; i--) {
-    const targetDate = subMonths(now, i)
-    const targetMonth = format(targetDate, "yyyy-MM")
-    const monthStart = `${targetMonth}-01`
-    const monthEnd = format(
-      new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0),
-      "yyyy-MM-dd"
-    )
-
-    const monthTransactions = await prisma.transaction.findMany({
-      where: {
-        date: {
-          gte: monthStart,
-          lte: monthEnd,
-        },
-        status: "confirmed",
-      },
-    })
-
-    const monthExpense = monthTransactions
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    const monthIncome = monthTransactions
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    monthlyTrend.push({
-      month: format(targetDate, "M월", { locale: ko }),
-      expense: monthExpense,
-      income: monthIncome,
-    })
+interface DashboardSummary {
+  period: { year: number; month: number }
+  summary: {
+    income: number
+    expense: number
+    balance: number
   }
-
-  return {
-    expenses,
-    income,
-    netAmount,
-    transactions,
-    categoryExpenses,
-    currentMonth,
-    monthlyTrend,
-  }
+  topCategories: Array<{
+    category: {
+      id: string
+      name: string
+      color: string | null
+    }
+    amount: number
+    count: number
+  }>
+  recentTransactions: Array<{
+    id: string
+    amount: number
+    type: "income" | "expense"
+    memo: string | null
+    merchant: string | null
+    date: string
+    category: {
+      name: string
+      color: string | null
+    } | null
+    account: {
+      name: string
+      type: string
+      color: string | null
+    }
+  }>
 }
 
 function formatKRW(amount: number) {
@@ -120,8 +56,66 @@ function formatKRW(amount: number) {
   }).format(amount)
 }
 
-export default async function DashboardPage() {
-  const data = await getDashboardData()
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardSummary | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
+
+        const response = await fetch(
+          `/api/dashboard/summary?year=${year}&month=${month}`
+        )
+        if (response.ok) {
+          const result = await response.json()
+          setData(result)
+        }
+      } catch (error) {
+        console.error("대시보드 데이터 로드 오류:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-32 mt-2" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-3">
+                <Skeleton className="h-4 w-20" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <p className="text-muted-foreground">데이터를 불러올 수 없습니다.</p>
+      </div>
+    )
+  }
+
+  const { summary, topCategories, recentTransactions } = data
 
   return (
     <div className="space-y-6">
@@ -135,143 +129,208 @@ export default async function DashboardPage() {
       {/* 요약 카드 */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">지출</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">
-              {formatKRW(data.expenses)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">수입</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">총 수입</CardTitle>
+            <ArrowUpRight className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatKRW(data.income)}
+              {formatKRW(summary.income)}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              이번 달 수입 총액
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">순지출</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">총 지출</CardTitle>
+            <ArrowDownRight className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {formatKRW(summary.expense)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              이번 달 지출 총액
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">수지</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div
               className={`text-2xl font-bold ${
-                data.netAmount < 0 ? "text-destructive" : "text-green-600"
+                summary.balance >= 0 ? "text-green-600" : "text-destructive"
               }`}
             >
-              {formatKRW(Math.abs(data.netAmount))}
+              {summary.balance >= 0 ? "+" : "-"}
+              {formatKRW(Math.abs(summary.balance))}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {summary.balance >= 0 ? "흑자" : "적자"}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* 차트 섹션 */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* 카테고리별 지출 파이 차트 */}
+        {/* 카테고리별 TOP 5 지출 */}
         <Card>
           <CardHeader>
-            <CardTitle>카테고리별 지출 분포</CardTitle>
+            <CardTitle>카테고리별 지출 TOP 5</CardTitle>
           </CardHeader>
           <CardContent>
-            <CategoryPieChart
-              data={data.categoryExpenses.map((cat) => ({
-                name: cat.name,
-                value: cat.total,
-                color: cat.color,
-              }))}
-            />
+            {topCategories.length > 0 ? (
+              <div className="space-y-4">
+                {topCategories.map((item, index) => (
+                  <div key={item.category.id} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-muted-foreground">
+                          {index + 1}
+                        </span>
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{
+                            backgroundColor: item.category.color || "#94a3b8",
+                          }}
+                        />
+                        <span className="font-medium">
+                          {item.category.name}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          {formatKRW(item.amount)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.count}건
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full bg-primary transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (item.amount / topCategories[0].amount) * 100,
+                            100
+                          )}%`,
+                          backgroundColor: item.category.color || undefined,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                이번 달 지출 내역이 없습니다.
+              </p>
+            )}
           </CardContent>
         </Card>
 
-        {/* 월별 추이 차트 */}
+        {/* 최근 거래 */}
         <Card>
           <CardHeader>
-            <CardTitle>최근 6개월 추이</CardTitle>
+            <CardTitle>최근 거래</CardTitle>
           </CardHeader>
           <CardContent>
-            <MonthlyTrendChart data={data.monthlyTrend} />
+            {recentTransactions.length > 0 ? (
+              <div className="space-y-3">
+                {recentTransactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {tx.merchant || tx.memo || "거래처 없음"}
+                        </span>
+                        {tx.category && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs"
+                            style={{
+                              borderColor: tx.category.color || undefined,
+                              color: tx.category.color || undefined,
+                            }}
+                          >
+                            {tx.category.name}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(tx.date), "M월 d일", { locale: ko })} •{" "}
+                        {tx.account.name}
+                      </div>
+                    </div>
+                    <div
+                      className={`text-sm font-semibold ${
+                        tx.type === "expense"
+                          ? "text-destructive"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {tx.type === "expense" ? "-" : "+"}
+                      {formatKRW(tx.amount)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                최근 거래 내역이 없습니다.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* 카테고리별 지출 목록 */}
+      {/* 빠른 액션 */}
       <Card>
         <CardHeader>
-          <CardTitle>카테고리별 지출</CardTitle>
+          <CardTitle>빠른 작업</CardTitle>
         </CardHeader>
         <CardContent>
-          {data.categoryExpenses.length > 0 ? (
-            <div className="space-y-3">
-              {data.categoryExpenses.map((cat) => (
-                <div key={cat.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: cat.color || "#94a3b8" }}
-                    />
-                    <span className="text-sm font-medium">{cat.name}</span>
-                  </div>
-                  <span className="text-sm font-semibold">
-                    {formatKRW(cat.total)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              이번 달 거래 내역이 없습니다.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 최근 거래 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>최근 거래 (최대 20건)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.transactions.length > 0 ? (
-            <div className="space-y-2">
-              {data.transactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center justify-between border-b pb-2 last:border-0"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{tx.merchant || "거래처 없음"}</span>
-                      {tx.category && (
-                        <Badge variant="outline">{tx.category.name}</Badge>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {tx.date} • {tx.account.name}
-                    </div>
-                  </div>
-                  <div
-                    className={`text-sm font-semibold ${
-                      tx.type === "expense" ? "text-destructive" : "text-green-600"
-                    }`}
-                  >
-                    {tx.type === "expense" ? "-" : "+"}
-                    {formatKRW(tx.amount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              최근 거래 내역이 없습니다.
-            </p>
-          )}
+          <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4">
+            <a
+              href="/transactions"
+              className="flex items-center gap-2 rounded-lg border p-3 hover:bg-accent transition-colors"
+            >
+              <TrendingDown className="h-4 w-4" />
+              <span className="text-sm font-medium">거래 내역</span>
+            </a>
+            <a
+              href="/recurring"
+              className="flex items-center gap-2 rounded-lg border p-3 hover:bg-accent transition-colors"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-sm font-medium">반복 거래</span>
+            </a>
+            <a
+              href="/calculator"
+              className="flex items-center gap-2 rounded-lg border p-3 hover:bg-accent transition-colors"
+            >
+              <Wallet className="h-4 w-4" />
+              <span className="text-sm font-medium">가계부 작성</span>
+            </a>
+            <a
+              href="/settings"
+              className="flex items-center gap-2 rounded-lg border p-3 hover:bg-accent transition-colors"
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              <span className="text-sm font-medium">설정</span>
+            </a>
+          </div>
         </CardContent>
       </Card>
     </div>

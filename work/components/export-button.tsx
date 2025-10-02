@@ -2,72 +2,65 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Download } from "lucide-react"
-import { useState } from "react"
 import { format } from "date-fns"
 
-export function ExportButton() {
-  const [exporting, setExporting] = useState(false)
+interface Transaction {
+  id: string
+  date: string
+  merchant: string | null
+  amount: number
+  type: string
+  memo: string | null
+  category: { name: string } | null
+  account: { name: string }
+}
 
-  const handleExport = async (type: "monthly" | "daily") => {
-    setExporting(true)
-    try {
-      const now = new Date()
-      const currentMonth = format(now, "yyyy-MM")
+interface ExportButtonProps {
+  transactions: Transaction[]
+}
 
-      const body = type === "monthly"
-        ? { month: currentMonth }
-        : { startDate: `${currentMonth}-01`, endDate: format(now, "yyyy-MM-dd") }
+export function ExportButton({ transactions }: ExportButtonProps) {
+  const handleExport = () => {
+    // CSV 헤더
+    const headers = ["날짜", "가맹점", "카테고리", "계정", "유형", "금액", "메모"]
 
-      const res = await fetch(`/api/export/${type}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
+    // CSV 데이터 행 생성
+    const rows = transactions.map((tx) => [
+      tx.date,
+      tx.merchant || "-",
+      tx.category?.name || "미분류",
+      tx.account.name,
+      tx.type === "expense" ? "지출" : "수입",
+      tx.amount.toString(),
+      tx.memo || "-",
+    ])
 
-      if (!res.ok) {
-        throw new Error("내보내기 실패")
-      }
+    // CSV 문자열 생성 (쉼표로 구분, 따옴표로 감싸기)
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n")
 
-      const blob = await res.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `transactions_${type === "monthly" ? currentMonth : format(now, "yyyy-MM-dd")}.xlsx`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error(error)
-      alert("내보내기 실패")
-    } finally {
-      setExporting(false)
-    }
+    // UTF-8 BOM 추가 (Excel에서 한글 깨짐 방지)
+    const bom = "\uFEFF"
+    const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" })
+
+    // 파일 다운로드
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `transactions_${format(new Date(), "yyyy-MM-dd_HHmmss")}.csv`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" disabled={exporting}>
-          <Download className="mr-2 h-4 w-4" />
-          {exporting ? "내보내는 중..." : "내보내기"}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleExport("monthly")}>
-          월별 내보내기 (이번 달)
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport("daily")}>
-          일별 내보내기 (이번 달)
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button variant="outline" onClick={handleExport} disabled={transactions.length === 0}>
+      <Download className="mr-2 h-4 w-4" />
+      내보내기 ({transactions.length}건)
+    </Button>
   )
 }

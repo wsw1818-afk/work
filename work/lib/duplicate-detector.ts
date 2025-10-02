@@ -22,8 +22,8 @@ export function detectDuplicates(
   for (const importTx of importTransactions) {
     for (const existingTx of existingTransactions) {
       const score = calculateSimilarityScore(importTx, existingTx)
-      if (score > 0.7) {
-        // 70% 이상 유사하면 중복 후보
+      if (score >= 0.95) {
+        // 95% 이상 유사하면 중복 후보 (날짜 + 금액 + 가맹점이 거의 일치)
         candidates.push({ importTx, existingTx, score })
       }
     }
@@ -37,7 +37,6 @@ function calculateSimilarityScore(
   existingTx: Transaction
 ): number {
   let score = 0
-  let weights = 0
 
   // 1. 날짜 유사도 (±1일 허용)
   const dateDiff = Math.abs(
@@ -48,25 +47,25 @@ function calculateSimilarityScore(
   )
   const dateScore = dateDiff <= 1 ? 1 : 0
   score += dateScore * 0.4
-  weights += 0.4
 
   // 2. 금액 일치
   if (importTx.amount === existingTx.amount) {
     score += 0.4
   }
-  weights += 0.4
 
-  // 3. 가맹점 유사도
+  // 3. 가맹점 유사도 (필수: 가맹점이 유사해야 중복으로 간주)
   if (importTx.merchant && existingTx.merchant) {
     const merchantSimilarity = stringSimilarity(
       importTx.merchant,
       existingTx.merchant
     )
     score += merchantSimilarity * 0.2
+  } else {
+    // 가맹점 정보가 없으면 중복 가능성 낮음
+    return score * 0.5
   }
-  weights += 0.2
 
-  return score / weights
+  return score
 }
 
 function stringSimilarity(a: string, b: string): number {

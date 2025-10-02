@@ -1,8 +1,82 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getCurrentUser } from "@/lib/auth"
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get("page") || "1")
+    const perPage = 50
+    const search = searchParams.get("search") || undefined
+    const category = searchParams.get("category") || undefined
+    const account = searchParams.get("account") || undefined
+    const startDate = searchParams.get("startDate") || undefined
+    const endDate = searchParams.get("endDate") || undefined
+
+    const where: any = {
+      userId: user.id,
+      status: "confirmed",
+    }
+
+    if (search) {
+      where.OR = [
+        { merchant: { contains: search } },
+        { memo: { contains: search } },
+      ]
+    }
+
+    if (category) where.categoryId = category
+    if (account) where.accountId = account
+
+    if (startDate || endDate) {
+      where.date = {}
+      if (startDate) where.date.gte = startDate
+      if (endDate) where.date.lte = endDate
+    }
+
+    const [transactions, total] = await Promise.all([
+      prisma.transaction.findMany({
+        where,
+        include: {
+          category: true,
+          account: true,
+          receipts: true,
+        },
+        orderBy: { date: "desc" },
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+      prisma.transaction.count({ where }),
+    ])
+
+    return NextResponse.json({
+      transactions,
+      total,
+      page,
+      perPage,
+      totalPages: Math.ceil(total / perPage),
+    })
+  } catch (error: any) {
+    console.error("거래 조회 오류:", error)
+    return NextResponse.json(
+      { error: error.message || "거래 조회 중 오류가 발생했습니다." },
+      { status: 500 }
+    )
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 })
+    }
+
     const body = await request.json()
     const { date, merchant, amount, type, categoryId, accountId, memo } = body
 
@@ -11,19 +85,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "필수 필드가 누락되었습니다." },
         { status: 400 }
-      )
-    }
-
-    // 임시: admin 사용자 조회 (인증 시스템 구현 전)
-    // TODO: 실제 인증 시스템 구현 후 세션/JWT에서 userId 가져오기
-    const adminUser = await prisma.user.findUnique({
-      where: { email: "admin@example.com" },
-    })
-
-    if (!adminUser) {
-      return NextResponse.json(
-        { error: "사용자를 찾을 수 없습니다." },
-        { status: 404 }
       )
     }
 
@@ -37,7 +98,7 @@ export async function POST(request: NextRequest) {
         categoryId: categoryId || null,
         accountId,
         memo: memo || "",
-        userId: adminUser.id,
+        userId: user.id,
       },
     })
 

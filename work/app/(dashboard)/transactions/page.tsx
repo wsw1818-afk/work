@@ -11,9 +11,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { prisma } from "@/lib/prisma"
-import { Filter } from "lucide-react"
 import { ExportButton } from "@/components/export-button"
 import { AddTransactionDialog } from "@/components/add-transaction-dialog"
+import { FilterTransactionDialog } from "@/components/filter-transaction-dialog"
 
 export const dynamic = "force-dynamic"
 
@@ -109,11 +109,8 @@ export default async function TransactionsPage({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Filter className="mr-2 h-4 w-4" />
-            필터
-          </Button>
-          <ExportButton />
+          <FilterTransactionDialog categories={categories} accounts={accounts} />
+          <ExportButton transactions={data.transactions} />
           <AddTransactionDialog categories={categories} accounts={accounts} />
         </div>
       </div>

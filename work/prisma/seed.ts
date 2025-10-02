@@ -10,10 +10,10 @@ async function main() {
   // 1. 사용자 생성
   const user = await prisma.user.upsert({
     where: { email: "admin@example.com" },
-    update: {},
+    update: { passwordHash: await hash("admin123", 10) },
     create: {
       email: "admin@example.com",
-      passwordHash: await hash("changeme", 10),
+      passwordHash: await hash("admin123", 10),
     },
   })
   console.log("✅ User created:", user.email)
