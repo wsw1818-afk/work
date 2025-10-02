@@ -24,7 +24,7 @@ async function createWindow() {
     url = 'http://localhost:3000';
   } else {
     // 개발 모드: 외부 Next.js 서버에 연결
-    url = process.env.ELECTRON_START_URL || 'http://localhost:3004';
+    url = process.env.ELECTRON_START_URL || 'http://localhost:3000';
   }
 
   console.log('Loading URL:', url);

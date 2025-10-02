@@ -1,4 +1,3 @@
-// components/charts/monthly-trend-chart.tsx
 "use client"
 
 import {
@@ -14,8 +13,8 @@ import {
 
 interface MonthlyData {
   month: string
-  expense: number
   income: number
+  expense: number
 }
 
 interface MonthlyTrendChartProps {
@@ -23,49 +22,40 @@ interface MonthlyTrendChartProps {
 }
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
-  if (data.length === 0) {
-    return (
-      <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-        데이터가 없습니다
-      </div>
-    )
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("ko-KR", {
+      style: "currency",
+      currency: "KRW",
+      notation: "compact",
+    }).format(value)
   }
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data}>
+      <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="month" />
-        <YAxis
-          tickFormatter={(value) =>
-            new Intl.NumberFormat("ko-KR", {
-              notation: "compact",
-              compactDisplay: "short",
-            }).format(value)
-          }
-        />
+        <YAxis tickFormatter={formatCurrency} />
         <Tooltip
-          formatter={(value: number) =>
-            new Intl.NumberFormat("ko-KR", {
-              style: "currency",
-              currency: "KRW",
-            }).format(value)
-          }
+          formatter={(value: number) => formatCurrency(value)}
+          labelStyle={{ color: "#000" }}
         />
         <Legend />
         <Line
           type="monotone"
-          dataKey="expense"
-          stroke="#ef4444"
-          name="지출"
+          dataKey="income"
+          stroke="#10b981"
           strokeWidth={2}
+          name="수입"
+          dot={{ r: 4 }}
         />
         <Line
           type="monotone"
-          dataKey="income"
-          stroke="#10b981"
-          name="수입"
+          dataKey="expense"
+          stroke="#ef4444"
           strokeWidth={2}
+          name="지출"
+          dot={{ r: 4 }}
         />
       </LineChart>
     </ResponsiveContainer>

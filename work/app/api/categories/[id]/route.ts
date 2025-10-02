@@ -62,15 +62,35 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // 카테고리를 사용하는 거래가 있는지 확인
-    const transactionCount = await prisma.transaction.count({
-      where: { categoryId: params.id },
-    })
+    // 카테고리를 사용하는 데이터가 있는지 확인
+    const [transactionCount, budgetCount, ruleCount] = await Promise.all([
+      prisma.transaction.count({ where: { categoryId: params.id } }),
+      prisma.budget.count({ where: { categoryId: params.id } }),
+      prisma.rule.count({ where: { assignCategoryId: params.id } }),
+    ])
 
     if (transactionCount > 0) {
       return NextResponse.json(
         {
           error: `이 카테고리를 사용하는 거래가 ${transactionCount}개 있습니다. 먼저 거래를 다른 카테고리로 변경해주세요.`,
+        },
+        { status: 400 }
+      )
+    }
+
+    if (budgetCount > 0) {
+      return NextResponse.json(
+        {
+          error: `이 카테고리를 사용하는 예산이 ${budgetCount}개 있습니다. 먼저 예산을 삭제해주세요.`,
+        },
+        { status: 400 }
+      )
+    }
+
+    if (ruleCount > 0) {
+      return NextResponse.json(
+        {
+          error: `이 카테고리를 사용하는 자동 분류 규칙이 ${ruleCount}개 있습니다. 먼저 규칙을 삭제해주세요.`,
         },
         { status: 400 }
       )

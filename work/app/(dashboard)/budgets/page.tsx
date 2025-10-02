@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Plus, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { Plus, TrendingUp, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,7 @@ interface Category {
 }
 
 interface BudgetSummary {
+  budgetId: string
   categoryId: string
   categoryName: string
   categoryColor: string | null
@@ -119,6 +120,28 @@ export default function BudgetsPage() {
     } catch (error) {
       console.error("예산 생성 실패:", error)
       alert("예산 설정에 실패했습니다.")
+    }
+  }
+
+  const handleDeleteBudget = async (budgetId: string, categoryName: string) => {
+    if (!confirm(`"${categoryName}" 예산을 삭제하시겠습니까?`)) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/budgets/${budgetId}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        loadBudgetSummary(selectedMonth)
+      } else {
+        const error = await res.json()
+        alert(error.error || "예산 삭제에 실패했습니다.")
+      }
+    } catch (error) {
+      console.error("예산 삭제 실패:", error)
+      alert("예산 삭제에 실패했습니다.")
     }
   }
 
@@ -294,7 +317,17 @@ export default function BudgetsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-base">
                   <span>{item.categoryName}</span>
-                  {getStatusIcon(item.status)}
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(item.status)}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteBudget(item.budgetId, item.categoryName)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>

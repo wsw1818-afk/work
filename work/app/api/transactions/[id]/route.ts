@@ -78,7 +78,7 @@ export async function PUT(
         ...(merchant !== undefined && { merchant }),
         ...(amount && { amount: parseFloat(amount) }),
         ...(type && { type }),
-        ...(categoryId !== undefined && { categoryId }),
+        ...(categoryId !== undefined && { categoryId: categoryId || null }),
         ...(accountId && { accountId }),
         ...(memo !== undefined && { memo }),
         ...(status && { status }),
@@ -124,6 +124,11 @@ export async function DELETE(
         { status: 404 }
       )
     }
+
+    // 영수증 먼저 삭제 (외래 키 제약 조건)
+    await prisma.receipt.deleteMany({
+      where: { linkedTxId: params.id },
+    })
 
     // 거래 삭제
     await prisma.transaction.delete({

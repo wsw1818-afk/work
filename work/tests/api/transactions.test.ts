@@ -20,8 +20,10 @@ describe("Transaction API", () => {
     userId = user.id
 
     // 테스트용 카테고리 생성
-    const category = await prisma.category.create({
-      data: {
+    const category = await prisma.category.upsert({
+      where: { name: "테스트 카테고리" },
+      update: {},
+      create: {
         name: "테스트 카테고리",
         color: "#000000",
       },

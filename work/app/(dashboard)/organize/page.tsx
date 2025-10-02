@@ -1,7 +1,6 @@
-// app/(dashboard)/transactions/page.tsx
+// app/(dashboard)/organize/page.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -11,58 +10,30 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { prisma } from "@/lib/prisma"
-import { ExportButton } from "@/components/export-button"
-import { AddTransactionDialog } from "@/components/add-transaction-dialog"
-import { FilterTransactionDialog } from "@/components/filter-transaction-dialog"
-import { EditTransactionButton } from "@/components/edit-transaction-button"
+import { DeleteTransactionButton } from "@/components/delete-transaction-button"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-config"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 interface SearchParams {
   page?: string
-  search?: string
-  category?: string
-  account?: string
-  startDate?: string
-  endDate?: string
 }
 
-async function getTransactions(params: SearchParams) {
+async function getTransactions(userId: string, params: SearchParams) {
   const page = parseInt(params.page || "1")
   const perPage = 50
 
-  const where: any = {
-    status: "confirmed",
-  }
-
-  if (params.search) {
-    where.OR = [
-      { merchant: { contains: params.search } },
-      { memo: { contains: params.search } },
-    ]
-  }
-
-  if (params.category) {
-    where.categoryId = params.category
-  }
-
-  if (params.account) {
-    where.accountId = params.account
-  }
-
-  if (params.startDate || params.endDate) {
-    where.date = {}
-    if (params.startDate) where.date.gte = params.startDate
-    if (params.endDate) where.date.lte = params.endDate
-  }
-
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
-      where,
+      where: {
+        userId,
+        status: "confirmed",
+      },
       include: {
         category: true,
         account: true,
-        receipts: true,
       },
       orderBy: {
         date: "desc",
@@ -70,7 +41,7 @@ async function getTransactions(params: SearchParams) {
       skip: (page - 1) * perPage,
       take: perPage,
     }),
-    prisma.transaction.count({ where }),
+    prisma.transaction.count({ where: { userId, status: "confirmed" } }),
   ])
 
   return {
@@ -89,36 +60,33 @@ function formatKRW(amount: number) {
   }).format(amount)
 }
 
-export default async function TransactionsPage({
+export default async function OrganizePage({
   searchParams,
 }: {
   searchParams: SearchParams
 }) {
-  const [data, categories, accounts] = await Promise.all([
-    getTransactions(searchParams),
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.account.findMany({ orderBy: { name: "asc" } }),
-  ])
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user?.id) {
+    redirect("/login")
+  }
+
+  const data = await getTransactions(session.user.id, searchParams)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">거래 내역</h1>
+          <h1 className="text-3xl font-bold">가계부 정리</h1>
           <p className="text-muted-foreground">
-            총 {data.total}건 (페이지 {data.page}/{data.totalPages})
+            불필요한 거래 내역을 삭제하여 가계부를 정리하세요
           </p>
-        </div>
-        <div className="flex gap-2">
-          <FilterTransactionDialog categories={categories} accounts={accounts} />
-          <ExportButton transactions={data.transactions} />
-          <AddTransactionDialog categories={categories} accounts={accounts} />
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>거래 목록</CardTitle>
+          <CardTitle>거래 목록 ({data.total}건)</CardTitle>
         </CardHeader>
         <CardContent>
           {data.transactions.length > 0 ? (
@@ -131,8 +99,7 @@ export default async function TransactionsPage({
                   <TableHead>계정</TableHead>
                   <TableHead>메모</TableHead>
                   <TableHead className="text-right">금액</TableHead>
-                  <TableHead className="text-center">영수증</TableHead>
-                  <TableHead className="text-center w-[60px]">편집</TableHead>
+                  <TableHead className="text-center">작업</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -162,17 +129,9 @@ export default async function TransactionsPage({
                       {formatKRW(tx.amount)}
                     </TableCell>
                     <TableCell className="text-center">
-                      {tx.receipts.length > 0 ? (
-                        <Badge variant="secondary">{tx.receipts.length}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <EditTransactionButton
-                        transaction={tx}
-                        categories={categories}
-                        accounts={accounts}
+                      <DeleteTransactionButton
+                        transactionId={tx.id}
+                        merchant={tx.merchant || "거래"}
                       />
                     </TableCell>
                   </TableRow>
@@ -181,29 +140,11 @@ export default async function TransactionsPage({
             </Table>
           ) : (
             <div className="py-12 text-center">
-              <p className="text-muted-foreground">
-                조건에 맞는 거래 내역이 없습니다.
-              </p>
+              <p className="text-muted-foreground">거래 내역이 없습니다.</p>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* 페이지네이션 (간단 버전) */}
-      {data.totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          {Array.from({ length: Math.min(data.totalPages, 10) }, (_, i) => (
-            <Button
-              key={i + 1}
-              variant={data.page === i + 1 ? "default" : "outline"}
-              size="sm"
-              asChild
-            >
-              <a href={`/transactions?page=${i + 1}`}>{i + 1}</a>
-            </Button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

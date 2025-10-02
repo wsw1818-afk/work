@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Upload, Receipt, Settings, List, RefreshCw, Wallet } from "lucide-react"
+import { Home, Upload, Receipt, Settings, List, RefreshCw, Wallet, FolderOpen } from "lucide-react"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -11,7 +11,8 @@ export function Sidebar() {
     { href: "/", label: "대시보드", icon: Home },
     { href: "/transactions", label: "거래 내역", icon: List },
     { href: "/budgets", label: "예산 관리", icon: Wallet },
-    { href: "/recurring", label: "반복 거래", icon: RefreshCw },
+    { href: "/organize", label: "가계부 정리", icon: FolderOpen },
+    { href: "/recurring", label: "고정 지출", icon: RefreshCw },
     { href: "/import", label: "가져오기", icon: Upload },
     { href: "/receipts", label: "영수증", icon: Receipt },
     { href: "/settings", label: "설정", icon: Settings },

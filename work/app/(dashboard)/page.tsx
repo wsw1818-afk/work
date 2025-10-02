@@ -13,6 +13,8 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from "lucide-react"
+import { MonthlyTrendChart } from "@/components/charts/monthly-trend-chart"
+import { CategoryPieChart } from "@/components/charts/category-pie-chart"
 
 interface DashboardSummary {
   period: { year: number; month: number }
@@ -56,8 +58,21 @@ function formatKRW(amount: number) {
   }).format(amount)
 }
 
+interface MonthlyData {
+  month: string
+  income: number
+  expense: number
+}
+
+interface CategoryData {
+  name: string
+  value: number
+  color: string
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null)
+  const [trendData, setTrendData] = useState<MonthlyData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -67,12 +82,19 @@ export default function DashboardPage() {
         const year = now.getFullYear()
         const month = now.getMonth() + 1
 
-        const response = await fetch(
-          `/api/dashboard/summary?year=${year}&month=${month}`
-        )
-        if (response.ok) {
-          const result = await response.json()
+        const [summaryRes, trendRes] = await Promise.all([
+          fetch(`/api/dashboard/summary?year=${year}&month=${month}`),
+          fetch(`/api/dashboard/trends?months=6`),
+        ])
+
+        if (summaryRes.ok) {
+          const result = await summaryRes.json()
           setData(result)
+        }
+
+        if (trendRes.ok) {
+          const trends = await trendRes.json()
+          setTrendData(trends)
         }
       } catch (error) {
         console.error("대시보드 데이터 로드 오류:", error)
@@ -175,6 +197,47 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground mt-1">
               {summary.balance >= 0 ? "흑자" : "적자"}
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 차트 섹션 */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* 월별 트렌드 차트 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>월별 수입/지출 트렌드</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {trendData.length > 0 ? (
+              <MonthlyTrendChart data={trendData} />
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-12">
+                차트 데이터가 없습니다.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 카테고리별 파이 차트 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>카테고리별 지출 분포</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topCategories.length > 0 ? (
+              <CategoryPieChart
+                data={topCategories.map((item) => ({
+                  name: item.category.name,
+                  value: item.amount,
+                  color: item.category.color || "#94a3b8",
+                }))}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-12">
+                차트 데이터가 없습니다.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -314,14 +377,14 @@ export default function DashboardPage() {
               className="flex items-center gap-2 rounded-lg border p-3 hover:bg-accent transition-colors"
             >
               <TrendingUp className="h-4 w-4" />
-              <span className="text-sm font-medium">반복 거래</span>
+              <span className="text-sm font-medium">고정 지출</span>
             </a>
             <a
-              href="/calculator"
+              href="/organize"
               className="flex items-center gap-2 rounded-lg border p-3 hover:bg-accent transition-colors"
             >
               <Wallet className="h-4 w-4" />
-              <span className="text-sm font-medium">가계부 작성</span>
+              <span className="text-sm font-medium">가계부 정리</span>
             </a>
             <a
               href="/settings"

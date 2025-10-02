@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
+import { writeFile, mkdir } from "fs/promises"
+import path from "path"
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,10 +57,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TODO: 실제 파일 저장 구현 (S3, Cloudflare R2, 로컬 저장소 등)
-    // 현재는 임시로 메모리에만 저장하는 것으로 간주
+    // 파일 저장 경로 생성
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "receipts")
+    await mkdir(uploadDir, { recursive: true })
+
+    // 파일명 생성 (타임스탬프 + 원본 확장자)
+    const timestamp = Date.now()
+    const ext = path.extname(file.name)
+    const filename = `${timestamp}${ext}`
+    const filepath = path.join(uploadDir, filename)
+
+    // 파일 저장
     const buffer = await file.arrayBuffer()
-    const tempUrl = `/uploads/${Date.now()}-${file.name}` // 임시 URL
+    await writeFile(filepath, Buffer.from(buffer))
+
+    // URL 생성
+    const tempUrl = `/uploads/receipts/${filename}`
 
     // 영수증 레코드 생성
     const receipt = await prisma.receipt.create({

@@ -91,7 +91,7 @@ export default function RecurringTransactionsPage() {
         setRecurringTransactions(data)
       }
     } catch (error) {
-      console.error("반복 거래 조회 오류:", error)
+      console.error("고정 지출 조회 오류:", error)
     } finally {
       setLoading(false)
     }
@@ -132,7 +132,7 @@ export default function RecurringTransactionsPage() {
   }
 
   async function handleGenerateTransactions() {
-    if (!confirm("오늘 날짜 기준으로 반복 거래를 생성하시겠습니까?")) {
+    if (!confirm("오늘 날짜 기준으로 고정 지출을 생성하시겠습니까?")) {
       return
     }
 
@@ -175,7 +175,7 @@ export default function RecurringTransactionsPage() {
   }
 
   async function handleDelete(id: string, name: string) {
-    if (!confirm(`"${name}" 반복 거래를 삭제하시겠습니까?`)) {
+    if (!confirm(`"${name}" 고정 지출을 삭제하시겠습니까?`)) {
       return
     }
 
@@ -206,9 +206,9 @@ export default function RecurringTransactionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">반복 거래</h1>
+          <h1 className="text-3xl font-bold">고정 지출</h1>
           <p className="text-muted-foreground">
-            매월/매주/매년 자동으로 생성되는 거래를 관리합니다
+            매월/매주/매년 자동으로 생성되는 지출을 관리합니다
           </p>
         </div>
         <div className="flex gap-2">
@@ -218,7 +218,7 @@ export default function RecurringTransactionsPage() {
           </Button>
           <Button onClick={handleAdd}>
             <Plus className="mr-2 h-4 w-4" />
-            반복 거래 추가
+            고정 지출 추가
           </Button>
         </div>
       </div>
@@ -233,15 +233,15 @@ export default function RecurringTransactionsPage() {
         onSuccess={handleDialogSuccess}
       />
 
-      {/* 활성 반복 거래 */}
+      {/* 활성 고정 지출 */}
       <Card>
         <CardHeader>
-          <CardTitle>활성 반복 거래 ({activeTransactions.length})</CardTitle>
+          <CardTitle>활성 고정 지출 ({activeTransactions.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {activeTransactions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              활성 반복 거래가 없습니다.
+              활성 고정 지출이 없습니다.
             </p>
           ) : (
             <div className="space-y-3">
@@ -318,11 +318,11 @@ export default function RecurringTransactionsPage() {
         </CardContent>
       </Card>
 
-      {/* 비활성 반복 거래 */}
+      {/* 비활성 고정 지출 */}
       {inactiveTransactions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>비활성 반복 거래 ({inactiveTransactions.length})</CardTitle>
+            <CardTitle>비활성 고정 지출 ({inactiveTransactions.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

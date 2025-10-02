@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
       const percentage = (spent / budget.limitAmount) * 100
 
       return {
+        budgetId: budget.id,
         categoryId: budget.categoryId,
         categoryName: budget.category.name,
         categoryColor: budget.category.color,
