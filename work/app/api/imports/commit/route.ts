@@ -5,30 +5,58 @@ import {
   parseExcelFile,
   applyMapping,
   ColumnMapping,
+  extractCardName,
+  extractCardNameFromFilename,
 } from "@/lib/excel-parser"
 import { detectDuplicates } from "@/lib/duplicate-detector"
 
-interface CommitRequest {
-  fileBuffer: string // base64
-  filename: string
-  mapping: ColumnMapping[]
-  userId: string // 실제로는 NextAuth 세션에서 가져옴
-  accountName?: string
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const body: CommitRequest = await request.json()
+    const formData = await request.formData()
+    const file = formData.get("file") as File
+    const mappingStr = formData.get("mapping") as string
+
+    if (!file) {
+      return NextResponse.json({ error: "파일이 없습니다." }, { status: 400 })
+    }
 
     // TODO: 실제 사용자 인증 구현 필요
-    const userId = body.userId || "default-user"
+    // 기본 사용자 찾기 또는 생성
+    let user = await prisma.user.findFirst()
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: "default@example.com",
+          passwordHash: "dummy-hash", // 임시 해시값
+        },
+      })
+    }
+    const userId = user.id
 
-    // 파일 파싱
-    const buffer = Buffer.from(body.fileBuffer, "base64")
+    // 파일 파싱 (먼저 헤더 정보 얻기)
+    const buffer = Buffer.from(await file.arrayBuffer())
     const parseResult = parseExcelFile(buffer)
 
+    // 매핑 파싱 (객체 -> 배열 변환)
+    const mappingObj: Record<string, string> = JSON.parse(mappingStr)
+    const mapping: ColumnMapping[] = Object.entries(mappingObj).map(([target, source]) => ({
+      source,
+      target: target as any,
+    }))
+
+    // 출금/입금 컬럼 자동 감지 및 추가 (신한은행 등 분리된 컬럼 처리)
+    const headers = parseResult.headers
+    for (const header of headers) {
+      const lowerHeader = header.toLowerCase()
+      // 출금/입금 컬럼이 매핑에 없으면 자동 추가
+      if ((lowerHeader.includes("출금") || lowerHeader.includes("입금")) &&
+          !mapping.some(m => m.source === header)) {
+        mapping.push({ source: header, target: "amount" })
+      }
+    }
+
     // 매핑 적용 및 정규화
-    const normalized = applyMapping(parseResult.rows, body.mapping)
+    const normalized = applyMapping(parseResult.rows, mapping)
 
     if (normalized.length === 0) {
       return NextResponse.json(
@@ -56,15 +84,23 @@ export async function POST(request: NextRequest) {
     // ImportFile 생성
     const importFile = await prisma.importFile.create({
       data: {
-        filename: body.filename,
+        filename: file.name,
         originalHeaders: JSON.stringify(parseResult.headers),
         rowCount: normalized.length,
         userId,
       },
     })
 
+    // 파일명과 파일 내용에서 카드 이름 추출 (파일명 우선)
+    const cardNameFromFilename = extractCardNameFromFilename(file.name)
+    const cardNameFromContent = extractCardName(buffer)
+    const cardName = cardNameFromFilename || cardNameFromContent
+    const accountName = cardName || "기본 계정"
+
+    // 계정 타입 결정 (은행 vs 카드)
+    const accountType = accountName.includes("은행") ? "bank" : "card"
+
     // 계정 찾기 또는 생성
-    const accountName = body.accountName || "기본 계정"
     let account = await prisma.account.findFirst({
       where: { userId, name: accountName },
     })
@@ -73,7 +109,7 @@ export async function POST(request: NextRequest) {
       account = await prisma.account.create({
         data: {
           name: accountName,
-          type: "card",
+          type: accountType,
           userId,
         },
       })
@@ -92,6 +128,7 @@ export async function POST(request: NextRequest) {
         type: tx.type,
         merchant: tx.merchant,
         memo: tx.memo,
+        cardName: cardName, // 파일명에서 추출한 카드 이름 저장
         accountId: account!.id,
         sourceFileId: importFile.id,
         original: JSON.stringify(tx.original),

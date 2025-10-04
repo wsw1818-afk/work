@@ -58,6 +58,7 @@ model Transaction {
   type         String // "expense" | "income" | "transfer" | "refund"
   merchant     String? // 가맹점명/상호
   memo         String? // 메모
+  cardName     String? // 파일명에서 추출한 카드사/은행 이름 (예: "신한카드", "현대카드")
   categoryId   String?
   category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   sourceFileId String?
@@ -78,19 +79,19 @@ model Transaction {
 }
 
 model Receipt {
-  id              String       @id @default(cuid())
-  url             String // S3 URL 또는 로컬 파일 경로
-  mime            String // "image/png", "image/jpeg", "application/pdf"
-  size            Int // bytes
-  ocrText         String? // 추출된 전체 텍스트
-  ocrAmount       Int? // OCR로 추출된 금액 (KRW 정수)
-  ocrDate         String? // OCR로 추출된 날짜 YYYY-MM-DD
-  ocrConfidence   Float? // 0~1 신뢰도
-  linkedTxId      String?
-  linkedTx        Transaction? @relation(fields: [linkedTxId], references: [id], onDelete: SetNull)
-  userId          String
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  uploadedAt      DateTime     @default(now())
+  id            String       @id @default(cuid())
+  url           String // S3 URL 또는 로컬 파일 경로
+  mime          String // "image/png", "image/jpeg", "application/pdf"
+  size          Int // bytes
+  ocrText       String? // 추출된 전체 텍스트
+  ocrAmount     Int? // OCR로 추출된 금액 (KRW 정수)
+  ocrDate       String? // OCR로 추출된 날짜 YYYY-MM-DD
+  ocrConfidence Float? // 0~1 신뢰도
+  linkedTxId    String?
+  linkedTx      Transaction? @relation(fields: [linkedTxId], references: [id], onDelete: SetNull)
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  uploadedAt    DateTime     @default(now())
 
   @@index([userId])
   @@index([linkedTxId])
@@ -140,27 +141,27 @@ model Budget {
 }
 
 model RecurringTransaction {
-  id          String   @id @default(cuid())
-  name        String // 반복 거래 이름 (예: "넷플릭스 구독료", "월세")
-  amount      Int // KRW 정수
-  type        String // "expense" | "income"
-  merchant    String? // 가맹점명
-  memo        String? // 메모
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  accountId   String
-  account     Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  frequency   String // "monthly" | "weekly" | "yearly"
-  dayOfMonth  Int? // 1-31 (monthly의 경우)
-  dayOfWeek   Int? // 0-6 (weekly의 경우, 0=일요일)
-  startDate   String // YYYY-MM-DD
-  endDate     String? // YYYY-MM-DD (선택, null이면 무한 반복)
-  lastRun     String? // YYYY-MM-DD (마지막 실행일)
-  isActive    Boolean @default(true)
-  userId      String
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid())
+  name       String // 반복 거래 이름 (예: "넷플릭스 구독료", "월세")
+  amount     Int // KRW 정수
+  type       String // "expense" | "income"
+  merchant   String? // 가맹점명
+  memo       String? // 메모
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  accountId  String
+  account    Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  frequency  String // "monthly" | "weekly" | "yearly"
+  dayOfMonth Int? // 1-31 (monthly의 경우)
+  dayOfWeek  Int? // 0-6 (weekly의 경우, 0=일요일)
+  startDate  String // YYYY-MM-DD
+  endDate    String? // YYYY-MM-DD (선택, null이면 무한 반복)
+  lastRun    String? // YYYY-MM-DD (마지막 실행일)
+  isActive   Boolean   @default(true)
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([userId, isActive])
   @@index([lastRun])
